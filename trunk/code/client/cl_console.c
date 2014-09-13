@@ -575,6 +575,26 @@ void Con_DrawNotify (void)
 
 }
 
+//I want it be rainbow :>
+static vec4_t conColourTable[16] = {
+	{1, 0, 0, 1},		//conColorRed
+	{1, 0.25f, 0, 1},	//conColorRedOrange
+	{1, 0.5f, 0, 1},	//conColorOrange
+	{1, 0.75f, 0, 1},	//conColorOrangeYellow
+	{1, 1, 0, 1},		//conColorYellow
+	{0.5f, 1, 0, 1},	//conColorYellowGreen
+	{0, 1, 0, 1},		//conColorGreen
+	{0, 1, 0.25f, 1},	//conColorGreenTurq
+	{0, 1, 0.5f, 1},	//conColorTurquoise
+	{0, 1, 1, 1},		//conColorCyan
+	{0, 0.5f, 1, 1},	//conColorCyanBlue
+	{0, 0, 1, 1},		//conColorBlue
+	{0.25f, 0, 1, 1},	//conColorBluePurple
+	{0.5f, 0, 1, 1},	//conColorPurple
+	{1, 0, 1, 1},		//conColorPink
+	{1, 0, 0.5f, 1}		//conColorMagenta
+};
+
 /*
 ================
 Con_DrawSolidConsole
@@ -621,12 +641,13 @@ void Con_DrawSolidConsole( float frac ) {
 
 	// draw the version number, now with massive color cycling!!!
 	i = strlen( version );
-	y = (cls.realtime >> 9);
+	y = (cls.realtime >> 6);
 	for (x=0 ; x<i ; x++) {
 		if (version[x] ==' ')
 			continue;
 		/* Hackish use of color table */
-		re.SetColor( colorRed + (y&7) * 4 );
+//		re.SetColor( colorRed + (y&7) * 4 ); // this hack only works fine on windows
+		re.SetColor( conColourTable[y&15] );
 		y++;
 		SCR_DrawSmallChar( cls.glconfig.vidWidth - ( i - x ) * SMALLCHAR_WIDTH, 
 			(lines-(SMALLCHAR_HEIGHT+SMALLCHAR_HEIGHT/2)), version[x] );
