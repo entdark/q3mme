@@ -371,6 +371,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\snd_effects.cpp" />
+    <ClCompile Include="qcommon\vm_x86_ioq3.c" />
     <ClCompile Include="renderer\libpng\png.c" />
     <ClCompile Include="renderer\libpng\pngerror.c" />
     <ClCompile Include="renderer\libpng\pngget.c" />
