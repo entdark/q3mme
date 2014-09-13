@@ -41,7 +41,7 @@
 //			- Image Blur when the player is hit
 //			- Depth of field blur
 
-
+#if !NEW_FBO
 #include "tr_local.h"
 #include "tr_glslprogs.h"
 #include "qgl.h"
@@ -559,6 +559,7 @@ qboolean R_TestFbuffer_texD( void ) {
 // for shader debugging
 void printShaderInfoLog(GLuint obj)
 {
+#if 0
     int infologLength = 0;
     int charsWritten  = 0;
     char *infoLog;
@@ -573,10 +574,12 @@ void printShaderInfoLog(GLuint obj)
 		ri.Printf( PRINT_ALL, infoLog );
         free(infoLog);
     }
+#endif
 }
 
 void printProgramInfoLog(GLuint obj)
 {
+#if 0
     int infologLength = 0;
     int charsWritten  = 0;
     char *infoLog;
@@ -591,6 +594,7 @@ void printProgramInfoLog(GLuint obj)
 		ri.Printf( PRINT_ALL, infoLog );
         free(infoLog);
     }
+#endif
 }
 
 void R_Build_glsl(struct glslobj *obj) {
@@ -1052,3 +1056,4 @@ void R_FrameBuffer_Shutdown( void ) {
 	//delete the main screen buffer
 	R_DeleteFBuffer(&screenBuffer);
 }
+#endif
