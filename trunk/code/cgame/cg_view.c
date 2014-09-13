@@ -760,6 +760,7 @@ CG_DrawActiveFrame
 Generates and draws a game scene and status information at the given time.
 =================
 */
+extern void trap_S_UpdateScale( float scale );
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayback ) {
 	int		inwater;
 
@@ -851,6 +852,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayb
 	// warning sounds when powerup is wearing off
 	CG_PowerupTimerSounds();
 
+	trap_S_UpdateScale( 1.0f );
 	// update audio positions
 	trap_S_Respatialize( cg.snap->ps.clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater );
 

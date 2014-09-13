@@ -37,6 +37,7 @@ extern int trap_MME_SeekTime( int seekTime );
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern int trap_MME_DemoInfo( mmeDemoInfo_t *info );
 extern void trap_MME_TimeFraction( float timeFraction );
+extern void trap_S_UpdateScale( float scale );
 int lastMusicStart;
 
 static void demoSynchMusic( int start, float length ) {
@@ -554,10 +555,11 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	}
 	
 	if (frameSpeed > 5)
-		frameSpeed = 6;
-	else frameSpeed += 1;
 	trap_S_Respatialize( cg.playerCent ? cg.playerCent->currentState.number : ENTITYNUM_NONE, 
 		cg.refdef.vieworg, cg.refdef.viewaxis, *((int *)&frameSpeed));
+		frameSpeed = 5;
+
+	trap_S_UpdateScale( frameSpeed );
 
 	trap_FX_End();
 	trap_R_RenderScene( &cg.refdef );

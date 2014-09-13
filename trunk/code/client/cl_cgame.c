@@ -765,6 +765,9 @@ long CL_CgameSystemCalls( long *args ) {
 		re.TimeFraction(VMF(1));
 		return 0;
 	
+	case CG_S_UPDATE_SCALE:
+		S_UpdateScale(VMF(1));
+		return 0;
 	case CG_R_ADDSPRITETOSCENE:
 		re.AddSpriteToScene( VMA(1) );
 		return 0;

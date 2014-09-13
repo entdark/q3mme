@@ -75,3 +75,5 @@ void S_MMERecord( const char *baseName, float deltaTime );
 void S_MMEWavClose( void );
 void S_MMEUpdate( float scale );
 void S_MMEMusic( const char *musicName, float time, float length );
+
+void S_UpdateScale(float scale);

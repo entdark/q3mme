@@ -76,6 +76,7 @@ cvar_t		*s_doppler;
 cvar_t		*s_dopplerSpeed;
 cvar_t		*s_dopplerFactor;
 cvar_t		*s_timescale;
+cvar_t		*s_forceScale;
 
 int						s_rawend;
 portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
@@ -113,6 +114,7 @@ void S_Init( void ) {
 	s_dopplerSpeed = Cvar_Get ("s_dopplerSpeed", "4000", CVAR_ARCHIVE);
 	s_dopplerFactor = Cvar_Get ("s_dopplerFactor", "1", CVAR_ARCHIVE);
 	s_timescale = Cvar_Get ("s_timescale", "1", CVAR_ARCHIVE);
+	s_playScale = 1.0f;
 
 	cv = Cvar_Get ("s_initsound", "1", 0);
 	if ( !cv->integer ) {
@@ -317,6 +319,7 @@ void S_ClearSoundBuffer( void ) {
 	if (!s_soundStarted)
 		return;
 
+	s_playScale = 1.0f;
 	// stop looping sounds
 	Com_Memset( s_entitySounds, 0, sizeof( s_entitySounds ));
 	// Signal the real sound mixer to stop any sounds
@@ -394,8 +397,6 @@ Change the volumes of all the playing sounds for changes in their positions
 ============
 */
 void S_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
-	float timeScale;
-
 	if (s_listenNumber == entityNum ) {
 		vec3_t delta;
 		float deltaTime;
@@ -411,12 +412,7 @@ void S_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwat
 	VectorCopy(axis[0], s_listenAxis[0]);
 	VectorCopy(axis[1], s_listenAxis[1]);
 	VectorCopy(axis[2], s_listenAxis[2]);
-	timeScale = *((float *)&inwater);
-	if (timeScale >= 1 && timeScale < 10 ) {
-		s_playScale = timeScale - 1;
-	} else {
-		s_playScale = 1;
-	}
+	
 	s_hadSpatialize = qtrue;
 	s_playScale *= com_timescale->value;
 }
@@ -581,6 +577,20 @@ void S_StartBackgroundTrack( const char *intro, const char *loop ){
 
 	Q_strncpyz( s_background.loopName, loop, sizeof( s_background.loopName ));
 	COM_DefaultExtension( s_background.loopName, sizeof( s_background.loopName ), ".wav" );
+}
+
+void S_UpdateScale(float scale) {
+	if (s_timescale->integer) {
+		if (s_forceScale->value > 0) {
+			s_playScale = s_forceScale->value;
+		} else {
+			s_playScale = scale;
+		}
+		if (s_playScale > 5)
+			s_playScale = 5;
+	} else {
+		s_playScale = 1;
+	}
 }
 
 
