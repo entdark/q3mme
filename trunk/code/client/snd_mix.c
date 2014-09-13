@@ -344,7 +344,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 		index %= indexTotal;
 	} else for (i = 0; i < count;i++) {
 		int sample;
-		if (index >= indexTotal) {
+		while (index >= indexTotal) {
 			index -= indexTotal;
 		}
 		sample = data[index >> MIX_SHIFT];
