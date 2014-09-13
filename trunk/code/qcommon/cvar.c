@@ -423,6 +423,22 @@ void Cvar_SetValue( const char *var_name, float value) {
 	Cvar_Set (var_name, val);
 }
 
+/*
+============
+Cvar_SetValue2
+============
+*/
+void Cvar_SetValue2( const char *var_name, float value, qboolean force )
+{
+	char	val[32];
+
+	if( value == (int)value )
+		Com_sprintf( val, sizeof(val), "%i", (int)value );
+	else
+		Com_sprintf( val, sizeof(val), "%f", value );
+	Cvar_Set2( var_name, val, force );
+}
+
 
 /*
 ============
@@ -483,6 +499,13 @@ qboolean Cvar_Command( void ) {
 		if ( v->latchedString ) {
 			Com_Printf( "latched: \"%s\"\n", v->latchedString );
 		}
+		return qtrue;
+	}
+	
+	if( !strcmp( Cmd_Argv(1), "!" ) )
+	{
+		// Swap the value if our command has ! in it (bind p "cg_thirdPeson !")
+		Cvar_SetValue2( v->name, !v->value, qfalse );
 		return qtrue;
 	}
 
