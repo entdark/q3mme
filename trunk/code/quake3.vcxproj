@@ -370,6 +370,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="client\snd_effects.cpp" />
     <ClCompile Include="renderer\libpng\png.c" />
     <ClCompile Include="renderer\libpng\pngerror.c" />
     <ClCompile Include="renderer\libpng\pngget.c" />
