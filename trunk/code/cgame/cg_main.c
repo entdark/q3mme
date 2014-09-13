@@ -422,6 +422,11 @@ void CG_UpdateCvars( void ) {
 	}
 }
 
+float CG_Cvar_Get(const char *cvar) {
+	char buff[128];
+	memset(buff, 0, sizeof(buff));
+	trap_Cvar_VariableStringBuffer(cvar, buff, sizeof(buff));
+	return atof(buff);
 }
 
 int CG_CrosshairPlayer( void ) {

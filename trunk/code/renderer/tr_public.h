@@ -106,6 +106,7 @@ typedef struct {
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );
 
 	void	(*Capture)( const char *baseName, float fps, float focus, float radius );
+	void	(*CaptureStereo)( const char *baseName, float fps, float focus, float radius );
 	void	(*BlurInfo)( int* total, int* index );
 	void	(*TimeFraction)( float timeFraction );
 } refexport_t;

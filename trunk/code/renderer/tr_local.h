@@ -1053,7 +1053,9 @@ typedef struct {
 	color4ub_t				colorIdentity[SHADER_MAX_VERTEXES];
 	color4ub_t				colorIdentityLight[SHADER_MAX_VERTEXES];
 
+	qboolean finishStereo;
 	qboolean capturingDofOrStereo;
+	qboolean latestDofOrStereoFrame;
 } trGlobals_t;
 
 typedef struct {
@@ -1097,6 +1099,8 @@ extern cvar_t	*r_verbose;				// used for verbose debug spew
 extern cvar_t	*r_ignoreFastPath;		// allows us to ignore our Tess fast paths
 
 extern cvar_t	*r_znear;				// near Z clip plane
+extern cvar_t	*r_zproj;				// z distance of projection plane
+extern cvar_t	*r_stereoSeparation;	// separation of cameras for stereo capture
 
 extern cvar_t	*r_stencilbits;			// number of desired stencil bits
 extern cvar_t	*r_depthbits;			// number of desired depth bits
@@ -1213,6 +1217,7 @@ extern	cvar_t	*r_GLlibCoolDownMsec;
 extern cvar_t	*mme_aviOutput;
 extern cvar_t	*mme_screenShotFormat;
 extern cvar_t	*mme_screenShotGamma;
+extern cvar_t	*mme_screenShotAlpha;
 extern cvar_t	*mme_jpegQuality;
 extern cvar_t	*mme_jpegDownsampleChroma;
 extern cvar_t	*mme_jpegOptimizeHuffman;
@@ -1226,6 +1231,10 @@ extern cvar_t	*mme_renderHeight;
 extern cvar_t	*mme_blurFrames;
 extern cvar_t	*mme_blurType;
 extern cvar_t	*mme_blurOverlap;
+extern cvar_t	*mme_blurGamma;
+extern cvar_t	*mme_cpuSSE2;
+extern cvar_t	*mme_pbo;
+extern cvar_t	*mme_workMegs;
 extern cvar_t	*mme_depthRange;
 extern cvar_t	*mme_depthFocus;
 extern cvar_t	*mme_captureName;
@@ -1782,6 +1791,7 @@ typedef enum {
 	RC_SWAP_BUFFERS,
 	RC_SCREENSHOT,
 	RC_CAPTURE,
+	RC_CAPTURE_STEREO,
 	RC_ALLOC,
 } renderCommand_t;
 
@@ -1838,17 +1848,26 @@ void R_InitFreeType( void );
 void R_DoneFreeType( void );
 void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
 
-void R_MME_Init( void );
-void R_MME_Shutdown( void );
-void R_MME_TakeShot( void );
+void R_MME_Init(void);
+void R_MME_InitStereo(void);
+void R_MME_Shutdown(void);
+void R_MME_ShutdownStereo(void);
+qboolean R_MME_TakeShot( void );
+qboolean R_MME_TakeShotStereo( void );
 const void *R_MME_CaptureShotCmd( const void *data );
+const void *R_MME_CaptureShotCmdStereo( const void *data );
 void R_MME_Capture( const char *shotName, float fps, float focus, float radius );
+void R_MME_CaptureStereo( const char *shotName, float fps, float focus, float radius );
 void R_MME_BlurInfo( int* total, int* index );
 void R_MME_JitterView( float *pixels, float* eyes );
+void R_MME_JitterViewStereo( float *pixels, float* eyes );
 qboolean R_MME_JitterOrigin( float *x, float *y );
+qboolean R_MME_JitterOriginStereo( float *x, float *y );
 
-int R_MME_MultiPassBegin( void );
 int R_MME_MultiPassNext( );
+int R_MME_MultiPassNextStereo( );
+
+void R_MME_DoNotTake( );
 
 void R_MME_TimeFraction(float timeFraction);
 

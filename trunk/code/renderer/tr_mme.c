@@ -172,12 +172,20 @@ static void R_MME_CheckCvars( void ) {
 	mme_dofFrames->modified = qfalse;
 }
 
+/* each loop LEFT shotData.take becomes true, but we don't want it when taking RIGHT (stereo) screenshot,
+because we may want pause, and it will continue taking LEFT screenshot (and that's wrong) */
+void R_MME_DoNotTake( ) {
+	shotData.take = qfalse;
+}
+
 qboolean R_MME_JitterOrigin( float *x, float *y ) {
 	mmeBlurControl_t* passControl = &passData.control;
 	*x = 0;
 	*y = 0;
-	if ( !shotData.take )
+	if ( !shotData.take || tr.finishStereo ) {
+		shotData.take = qfalse;
 		return qfalse;
+	}
 	if ( passControl->totalFrames ) {
 		int i = passControl->totalIndex;
 		float scale;
@@ -195,8 +203,10 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 void R_MME_JitterView( float *pixels, float *eyes ) {
 	mmeBlurControl_t* blurControl = &blurData.control;
 	mmeBlurControl_t* passControl = &passData.control;
-	if ( !shotData.take )
+	if ( !shotData.take || tr.finishStereo ) {
+		shotData.take = qfalse;
 		return;
+	}
 	if ( blurControl->totalFrames ) {
 		int i = blurControl->totalIndex;
 		pixels[0] = mme_blurJitter->value * blurData.jitter[i][0];
@@ -221,8 +231,10 @@ int R_MME_MultiPassNext( ) {
 	byte* outAlloc;
 	__m64 *outAlign;
 	int index;
-	if ( !shotData.take )
+	if ( !shotData.take || tr.finishStereo ) {
+		shotData.take = qfalse;
 		return 0;
+	}
 	if ( !control->totalFrames )
 		return 0;
 
@@ -238,6 +250,9 @@ int R_MME_MultiPassNext( ) {
 
 	ri.Hunk_FreeTempMemory( outAlloc );
 	if ( ++(control->totalIndex) < control->totalFrames ) {
+		int nextIndex = control->totalIndex;
+		if ( ++(nextIndex) >= control->totalFrames && r_stereoSeparation->value == 0.0f )
+			tr.latestDofOrStereoFrame = qtrue;
 		return 1;
 	}
 	control->totalIndex = 0;
@@ -254,14 +269,14 @@ static void R_MME_MultiShot( byte * target ) {
 }
 
 
-void R_MME_TakeShot( void ) {
+qboolean R_MME_TakeShot( void ) {
 	int pixelCount;
 	qboolean doGamma;
 	qboolean doShot;
 	mmeBlurControl_t* blurControl = &blurData.control;
 
-	if ( !shotData.take || allocFailed )
-		return;
+	if ( !shotData.take || allocFailed || tr.finishStereo )
+		return qfalse;
 	shotData.take = qfalse;
 
 	pixelCount = glConfig.vidHeight * glConfig.vidWidth;
@@ -273,7 +288,7 @@ void R_MME_TakeShot( void ) {
 		R_FrameBuffer_Blur( blurControl->Float[ blurControl->totalIndex ], blurControl->totalIndex, blurControl->totalFrames ) ) {
 		byte *shotBuf;
 		if ( ++(blurControl->totalIndex) < blurControl->totalFrames ) 
-			return;
+			return qtrue;
 		blurControl->totalIndex = 0;
 		shotBuf = ri.Hunk_AllocateTempMemory( pixelCount * 3 );
 		R_MME_MultiShot( shotBuf );
@@ -282,7 +297,7 @@ void R_MME_TakeShot( void ) {
 
 		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf );
 		ri.Hunk_FreeTempMemory( shotBuf );
-		return;
+		return qtrue;
 	}
 
 	/* Test if we need to do blurred shots */
@@ -448,6 +463,7 @@ void R_MME_TakeShot( void ) {
 			ri.Hunk_FreeTempMemory( depthShot );
 		}
 	}
+	return qtrue;
 }
 
 const void *R_MME_CaptureShotCmd( const void *data ) {

@@ -448,7 +448,7 @@ R_SetupProjection
 static void R_SetupProjection( void ) {
 	float	xmin, xmax, ymin, ymax;
 	float	width, height, depth;
-	float	zNear, zFar;
+	float	zNear, zFar, zProj, stereoSep;
 
 	// dynamically compute far clip plane distance
 	SetFarClip();
@@ -457,7 +457,9 @@ static void R_SetupProjection( void ) {
 	// set up projection matrix
 	//
 	zNear	= r_znear->value;
+	zProj	= r_zproj->value;
 	zFar	= tr.viewParms.zFar;
+	stereoSep = r_stereoSeparation->value;
 
 	ymax = zNear * tan( trScene.refdef->fov_y * M_PI / 360.0f );
 	ymin = -ymax;
@@ -472,8 +474,8 @@ static void R_SetupProjection( void ) {
 #if 1
 	tr.viewParms.projectionMatrix[0] = 2 * zNear / width;
 	tr.viewParms.projectionMatrix[4] = 0;
-	tr.viewParms.projectionMatrix[8] = ( xmax + xmin ) / width;	// normally 0
-	tr.viewParms.projectionMatrix[12] = 0;
+	tr.viewParms.projectionMatrix[8] = (xmax + xmin + 2 * stereoSep) / width;	// normally 0
+	tr.viewParms.projectionMatrix[12] = 2 * zProj * stereoSep / width;
 
 	tr.viewParms.projectionMatrix[1] = 0;
 	tr.viewParms.projectionMatrix[5] = 2 * zNear / height;
@@ -525,6 +527,19 @@ void R_SetupFrustum (void) {
 	int		i;
 	float	xs, xc;
 	float	ang;
+	float	stereoSep;
+	vec3_t	origin;
+
+	stereoSep = r_stereoSeparation->value;
+	
+	if(stereoSep == 0) {
+		VectorCopy(tr.viewParms.or.origin, origin);
+	} else {
+		VectorMA(tr.viewParms.or.origin, stereoSep*20, tr.viewParms.or.axis[1], origin);
+	}
+
+	VectorCopy(tr.viewParms.or.origin, origin);
+
 
 	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
 	xs = sin( ang );
@@ -548,7 +563,7 @@ void R_SetupFrustum (void) {
 
 	for (i=0 ; i<4 ; i++) {
 		tr.viewParms.frustum[i].type = PLANE_NON_AXIAL;
-		tr.viewParms.frustum[i].dist = DotProduct (tr.viewParms.or.origin, tr.viewParms.frustum[i].normal);
+		tr.viewParms.frustum[i].dist = DotProduct (origin, tr.viewParms.frustum[i].normal);
 		SetPlaneSignbits( &tr.viewParms.frustum[i] );
 	}
 }

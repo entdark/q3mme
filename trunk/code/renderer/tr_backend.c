@@ -403,7 +403,7 @@ static void RB_Hyperspace( void ) {
 static void SetFinalProjection( void ) {
 	float	xmin, xmax, ymin, ymax;
 	float	width, height, depth;
-	float	zNear, zFar;
+	float	zNear, zFar, zProj, stereoSep;
 	float	dx, dy;
 	vec2_t	pixelJitter, eyeJitter;
 	
@@ -412,6 +412,9 @@ static void SetFinalProjection( void ) {
 	//
 	zNear	= r_znear->value;
 	zFar	= backEnd.viewParms.zFar;
+	
+	zProj	= r_zproj->value;
+	stereoSep = r_stereoSeparation->value;
 
 	ymax = zNear * tan( backEnd.viewParms.fovY * M_PI / 360.0f );
 	ymin = -ymax;
@@ -426,7 +429,11 @@ static void SetFinalProjection( void ) {
 	pixelJitter[0] = pixelJitter[1] = 0;
 	eyeJitter[0] = eyeJitter[1] = 0;
 	/* Jitter the view */
-	R_MME_JitterView( pixelJitter, eyeJitter );
+	if ( stereoSep <= 0.0f) {
+		R_MME_JitterView( pixelJitter, eyeJitter );
+	} else if ( stereoSep > 0.0f) {
+		R_MME_JitterViewStereo( pixelJitter, eyeJitter );
+	}
 
 	dx = ( pixelJitter[0]*width ) / backEnd.viewParms.viewportWidth;
 	dy = ( pixelJitter[1]*height ) / backEnd.viewParms.viewportHeight;
@@ -443,11 +450,10 @@ static void SetFinalProjection( void ) {
 	qglGetFloatv(GL_PROJECTION_MATRIX, backEnd.viewParms.projectionMatrix );
 	qglPopMatrix();
 
-#if 0
 	backEnd.viewParms.projectionMatrix[0] = 2 * zNear / width;
 	backEnd.viewParms.projectionMatrix[4] = 0;
-	backEnd.viewParms.projectionMatrix[8] = ( xmax + xmin ) / width;	// normally 0
-	backEnd.viewParms.projectionMatrix[12] = 0;
+	backEnd.viewParms.projectionMatrix[8] = ( xmax + xmin + 2 * stereoSep ) / width;	// normally 0
+	backEnd.viewParms.projectionMatrix[12] = 2 * zProj * stereoSep / width;
 
 	backEnd.viewParms.projectionMatrix[1] = 0;
 	backEnd.viewParms.projectionMatrix[5] = 2 * zNear / height;
@@ -463,7 +469,6 @@ static void SetFinalProjection( void ) {
 	backEnd.viewParms.projectionMatrix[7] = 0;
 	backEnd.viewParms.projectionMatrix[11] = -1;
 	backEnd.viewParms.projectionMatrix[15] = 0;
-#endif
 }
 
 
@@ -957,7 +962,6 @@ RB_DrawSurfs
 */
 static void RB_DrawSurfs( const void *data ) {
 	const drawSurfsCommand_t	*cmd;
-	int i;
 
 	// finish any 2D drawing if needed
 	if ( tess.numIndexes ) {
@@ -972,7 +976,8 @@ static void RB_DrawSurfs( const void *data ) {
 	if ( !backEnd.viewParms.isPortal && !(backEnd.refdef->rdflags & RDF_NOWORLDMODEL) ) {
 		int i;
 		float x, y;
-		if ( R_MME_JitterOrigin( &x, &y ) ) {
+		if ( (r_stereoSeparation->value <= 0 && R_MME_JitterOrigin( &x, &y ))
+			|| (r_stereoSeparation->value > 0 && R_MME_JitterOriginStereo( &x, &y ))) {
 			orientationr_t* or = &backEnd.viewParms.or;
 			orientationr_t* world = &backEnd.viewParms.world;
 
@@ -1104,10 +1109,17 @@ static int RB_SwapBuffers( const void *data ) {
 	backEnd.projection2D = qfalse;
 	
 	tr.capturingDofOrStereo = qfalse;
+	tr.latestDofOrStereoFrame = qfalse;
 
-
-	if ( R_MME_MultiPassNext() ) {
-		return 1;
+	/* Take and merge DOF frames */
+	if ( r_stereoSeparation->value <= 0.0f && !tr.finishStereo) {
+		if ( R_MME_MultiPassNext() ) {
+			return 1;
+		}
+	} else if ( r_stereoSeparation->value > 0.0f) {
+		if ( R_MME_MultiPassNextStereo() ) {
+			return 1;
+		}
 	}
 	// we measure overdraw by reading back the stencil buffer and
 	// counting up the number of increments that have happened
@@ -1131,8 +1143,27 @@ static int RB_SwapBuffers( const void *data ) {
 		qglFinish();
 	}
 	/* Allow MME to take a screenshot */
-
-	R_MME_TakeShot( );
+	if ( r_stereoSeparation->value < 0.0f && tr.finishStereo) {
+		tr.capturingDofOrStereo = qtrue;
+		tr.latestDofOrStereoFrame = qtrue;
+		Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
+		return 1;
+	} else if ( r_stereoSeparation->value <= 0.0f) {
+		if ( R_MME_TakeShot( ) && r_stereoSeparation->value != 0.0f) {
+			tr.capturingDofOrStereo = qtrue;
+			tr.latestDofOrStereoFrame = qfalse;
+			Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
+			tr.finishStereo = qtrue;
+			return 1;
+		}
+	} else if ( r_stereoSeparation->value > 0.0f) {
+		if ( tr.finishStereo) {
+			R_MME_TakeShotStereo( );
+			R_MME_DoNotTake( );
+			Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
+			tr.finishStereo = qfalse;
+		}
+	}
 
 	R_FrameBuffer_EndFrame();
 
@@ -1196,6 +1227,9 @@ again:
 			break;
 		case RC_CAPTURE:
 			R_MME_CaptureShotCmd( data );
+			break;
+		case RC_CAPTURE_STEREO:
+			R_MME_CaptureShotCmdStereo( data );
 			break;
 		case RC_ALLOC:
 			break;

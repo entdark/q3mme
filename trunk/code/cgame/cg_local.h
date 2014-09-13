@@ -1224,6 +1224,8 @@ typedef enum {
 
 gameType_t CG_GameType( void );
 
+float CG_Cvar_Get(const char *cvar);
+
 //
 // cg_view.c
 //

@@ -335,6 +335,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	float frameSpeed;
 	int blurTotal, blurIndex;
 	float blurFraction;
+	float stereoSep = CG_Cvar_Get( "r_stereoSeparation" );
 
 	int inwater, entityNum;
 
@@ -615,6 +616,8 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	trap_S_UpdateScale( frameSpeed );
 
 	trap_FX_End();
+	if (captureFrame && stereoSep > 0.0f)
+		trap_Cvar_Set("r_stereoSeparation", va("%f", -stereoSep));
 	trap_MME_TimeFraction(cg.timeFraction);
 	trap_R_RenderScene( &cg.refdef );
 
