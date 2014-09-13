@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "snd_local.h"
 
-//#define HAVE_LIBMAD
+#define HAVE_LIBMAD
 /*
 ===============================================================================
 
@@ -354,7 +354,7 @@ static openSound_t * S_WavOpen( const char *fileName ) {
 
 #ifdef HAVE_LIBMAD 
 #include <mad.h>
-#pragma comment (lib, "libmad.lib")
+//#pragma comment (lib, "libmad.lib")
 //#pragma comment (lib, "libmadd.lib")
 #define MP3_SEEKINTERVAL 16 
 #define MP3_SEEKMAX 4096
