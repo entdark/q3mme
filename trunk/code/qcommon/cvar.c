@@ -657,7 +657,14 @@ Appends lines containing "set variable value" for all variables
 with the archive flag set to qtrue.
 ============
 */
+typedef struct cvarSerialise_s {
+	char *name, *value;
+} cvarSerialise_t;
+static int cvarSort( const void *cvar1, const void *cvar2 ) {
+	return strcmp( ((cvarSerialise_t *)cvar1)->name, ((cvarSerialise_t *)cvar2)->name );
+}
 void Cvar_WriteVariables( fileHandle_t f ) {
+#if 0
 	cvar_t	*var;
 	char	buffer[1024];
 
@@ -675,6 +682,52 @@ void Cvar_WriteVariables( fileHandle_t f ) {
 			FS_Printf (f, "%s", buffer);
 		}
 	}
+#else
+	cvar_t *var;
+	char buffer[MAX_STRING_CHARS] = {0};
+	int i=0, writeCount=0, totalCount=0, size=0;
+	cvarSerialise_t *list = NULL, *listPtr = NULL;
+
+	for ( var=cvar_vars; var; var=var->next ) {
+		char *value = var->latchedString ? var->latchedString : var->string;
+		if ( var->name && (var->flags & CVAR_ARCHIVE) && (Q_stricmp( var->resetString, value ) || (var->flags&CVAR_USER_CREATED)) ) {
+			if ( strlen( var->name ) + strlen( var->latchedString ? var->latchedString : var->string ) + 9 >= sizeof( buffer ) )
+				continue;
+			writeCount++;
+		}
+		totalCount++;
+	}
+
+	// allocate the working space for sorting
+	size = sizeof( cvarSerialise_t ) * writeCount;
+	list = (cvarSerialise_t *)Z_Malloc( size );
+	memset( list, 0, size );
+
+	for ( var=cvar_vars, listPtr=list; var; var=var->next ) {
+		char *value = var->latchedString ? var->latchedString : var->string;
+		if ( var->name && (var->flags & CVAR_ARCHIVE) && (Q_stricmp( var->resetString, value ) || (var->flags&CVAR_USER_CREATED)) ) {
+			if ( strlen( var->name ) + strlen( value ) + 9 >= sizeof( buffer ) ) {
+				Com_Printf( S_COLOR_YELLOW "WARNING: value of variable \"%s\" too long to write to file\n", var->name );
+				continue;
+			}
+			listPtr->name = var->name;
+			listPtr->value = value;
+			listPtr++;
+		}
+	}
+
+	qsort( list, writeCount, sizeof( cvarSerialise_t ), cvarSort );
+
+	for ( i=0, listPtr=list; i<writeCount; i++, listPtr++ ) {
+		Com_sprintf( buffer, sizeof( buffer ), "seta %s \"%s\"\n", listPtr->name, listPtr->value );
+		FS_Write( buffer, (int)strlen( buffer ), f );
+	}
+
+	Com_DPrintf( "Wrote %i/%i cvars to file\n", writeCount, totalCount );
+
+	Z_Free( list );
+	list = listPtr = NULL;
+#endif
 }
 
 /*
