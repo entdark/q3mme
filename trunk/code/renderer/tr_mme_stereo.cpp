@@ -1,27 +1,4 @@
-/*
-===========================================================================
-Copyright (C) 2009 Sjoerd van der Berg ( harekiet @ gmail.com )
-
-This file is part of Quake III Arena source code.
-
-Quake III Arena source code is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-Quake III Arena source code is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Foobar; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-===========================================================================
-*/
-
 #include "tr_mme.h"
-#include "../client/snd_public.h"
 
 static char *workAlloc = 0;
 static char *workAlign = 0;
@@ -52,42 +29,6 @@ static struct {
 static struct {
 	int pixelCount;
 } mainData;
-
-// MME cvars
-cvar_t	*mme_aviFormat;
-cvar_t	*mme_screenShotFormat;
-cvar_t	*mme_screenShotGamma;
-cvar_t	*mme_screenShotAlpha;
-cvar_t	*mme_jpegQuality;
-cvar_t	*mme_jpegDownsampleChroma;
-cvar_t	*mme_jpegOptimizeHuffman;
-cvar_t	*mme_tgaCompression;
-cvar_t	*mme_pngCompression;
-cvar_t	*mme_skykey;
-cvar_t	*mme_worldShader;
-cvar_t	*mme_pip;
-cvar_t	*mme_blurFrames;
-cvar_t	*mme_blurFrames;
-cvar_t	*mme_blurType;
-cvar_t	*mme_blurOverlap;
-cvar_t	*mme_blurGamma;
-cvar_t	*mme_blurJitter;
-
-cvar_t	*mme_dofFrames;
-cvar_t	*mme_dofRadius;
-
-cvar_t	*mme_cpuSSE2;
-
-cvar_t	*mme_renderWidth;
-cvar_t	*mme_renderHeight;
-cvar_t	*mme_workMegs;
-cvar_t	*mme_depthFocus;
-cvar_t	*mme_depthRange;
-cvar_t	*mme_captureName;
-cvar_t	*mme_saveOverwrite;
-cvar_t	*mme_saveShot;
-cvar_t	*mme_saveStencil;
-cvar_t	*mme_saveDepth;
 
 static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl_t* control ) {
 	memset( block, 0, sizeof( *block ) );
@@ -152,7 +93,7 @@ static void R_MME_CheckCvars( void ) {
 		blurControl->overlapIndex = 0;
 
 		R_MME_MakeBlurBlock( &blurData.shot, pixelCount * 3, blurControl );
-		R_MME_MakeBlurBlock( &blurData.stencil, pixelCount * 1, blurControl );
+//		R_MME_MakeBlurBlock( &blurData.stencil, pixelCount * 1, blurControl );
 		R_MME_MakeBlurBlock( &blurData.depth, pixelCount * 1, blurControl );
 
 		R_MME_JitterTable( blurData.jitter[0], blurTotal );
@@ -172,7 +113,7 @@ static void R_MME_CheckCvars( void ) {
 	mme_dofFrames->modified = qfalse;
 }
 
-qboolean R_MME_JitterOrigin( float *x, float *y ) {
+qboolean R_MME_JitterOriginStereo( float *x, float *y ) {
 	mmeBlurControl_t* passControl = &passData.control;
 	*x = 0;
 	*y = 0;
@@ -192,7 +133,7 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 	return qfalse;
 }
 
-void R_MME_JitterView( float *pixels, float *eyes ) {
+void R_MME_JitterViewStereo( float *pixels, float *eyes ) {
 	mmeBlurControl_t* blurControl = &blurData.control;
 	mmeBlurControl_t* passControl = &passData.control;
 	if ( !shotData.take )
@@ -216,7 +157,7 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 
 }
 
-int R_MME_MultiPassNext( ) {
+int R_MME_MultiPassNextStereo( ) {
 	mmeBlurControl_t* control = &passData.control;
 	byte* outAlloc;
 	__m64 *outAlign;
@@ -227,9 +168,9 @@ int R_MME_MultiPassNext( ) {
 		return 0;
 
 	index = control->totalIndex;
-	outAlloc = ri.Hunk_AllocateTempMemory( mainData.pixelCount * 3 + 16);
+	outAlloc = (byte *)ri.Hunk_AllocateTempMemory( mainData.pixelCount * 3 + 16);
 	outAlign = (__m64 *)((((int)(outAlloc)) + 15) & ~15);
-	
+
 	GLimp_EndFrame();
 	R_MME_GetShot( outAlign );
 	R_MME_BlurAccumAdd( &passData.dof, outAlign );
@@ -238,6 +179,9 @@ int R_MME_MultiPassNext( ) {
 
 	ri.Hunk_FreeTempMemory( outAlloc );
 	if ( ++(control->totalIndex) < control->totalFrames ) {
+		int nextIndex = control->totalIndex;
+		if ( ++(nextIndex) >= control->totalFrames )
+			tr.latestDofOrStereoFrame = qtrue;
 		return 1;
 	}
 	control->totalIndex = 0;
@@ -253,36 +197,37 @@ static void R_MME_MultiShot( byte * target ) {
 	}
 }
 
-
-void R_MME_TakeShot( void ) {
+qboolean R_MME_TakeShotStereo( void ) {
 	int pixelCount;
 	qboolean doGamma;
 	qboolean doShot;
 	mmeBlurControl_t* blurControl = &blurData.control;
 
 	if ( !shotData.take || allocFailed )
-		return;
+		return qfalse;
 	shotData.take = qfalse;
 
 	pixelCount = glConfig.vidHeight * glConfig.vidWidth;
 
-	doGamma = ( mme_screenShotGamma->integer || (tr.overbrightBits > 0) ) && (glConfig.deviceSupportsGamma );
+	doGamma = (qboolean)(( mme_screenShotGamma->integer || (tr.overbrightBits > 0) ) && (glConfig.deviceSupportsGamma ));
 	R_MME_CheckCvars();
 	//Special early version using the framebuffer
 	if ( mme_saveShot->integer && blurControl->totalFrames > 0 &&
 		R_FrameBuffer_Blur( blurControl->Float[ blurControl->totalIndex ], blurControl->totalIndex, blurControl->totalFrames ) ) {
+		float fps;
 		byte *shotBuf;
 		if ( ++(blurControl->totalIndex) < blurControl->totalFrames ) 
-			return;
+			return qtrue;
 		blurControl->totalIndex = 0;
-		shotBuf = ri.Hunk_AllocateTempMemory( pixelCount * 3 );
+		shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 3 );
 		R_MME_MultiShot( shotBuf );
 		if ( doGamma ) 
 			R_GammaCorrect( shotBuf, pixelCount * 3 );
 
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf );
+		fps = shotData.fps / ( blurControl->totalFrames );
+		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, shotBuf, qfalse, 0, 0 );
 		ri.Hunk_FreeTempMemory( shotBuf );
-		return;
+		return qtrue;
 	}
 
 	/* Test if we need to do blurred shots */
@@ -330,7 +275,7 @@ void R_MME_TakeShot( void ) {
 		} else {
 			byte *outAlloc;
 			__m64 *outAlign;
-			outAlloc = ri.Hunk_AllocateTempMemory( pixelCount * 3 + 16);
+			outAlloc = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 3 + 16);
 			outAlign = (__m64 *)((((int)(outAlloc)) + 15) & ~15);
 
 			if ( mme_saveShot->integer == 1 ) {
@@ -371,10 +316,9 @@ void R_MME_TakeShot( void ) {
 				R_MME_BlurAccumShift( blurStencil );
 		
 			// Big test for an rgba shot
-			if ( mme_saveShot->integer == 1 && shotData.main.type == mmeShotTypeRGBA ) 
-			{
+			if ( mme_saveShot->integer == 1 && shotData.main.type == mmeShotTypeRGBA ) {
 				int i;
-				byte *alphaShot = ri.Hunk_AllocateTempMemory( pixelCount * 4);
+				byte *alphaShot = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 4);
 				byte *rgbData = (byte *)(blurShot->accum );
 				if ( mme_saveDepth->integer == 1 ) {
 					byte *depthData = (byte *)( blurDepth->accum );
@@ -393,15 +337,15 @@ void R_MME_TakeShot( void ) {
 						alphaShot[i*4+3] = stencilData[i];
 					}
 				}
-				R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, alphaShot );
+				R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, alphaShot, qfalse, 0, 0 );
 				ri.Hunk_FreeTempMemory( alphaShot );
 			} else {
 				if ( mme_saveShot->integer == 1 )
-					R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurShot->accum ));
+					R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurShot->accum ), qfalse, 0, 0 );
 				if ( mme_saveDepth->integer == 1 )
-					R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurDepth->accum ));
+					R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurDepth->accum ), qfalse, 0, 0 );
 				if ( mme_saveStencil->integer == 1 )
-					R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurStencil->accum) );
+					R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurStencil->accum), qfalse, 0, 0 );
 			}
 			doShot = qtrue;
 		} else {
@@ -409,7 +353,7 @@ void R_MME_TakeShot( void ) {
 		}
 	} 
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
-		byte *shotBuf = ri.Hunk_AllocateTempMemory( pixelCount * 5 );
+		byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 		R_MME_MultiShot( shotBuf );
 		
 		if ( doGamma ) 
@@ -430,27 +374,28 @@ void R_MME_TakeShot( void ) {
 				shotBuf[i * 4 + 3] = alphaBuf[i];
 			}
 		}
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf );
+		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf, qfalse, 0, 0 );
 		ri.Hunk_FreeTempMemory( shotBuf );
 	}
 
 	if ( shotData.main.type == mmeShotTypeRGB ) {
 		if ( mme_saveStencil->integer > 1 || ( !blurControl->totalFrames && mme_saveStencil->integer) ) {
-			byte *stencilShot = ri.Hunk_AllocateTempMemory( pixelCount * 1);
+			byte *stencilShot = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 1);
 			R_MME_GetStencil( stencilShot );
-			R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, stencilShot );
+			R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, stencilShot, qfalse, 0, 0 );
 			ri.Hunk_FreeTempMemory( stencilShot );
 		}
 		if ( mme_saveDepth->integer > 1 || ( !blurControl->totalFrames && mme_saveDepth->integer) ) {
-			byte *depthShot = ri.Hunk_AllocateTempMemory( pixelCount * 1);
+			byte *depthShot = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 1);
 			R_MME_GetDepth( depthShot );
-			R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, depthShot );
+			R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, depthShot, qfalse, 0, 0 );
 			ri.Hunk_FreeTempMemory( depthShot );
 		}
 	}
+	return qtrue;
 }
 
-const void *R_MME_CaptureShotCmd( const void *data ) {
+const void *R_MME_CaptureShotCmdStereo( const void *data ) {
 	const captureCommand_t *cmd = (const captureCommand_t *)data;
 
 	if (!cmd->name[0])
@@ -459,6 +404,7 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 	shotData.take = qtrue;
 	shotData.fps = cmd->fps;
 	shotData.dofFocus = cmd->focus;
+	shotData.dofRadius = cmd->radius;
 	if (strcmp( cmd->name, shotData.main.name) || mme_screenShotFormat->modified || mme_screenShotAlpha->modified ) {
 		/* Also reset the the other data */
 		blurData.control.totalIndex = 0;
@@ -483,13 +429,14 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 			shotData.main.format = mmeShotFormatTGA;
 		}
 		
-//		if (shotData.main.format != mmeShotFormatAVI) {
+		//grayscale works fine only with compressed avi :(
+		if (shotData.main.format != mmeShotFormatAVI || !mme_aviFormat->integer) {
 			shotData.depth.format = mmeShotFormatPNG;
 			shotData.stencil.format = mmeShotFormatPNG;
-//		} else {
-//			shotData.depth.format = mmeShotFormatAVI;
-//			shotData.stencil.format = mmeShotFormatAVI;
-//		}
+		} else {
+			shotData.depth.format = mmeShotFormatAVI;
+			shotData.stencil.format = mmeShotFormatAVI;
+		}
 
 		shotData.main.type = mmeShotTypeRGB;
 		if ( mme_screenShotAlpha->integer ) {
@@ -507,88 +454,45 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 	return (const void *)(cmd + 1);	
 }
 
-void R_MME_Capture( const char *shotName, float fps, float focus ) {
+void R_MME_CaptureStereo( const char *shotName, float fps, float focus, float radius ) {
 	captureCommand_t *cmd;
 	
-	if ( !tr.registered || !fps ) {
+	if ( !tr.registered || !fps || r_stereoSeparation->value == 0.0f ) {
 		return;
 	}
-	cmd = R_GetCommandBuffer( RC_CAPTURE, sizeof( *cmd ) );
+	cmd = (captureCommand_t *)R_GetCommandBuffer( RC_CAPTURE_STEREO, sizeof( *cmd ) );
 	if ( !cmd ) {
 		return;
 	}
+	tr.capturingDofOrStereo = qtrue;
 	cmd->fps = fps;
 	cmd->focus = focus;
-	Q_strncpyz( cmd->name, shotName, sizeof( cmd->name ));
+	cmd->radius = radius;
+	Com_sprintf(cmd->name, sizeof( cmd->name ), "%s.stereo", shotName );
 }
 
-void R_MME_BlurInfo( int* total, int *index ) {
-	*total = mme_blurFrames->integer;
-	*index = blurData.control.totalIndex;
-	if (*index )
-		*index -= blurData.control.overlapFrames;
-}
-
-void R_MME_Shutdown(void) {
+void R_MME_ShutdownStereo(void) {
 	aviClose( &shotData.main.avi );
 	aviClose( &shotData.depth.avi );
 	aviClose( &shotData.stencil.avi );
 }
 
-void R_MME_Init(void) {
-
-	// MME cvars
-	mme_aviFormat = ri.Cvar_Get ("mme_aviFormat", "0", CVAR_ARCHIVE);
-	mme_jpegQuality = ri.Cvar_Get ("mme_jpegQuality", "90", CVAR_ARCHIVE);
-	mme_jpegDownsampleChroma = ri.Cvar_Get ("mme_jpegDownsampleChroma", "0", CVAR_ARCHIVE);
-	mme_jpegOptimizeHuffman = ri.Cvar_Get ("mme_jpegOptimizeHuffman", "1", CVAR_ARCHIVE);
-	mme_screenShotFormat = ri.Cvar_Get ("mme_screenShotFormat", "tga", CVAR_ARCHIVE);
-	mme_screenShotGamma = ri.Cvar_Get ("mme_screenShotGamma", "0", CVAR_ARCHIVE);
-	mme_screenShotAlpha = ri.Cvar_Get ("mme_screenShotAlpha", "0", CVAR_ARCHIVE);
-	mme_tgaCompression = ri.Cvar_Get ("mme_tgaCompression", "1", CVAR_ARCHIVE);
-	mme_pngCompression = ri.Cvar_Get("mme_pngCompression", "5", CVAR_ARCHIVE);
-	mme_skykey = ri.Cvar_Get( "mme_skykey", "0", CVAR_ARCHIVE );
-	mme_pip = ri.Cvar_Get( "mme_pip", "0", CVAR_CHEAT );
-	mme_worldShader = ri.Cvar_Get( "mme_worldShader", "0", CVAR_CHEAT );
-	mme_renderWidth = ri.Cvar_Get( "mme_renderWidth", "0", CVAR_LATCH | CVAR_ARCHIVE );
-	mme_renderHeight = ri.Cvar_Get( "mme_renderHeight", "0", CVAR_LATCH | CVAR_ARCHIVE );
-
-	mme_blurFrames = ri.Cvar_Get ( "mme_blurFrames", "0", CVAR_ARCHIVE );
-	mme_blurOverlap = ri.Cvar_Get ("mme_blurOverlap", "0", CVAR_ARCHIVE );
-	mme_blurType = ri.Cvar_Get ( "mme_blurType", "gaussian", CVAR_ARCHIVE );
-	mme_blurGamma = ri.Cvar_Get ( "mme_blurGamma", "0", CVAR_ARCHIVE );
-	mme_blurJitter = ri.Cvar_Get ( "mme_blurJitter", "1", CVAR_ARCHIVE );
-
-	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
-	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
-
-	mme_cpuSSE2 = ri.Cvar_Get ( "mme_cpuSSE2", "0", CVAR_ARCHIVE );
-	
-	mme_depthRange = ri.Cvar_Get ( "mme_depthRange", "0", CVAR_ARCHIVE );
-	mme_depthFocus = ri.Cvar_Get ( "mme_depthFocus", "0", CVAR_ARCHIVE );
-	mme_saveOverwrite = ri.Cvar_Get ( "mme_saveOverwrite", "0", CVAR_ARCHIVE );
-	mme_saveStencil = ri.Cvar_Get ( "mme_saveStencil", "0", CVAR_ARCHIVE );
-	mme_saveDepth = ri.Cvar_Get ( "mme_saveDepth", "0", CVAR_ARCHIVE );
-	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
-	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
-
-	mme_worldShader->modified = qtrue;
-
+void R_MME_InitStereo(void) {
 	Com_Memset( &shotData, 0, sizeof(shotData));
 	//CANATODO, not exactly the best way to do this probably, but it works
 	if (!workAlloc) {
 		workSize = mme_workMegs->integer;
 		if (workSize < 64)
 			workSize = 64;
-		if (workSize > 512)
+		else if (workSize > 512)
 			workSize = 512;
-		workSize *= 1024 * 1024;
-		workAlloc = calloc( workSize + 16, 1 );
+		workSize *= 1024 * 1024 / 2; //dividing by 2 because other half is used in stereo
+		workAlloc = (char *)calloc( workSize + 16, 1 );
 		if (!workAlloc) {
-			ri.Printf(PRINT_ALL, "Failed to allocate %d bytes for mme work buffer\n", workSize );
+			ri.Printf(PRINT_ALL, "Failed to allocate %d bytes for mme stereo work buffer\n", workSize );
+			allocFailed = qtrue;
 			return;
 		}
 		workAlign = (char *)(((int)workAlloc + 15) & ~15);
 	}
 }
-
