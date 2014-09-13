@@ -483,7 +483,8 @@ static srfDecal_t *R_DecalAlloc( void ) {
 				decal = trDecal.list;
 			}
 			if ( decal == trDecal.listSearch ) {
-				Com_Printf( "Ran out of decal space\n" );
+				Com_Printf( "Ran out of decal space, resetting\n" );
+				R_DecalReset();
 				return 0;
 			}
 			continue;

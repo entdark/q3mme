@@ -474,7 +474,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	frameSpeed *= demo.play.speed;
 
 	cg.frametime = (cg.time - cg.oldTime) + (cg.timeFraction - cg.oldTimeFraction);
-	if (cg.frametime <0  || cg.frametime > 100) {
+	if (cg.frametime < 0) {
 		cg.frametime = 0;
 		hadSkip = qtrue;
 		cg.oldTime = cg.time;
@@ -500,11 +500,13 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		cg.headStartTime = 0;
 		cg.v_dmg_time = 0;
 		trap_S_ClearLoopingSounds(qtrue);
+	} else if (cg.frametime > 100) {
+		hadSkip = qtrue;
 	} else {
 		hadSkip = qfalse;
 	}
 	/* Make sure the random seed is the same each time we hit this frame */
-	srand( cg.time + cg.timeFraction * 1000);
+	srand( (cg.time % 10000000) + cg.timeFraction * 1000);
 	/* Prepare to render the screen */		
 	trap_S_ClearLoopingSounds(qfalse);
 	trap_R_ClearScene();
