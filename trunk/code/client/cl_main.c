@@ -2018,27 +2018,31 @@ void CL_Frame ( int dmsec ) {
 
 	// if recording an avi, lock to a fixed fps
 	if ( cl_avidemo->integer && dmsec) {
-		char shotName[MAX_OSPATH];
-		float frameTime, fps;
-		fps = cl_avidemo->value * com_timescale->value;
-		if ( fps > 1000.0f)
-			fps = 1000.0f;
 		// save the current screen
 		if ( cls.state == CA_ACTIVE || cl_forceavidemo->integer) {
+			float frameTime, fps;
+			int blurFrames = Cvar_VariableIntegerValue("mme_blurFrames");
+			char shotName[MAX_OSPATH];
 			Com_sprintf( shotName, sizeof( shotName ), "screenshots/%s/shot", mme_demoFileName->string );
-			//TODO use mme_depthFocus
-			re.Capture( shotName, fps, 1000 );
+			if (blurFrames < 1)
+				blurFrames = 1;
+			else if (blurFrames > 256)
+				blurFrames = 256;
 			// fixed time for next frame'
+			fps = cl_avidemo->value * com_timescale->value * (float)blurFrames;
+//			if ( fps > 1000.0f)
+//				fps = 1000.0f;
 			frameTime = (1000.0f / fps);
-			if (frameTime < 1) {
-				frameTime = 1;
+			if (frameTime < 0) {
+				frameTime = 0;
 			}
+			//TODO use mme_depthFocus
+			re.Capture( shotName, fps, 0, 0 );
 			frameTime += clc.aviDemoRemain;
 			dmsec = (int)frameTime;
 			clc.aviDemoRemain = frameTime - dmsec;
 			/* Signal this frame to be recorded */
-			if (mme_saveWav->integer)
-				S_MMERecord( shotName, dmsec );
+			S_MMERecord( shotName, 1.0f / fps );
 		}
 	}
 	
