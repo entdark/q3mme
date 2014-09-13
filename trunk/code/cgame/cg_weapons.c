@@ -1040,6 +1040,10 @@ void CG_AddViewWeaponDirect( centity_t *cent ) {
 	vec3_t		angles;
 	weaponInfo_t	*weapon;
 
+	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+		return;
+	}
+
 	// no gun if in third person view or a camera is active
 	if ( cg.renderingThirdPerson ) {
 		return;
@@ -1106,10 +1110,6 @@ Add the weapon, and flash for the player's view
 void CG_AddViewWeapon( playerState_t *ps ) {
 
 	if (!cg.arena.detected && ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
-		return;
-	}
-
-	if ( ps->pm_type == PM_INTERMISSION ) {
 		return;
 	}
 
