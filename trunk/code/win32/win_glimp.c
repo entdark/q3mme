@@ -1455,6 +1455,18 @@ static void GLW_InitExtensions( void )
 		qglGetShaderiv = ( void (APIENTRY * ) (GLuint, GLenum, GLint *) ) qwglGetProcAddress( "glGetShaderiv");
 		qglGetShaderInfoLog = ( void (APIENTRY * ) (GLuint, GLsizei, GLsizei *, GLchar *) ) qwglGetProcAddress( "glGetShaderInfoLog");
 	}
+	// If we support one or the other, load the shared function pointers.
+	if ( strstr( glConfig.extensions_string, "GL_ARB_vertex_program" ) && 
+		 strstr( glConfig.extensions_string, "GL_ARB_fragment_program" ) ) {
+		ri.Printf( PRINT_ALL, "...using GL_ARB_fragment_program\n" );
+		ri.Printf( PRINT_ALL, "...using GL_ARB_vertex_program\n" );
+		//teh's PBO
+		qglGenBuffersARB = (void (APIENTRY *) (GLsizei n, GLuint* ids)) qwglGetProcAddress("glGenBuffersARB");
+		qglBindBufferARB = (void (APIENTRY *) (GLenum target, GLuint id)) qwglGetProcAddress("glBindBufferARB");
+		qglBufferDataARB = (void (APIENTRY *) (GLenum target, GLsizei size, const void* data, GLenum usage)) qwglGetProcAddress("glBufferDataARB");
+		qglMapBufferARB = (void *(APIENTRY *) (GLenum target, GLenum access)) qwglGetProcAddress("glMapBufferARB");
+		qglUnmapBufferARB = (GLboolean (APIENTRY *) (GLenum target)) qwglGetProcAddress("glUnmapBufferARB");
+	}
 }
 
 /*

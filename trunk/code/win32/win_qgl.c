@@ -121,6 +121,13 @@ BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
 	extern void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
 	extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint *);
 	extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
+	
+	//teh's PBO
+	extern void (APIENTRYP qglGenBuffersARB) (GLsizei n, GLuint* ids);
+	extern void (APIENTRYP qglBindBufferARB) (GLenum target, GLuint id);
+	extern void (APIENTRYP qglBufferDataARB) (GLenum target, GLsizei size, const void* data, GLenum usage);
+	extern void *(APIENTRYP qglMapBufferARB) (GLenum target, GLenum access);
+	extern GLboolean (APIENTRYP qglUnmapBufferARB) (GLenum target);
 
 
 void ( APIENTRY * qglAccum )(GLenum op, GLfloat value);
@@ -495,6 +502,13 @@ void (APIENTRYP qglGetProgramiv) (GLuint, GLenum, GLint *);
 void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
 void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint *);
 void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
+
+//teh's PBO
+void (APIENTRYP qglGenBuffersARB) (GLsizei n, GLuint* ids);
+void (APIENTRYP qglBindBufferARB) (GLenum target, GLuint id);
+void (APIENTRYP qglBufferDataARB) (GLenum target, GLsizei size, const void* data, GLenum usage);
+void *(APIENTRYP qglMapBufferARB) (GLenum target, GLenum access);
+GLboolean (APIENTRYP qglUnmapBufferARB) (GLenum target);
 
 static void ( APIENTRY * dllAccum )(GLenum op, GLfloat value);
 static void ( APIENTRY * dllAlphaFunc )(GLenum func, GLclampf ref);
@@ -3765,7 +3779,13 @@ qboolean QGL_Init( const char *dllname )
 	qglGetProgramInfoLog = NULL;
 	qglGetShaderiv =NULL;
 	qglGetShaderInfoLog = NULL;
-
+	
+	qglGenBuffersARB = NULL;
+	qglBindBufferARB = NULL;
+	qglBufferDataARB = NULL;
+	qglMapBufferARB = NULL;
+	qglUnmapBufferARB = NULL;
+	
 	qwglSwapIntervalEXT = 0;
 	qglActiveTextureARB = 0;
 	qglClientActiveTextureARB = 0;
