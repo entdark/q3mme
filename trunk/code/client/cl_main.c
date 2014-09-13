@@ -271,7 +271,7 @@ void CL_PlayDemo_f( void ) {
 	cvar_t		*fs_game;
 
 	if (Cmd_Argc() != 2) {
-		Com_Printf ("playdemo <demoname>\n");
+		Com_Printf ("demo <demoname>\n");
 		return;
 	}
 
