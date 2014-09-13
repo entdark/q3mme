@@ -253,6 +253,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="botlib\aasfile.h" />
+    <ClInclude Include="client\fx_local.h" />
+    <ClInclude Include="client\fx_public.h" />
+    <ClInclude Include="client\fx_types.h" />
     <ClInclude Include="game\be_aas.h" />
     <ClInclude Include="botlib\be_aas_bsp.h" />
     <ClInclude Include="botlib\be_aas_cluster.h" />
