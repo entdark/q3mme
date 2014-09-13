@@ -123,6 +123,8 @@ UpgradeLog*.XML
 ############
 ## Windows
 ############
+*.exe
+*.dll
 
 # Windows image file caches
 Thumbs.db
