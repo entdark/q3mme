@@ -47,6 +47,13 @@ static qboolean captureParseEnd( BG_XMLParse_t *parse,const char *line, void *da
 	return qtrue;
 }
 
+static qboolean captureParseSpeed( BG_XMLParse_t *parse,const char *line, void *data) {
+	if (!line[0]) 
+		return BG_XMLError( parse, "speed has empty line" );
+	demo.play.speed = atof( line );
+	return qtrue;
+}
+
 static qboolean captureParseView( BG_XMLParse_t *parse,const char *line, void *data) {
 	if (!Q_stricmp(line, "chase")) {
 		demo.viewType = viewChase;
@@ -168,6 +175,7 @@ qboolean captureParse( BG_XMLParse_t *parse, const struct BG_XMLParseBlock_s *fr
 	static BG_XMLParseBlock_t captureParseBlock[] = {
 		{"start",	0,					captureParseStart },
 		{"end",		0,					captureParseEnd	},
+		{"speed",	0,					captureParseSpeed },
 		{"view",	0,					captureParseView },
 		{"cvar",	captureParseCvar,	0 },
 		{"client",	captureParseClient,	0 },
@@ -199,6 +207,7 @@ void captureSave( fileHandle_t fileHandle ) {
 	demoSaveLine( fileHandle, "<capture>\n" );
 	demoSaveLine( fileHandle, "\t<start>%d</start>\n", demo.capture.start );
 	demoSaveLine( fileHandle, "\t<end>%d</end>\n", demo.capture.end );
+	demoSaveLine( fileHandle, "\t<speed>%2.8f</speed>\n", demo.play.speed );
 	switch (demo.viewType) {
 	case viewCamera:
 		viewString = "camera";
