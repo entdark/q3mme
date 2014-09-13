@@ -226,6 +226,16 @@ extern void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei *, GLchar
 extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint *);
 extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
 
+//teh's PBO
+extern void (APIENTRYP qglGenBuffersARB) (GLsizei n, GLuint* ids);
+extern void (APIENTRYP qglBindBufferARB) (GLenum target, GLuint id);
+extern void (APIENTRYP qglBufferDataARB) (GLenum target, GLsizei size, const void* data, GLenum usage);
+extern void *(APIENTRYP qglMapBufferARB) (GLenum target, GLenum access);
+extern GLboolean (APIENTRYP qglUnmapBufferARB) (GLenum target);
+#define GL_READ_ONLY_ARB                  0x88B8
+#define GL_STREAM_READ_ARB                0x88E1
+#define GL_PIXEL_PACK_BUFFER_ARB          0x88EB
+
 
 /*
 ** multitexture extension definitions

@@ -924,6 +924,7 @@ void R_Register( void )
 
 }
 
+GLuint pboIds[2];
 /*
 ===============
 R_Init
@@ -1024,6 +1025,18 @@ void R_Init( void ) {
 		ri.Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
 
 	ri.Printf( PRINT_ALL, "----- finished R_Init -----\n" );
+	{
+		// create 2 pixel buffer objects, you need to delete them when program exits.
+		// glBufferDataARB with NULL pointer reserves only memory space.
+		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
+		qglGenBuffersARB(2, pboIds);
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
+		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[1]);
+		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+	}
 }
 
 /*
