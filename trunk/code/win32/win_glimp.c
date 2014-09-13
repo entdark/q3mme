@@ -898,7 +898,14 @@ qboolean GLW_CreateWindow( const char *drivername, int width, int height, int co
 		else
 		{
 			exstyle = 0;
-			stylebits = WS_MINIMIZEBOX|WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE|WS_SYSMENU;
+			if ( r_noborder->integer == 0 )
+			{
+				stylebits = WS_MINIMIZEBOX|WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE|WS_SYSMENU;
+			}
+			else
+			{
+				stylebits = WS_POPUP|WS_VISIBLE;
+			}
 			if ( hide ) {
 				stylebits &= ~WS_VISIBLE;
 			}

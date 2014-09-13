@@ -1147,6 +1147,7 @@ extern	cvar_t	*r_showtriggers;		//Show trigger brushes
 
 extern cvar_t	*r_mode;				// video mode
 extern cvar_t	*r_fullscreen;
+extern cvar_t	*r_noborder;			// disable border in windowed mode
 extern cvar_t	*r_gamma;
 extern cvar_t	*r_displayRefresh;		// optional display refresh option
 extern cvar_t	*r_ignorehwgamma;		// overrides hardware gamma capabilities
