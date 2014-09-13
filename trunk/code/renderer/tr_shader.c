@@ -39,6 +39,104 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
 /*
+//I think I will leave that shit here because I'd probably need it one day...
+#define MAX_IGNORE_CONDITIONS 23
+
+typedef struct {
+	float s1, t1, s2, t2;
+} conditions_t;
+
+conditions_t bigchars[MAX_IGNORE_CONDITIONS] = {
+	{0.1875, 0.25000, 0.2500, 0.31250},	//C
+	{0.9375, 0.37500, 1.0000, 0.43750},	//o
+	{0.875, 0.37500, 0.9375, 0.43750},	//n
+	{0.875, 0.37500, 0.9375, 0.43750},	//n
+	{0.3125, 0.37500, 0.3750, 0.43750},	//e
+	{0.1875, 0.37500, 0.2500, 0.43750},	//c
+	{0.25, 0.43750, 0.3125, 0.50000},	//t
+	{0.5625, 0.37500, 0.6250, 0.43750},	//i
+	{0.9375, 0.37500, 1.0000, 0.43750},	//o
+	{0.875, 0.37500, 0.9375, 0.43750},	//n
+										//' '
+	{0.5625, 0.25000, 0.6250, 0.31250},	//I
+	{0.875, 0.37500, 0.9375, 0.43750},	//n
+	{0.25, 0.43750, 0.3125, 0.50000},	//t
+	{0.3125, 0.37500, 0.3750, 0.43750},	//e
+	{0.125, 0.43750, 0.1875, 0.50000},	//r
+	{0.125, 0.43750, 0.1875, 0.50000},	//r
+	{0.3125, 0.43750, 0.3750, 0.50000},	//u
+	{0, 0.43750, 0.0625, 0.50000},		//p
+	{0.25, 0.43750, 0.3125, 0.50000},	//t
+	{0.3125, 0.37500, 0.3750, 0.43750},	//e
+	{0.25, 0.37500, 0.3125, 0.43750},	//d
+};
+
+typedef struct {
+	qhandle_t		shader;
+	const char		*name;
+	qboolean		added;
+	qboolean		specialCondition;
+	conditions_t	lastCond;
+	conditions_t	cond[MAX_IGNORE_CONDITIONS];
+} ignoreShader_t;
+
+static char *specialConditionsTable[] = {
+	"gfx/2d/bigchars",
+	NULL
+};
+static char *ignoreShaderTable[] = {
+	"gfx/2d/bigchars",
+	"gfx/2d/net.tga",
+	NULL
+};
+
+static int ignoreCounter;
+static const int ignoreShaderTableSize = sizeof(ignoreShaderTable)/sizeof(ignoreShaderTable[0]);
+static ignoreShader_t ignoreShader[sizeof(ignoreShaderTable)/sizeof(ignoreShaderTable[0])];
+
+static void R_AddShaderToIgnore(const char *shaderName, const qhandle_t shader) {
+	int i = 0;
+	while (ignoreShaderTable[i]) {
+		if (!Q_stricmp(ignoreShaderTable[i], shaderName)) {
+			int j = 0;
+			if (ignoreShader[i].added)
+				return;
+			while(specialConditionsTable[j]) {
+				if (!Q_stricmp(specialConditionsTable[j], shaderName)) {
+					ignoreShader[i].specialCondition = qtrue;
+					break;
+				}
+				j++;
+			}
+			if (ignoreShader[i].specialCondition) {
+				int k;
+				conditions_t lastCond = {0.0f, 0.0f, 0.0f, 0.0f}; 
+				ignoreShader[i].lastCond = lastCond;
+				for (k = 0; k < MAX_IGNORE_CONDITIONS; k++)
+					ignoreShader[i].cond[k] = bigchars[k];
+			}
+			ignoreShader[i].shader = shader;
+			ignoreShader[i].added = qtrue;
+			return;
+		}
+		i++;
+	}
+}
+
+static qboolean R_CheckShaderToIgnore(const qhandle_t shader) {
+	int i = 0;
+	while (i < ignoreShaderTableSize) {
+		if (ignoreShader[i].shader != shader)
+			continue;
+		if (!ignoreShader[i].specialCondition)
+			return qtrue;
+		if 
+		i++;
+	}
+}
+*/
+
+/*
 ================
 return a hash value for the filename
 ================
@@ -2400,7 +2498,7 @@ char *R_FindShaderText( const char *shadername ) {
 		}
 		else {
 			// skip the definition
-			SkipBracedSection( &p );
+			SkipBracedSection( &p, 0 );
 		}
 	}
 
@@ -2950,8 +3048,10 @@ static void ScanAndLoadShaderFiles( void )
 	int i;
 	char *oldp, *token, *hashMem;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
+	char shaderName[MAX_QPATH];
+	int shaderLine;
 
-	long sum = 0;
+	long sum = 0, summand;
 	// scan for shader files
 	shaderFiles = ri.FS_ListFiles( "scripts", ".shader", &numShaders );
 
@@ -2972,10 +3072,51 @@ static void ScanAndLoadShaderFiles( void )
 
 		Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
 //		ri.Printf( PRINT_ALL, "...loading '%s'\n", filename );
-		sum += ri.FS_ReadFile( filename, (void **)&buffers[i] );
+		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );
 		if ( !buffers[i] ) {
 			ri.Error( ERR_DROP, "Couldn't load %s", filename );
 		}
+		// Do a simple check on the shader structure in that file to make sure one bad shader file cannot fuck up all other shaders.
+		p = buffers[i];
+		COM_BeginParseSession(filename);
+		while(1)
+		{
+			token = COM_ParseExt(&p, qtrue);
+			
+			if(!*token)
+				break;
+
+			Q_strncpyz(shaderName, token, sizeof(shaderName));
+			shaderLine = COM_GetCurrentParseLine();
+
+			token = COM_ParseExt(&p, qtrue);
+			if(token[0] != '{' || token[1] != '\0')
+			{
+				ri.Printf(PRINT_WARNING, "WARNING: Ignoring shader file %s. Shader \"%s\" on line %d missing opening brace",
+							filename, shaderName, shaderLine);
+				if (token[0])
+				{
+					ri.Printf(PRINT_WARNING, " (found \"%s\" on line %d)", token, COM_GetCurrentParseLine());
+				}
+				ri.Printf(PRINT_WARNING, ".\n");
+				ri.FS_FreeFile(buffers[i]);
+				buffers[i] = NULL;
+				break;
+			}
+
+			if(!SkipBracedSection(&p, 1))
+			{
+				ri.Printf(PRINT_WARNING, "WARNING: Ignoring shader file %s. Shader \"%s\" on line %d missing closing brace.\n",
+							filename, shaderName, shaderLine);
+				ri.FS_FreeFile(buffers[i]);
+				buffers[i] = NULL;
+				break;
+			}
+		}
+			
+		
+		if (buffers[i])
+			sum += summand;		
 	}
 
 	// build single large buffer
@@ -2983,6 +3124,8 @@ static void ScanAndLoadShaderFiles( void )
 
 	// free in reverse order, so the temp files are all dumped
 	for ( i = numShaders - 1; i >= 0 ; i-- ) {
+		if ( !buffers[i] )
+			continue;
 		strcat( s_shaderText, "\n" );
 		p = &s_shaderText[strlen(s_shaderText)];
 		strcat( s_shaderText, buffers[i] );
@@ -3010,7 +3153,7 @@ static void ScanAndLoadShaderFiles( void )
 			hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
 			shaderTextHashTableSizes[hash]++;
 			size++;
-			SkipBracedSection(&p);
+			SkipBracedSection(&p, 0);
 			// if we passed the pointer to the next shader file
 			if ( i < numShaders - 1 ) {
 				if ( p > buffers[i+1] ) {
@@ -3045,7 +3188,7 @@ static void ScanAndLoadShaderFiles( void )
 			hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
 			shaderTextHashTable[hash][shaderTextHashTableSizes[hash]++] = oldp;
 
-			SkipBracedSection(&p);
+			SkipBracedSection(&p, 0);
 			// if we passed the pointer to the next shader file
 			if ( i < numShaders - 1 ) {
 				if ( p > buffers[i+1] ) {
