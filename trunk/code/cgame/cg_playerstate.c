@@ -298,6 +298,9 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 	int			health, armor, reward;
 	sfxHandle_t sfx;
 
+	if (!cg.playerPredicted) {
+		return;
+	}
 	// don't play the sounds if the player just changed teams
 	if ( ps->persistant[PERS_TEAM] != ops->persistant[PERS_TEAM] ) {
 		return;

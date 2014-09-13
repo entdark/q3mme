@@ -954,9 +954,11 @@ static void CG_DrawLowerRight( void ) {
 
 	y = 480 - ICON_SIZE;
 
-	if ( cg_drawScores.integer ) {
+	if ( cg.playerPredicted && cg_drawScores.integer ) {
         y = CG_DrawScores( y );
-	} 
+	} else {
+		y -= BIGCHAR_HEIGHT + 16;
+	}
 
 	if (cg_drawPowerups.integer)
 		y = CG_DrawPowerups( y );
@@ -976,7 +978,7 @@ static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
 
-	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( cg.playerCent->currentState.eFlags & EF_DEAD ) {
 		return y;
 	}
 
@@ -1445,7 +1447,7 @@ static void CG_DrawCrosshair(void) {
 		return;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR) {
+	if ( cg.playerPredicted && cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR) {
 		return;
 	}
 
@@ -1504,7 +1506,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
 
 	CG_Trace( &trace, start, vec3_origin, vec3_origin, end, 
-		cg.snap->ps.clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+		cg.playerCent->currentState.number, CONTENTS_SOLID|CONTENTS_BODY );
 	if ( trace.entityNum >= MAX_CLIENTS ) {
 		return;
 	}

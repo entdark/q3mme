@@ -103,6 +103,7 @@ void demoSetupView( void) {
 	centity_t *cent = 0;
 	vec3_t forward;
 
+	cg.playerPredicted = qfalse;
 	cg.playerCent = 0;
 	demo.viewFocus = 0;
 	demo.viewTarget = -1;
@@ -495,8 +496,6 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	CG_AddLocalEntities();
 	
 	if ( cg.playerCent == &cg.predictedPlayerEntity ) {
-		CG_PlayBufferedSounds();
-		CG_PlayBufferedVoiceChats();
 		// warning sounds when powerup is wearing off
 		CG_PowerupTimerSounds();
 		CG_AddViewWeapon( &cg.predictedPlayerState  );
@@ -504,6 +503,9 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		CG_AddViewWeaponDirect( cg.playerCent );
 	}
 
+	CG_PlayBufferedSounds();
+	CG_PlayBufferedVoiceChats();
+		
 	cg.refdef.time = cg.time;
 	memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );
 	/* Render some extra demo related stuff */

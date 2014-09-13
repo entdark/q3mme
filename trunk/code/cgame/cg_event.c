@@ -700,7 +700,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 
 			// show icon and name on status bar
-			if ( es->number == cg.snap->ps.clientNum ) {
+			if ( cg.playerCent && es->number == cg.playerCent->currentState.number ) {
 				CG_ItemPickup( index );
 			}
 		}
@@ -720,11 +720,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			item = &bg_itemlist[ index ];
 			// powerup pickups are global
 			if( item->pickup_sound ) {
-				trap_S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
+				if( cg.playerCent )
+					trap_S_StartSound (NULL, cg.playerCent->currentState.number, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
+				else
+					trap_S_StartSound (NULL, ENTITYNUM_NONE, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
 			// show icon and name on status bar
-			if ( es->number == cg.snap->ps.clientNum ) {
+			if ( cg.playerCent && es->number == cg.playerCent->currentState.number ) {
 				CG_ItemPickup( index );
 			}
 		}
