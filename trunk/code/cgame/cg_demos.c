@@ -551,7 +551,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	} else if ( cg.playerCent && cg.playerCent->currentState.number < MAX_CLIENTS )  {
 		CG_AddViewWeaponDirect( cg.playerCent );
 	}
-
+	trap_S_UpdateEntityPosition(ENTITYNUM_NONE, cg.refdef.vieworg);
 	CG_PlayBufferedSounds();
 	CG_PlayBufferedVoiceChats();
 		
@@ -609,11 +609,17 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	}
 	
 	if (frameSpeed > 5)
-	trap_S_Respatialize( cg.playerCent ? cg.playerCent->currentState.number : ENTITYNUM_NONE, 
-		cg.refdef.vieworg, cg.refdef.viewaxis, *((int *)&frameSpeed));
 		frameSpeed = 5;
 
 	trap_S_UpdateScale( frameSpeed );
+	if (cg.playerCent && cg.predictedPlayerState.pm_type == PM_INTERMISSION) {
+		entityNum = cg.snap->ps.clientNum;
+	} else if (cg.playerCent) {
+		entityNum = cg.playerCent->currentState.number;
+	} else {
+		entityNum = ENTITYNUM_NONE;
+	}
+	trap_S_Respatialize( entityNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater);
 
 	trap_FX_End();
 	if (captureFrame && stereoSep > 0.0f)
