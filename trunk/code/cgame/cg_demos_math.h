@@ -197,6 +197,8 @@ static ID_INLINE void AnglesNormalize180( vec3_t angles) {
 qboolean CylinderTraceImpact( const vec3_t start, const vec3_t forward, const vec3_t container, vec3_t result );
 qboolean BoxTraceImpact(const vec3_t start, const vec3_t forward, const vec3_t container, vec3_t result );
 
+void GetPerpendicularViewVector( const vec3_t point, const vec3_t p1, const vec3_t p2, vec3_t up );
+
 float dsplineCalc(float x, vec3_t dx, vec3_t dy, float*deriv );
 
 void demoDrawCross( const vec3_t origin, const vec4_t color );

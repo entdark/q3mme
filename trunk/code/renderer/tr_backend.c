@@ -1102,6 +1102,8 @@ static int RB_SwapBuffers( const void *data ) {
 	}
 
 	backEnd.projection2D = qfalse;
+	
+	tr.capturingDofOrStereo = qfalse;
 
 
 	if ( R_MME_MultiPassNext() ) {

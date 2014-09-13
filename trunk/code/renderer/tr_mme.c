@@ -38,7 +38,7 @@ static struct {
 static struct {
 	qboolean		take;
 	float			fps;
-	float			dofFocus;
+	float			dofFocus, dofRadius;
 	mmeShot_t		main, stencil, depth;
 	float			jitter[BLURMAX][2];
 } shotData;
@@ -419,6 +419,12 @@ static void R_MME_CheckCvars( void ) {
 	} else if (mme_blurOverlap->integer < 0 ) {
 		ri.Cvar_Set( "mme_blurOverlap", "0");
 	}
+	
+	if (mme_dofFrames->integer > BLURMAX ) {
+		ri.Cvar_Set( "mme_dofFrames", va( "%d", BLURMAX) );
+	} else if (mme_dofFrames->integer < 0 ) {
+		ri.Cvar_Set( "mme_dofFrames", "0");
+	}
 
 	blurTotal = mme_blurFrames->integer + mme_blurOverlap->integer ;
 	passTotal = mme_dofFrames->integer;
@@ -463,10 +469,13 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 		return qfalse;
 	if ( passControl->totalFrames ) {
 		int i = passControl->totalIndex;
-		*x = mme_dofRadius->value * passData.jitter[i][0];
-		*y = -mme_dofRadius->value * passData.jitter[i][1];
-//		*x = 0;
-//		*y = 0;
+		float scale;
+		float focus = shotData.dofFocus;
+		float radius = shotData.dofRadius;
+		R_MME_ClampDof(&focus, &radius);
+		scale = radius * R_MME_FocusScale(focus);
+		*x = scale * passData.jitter[i][0];
+		*y = -scale * passData.jitter[i][1];
 		return qtrue;
 	} 
 	return qfalse;
@@ -484,17 +493,12 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 	}
 	if ( passControl->totalFrames ) {
 		int i = passControl->totalIndex;
-		float scale;	//			= r_znear->value / shotData.dofFocus;
-		float focus;
-//		return;
-
-		focus = shotData.dofFocus;
-		if ( focus < 10 ) 
-			focus = mme_depthFocus->value;
-		if ( focus < 10 )
-			focus = 10;
+		float scale;
+		float focus = shotData.dofFocus;
+		float radius = shotData.dofRadius;
+		R_MME_ClampDof(&focus, &radius);
 		scale = r_znear->value / focus;
-		scale *= mme_dofRadius->value;
+		scale *= radius * R_MME_FocusScale(focus);;
 		eyes[0] = scale * passData.jitter[i][0];
 		eyes[1] = scale * passData.jitter[i][1];
 	}
@@ -557,10 +561,12 @@ int R_MME_MultiPassNext( ) {
 	index = control->totalIndex;
 	outAlloc = ri.Hunk_AllocateTempMemory( mainData.pixelCount * 3 + 16);
 	outAlign = (__m64 *)((((int)(outAlloc)) + 15) & ~15);
-
+	
 	GLimp_EndFrame();
 	R_MME_GetShot( outAlign );
 	R_MME_BlurAccumAdd( &passData.dof, outAlign );
+	
+	tr.capturingDofOrStereo = qtrue;
 
 	ri.Hunk_FreeTempMemory( outAlloc );
 	if ( ++(control->totalIndex) < control->totalFrames ) {

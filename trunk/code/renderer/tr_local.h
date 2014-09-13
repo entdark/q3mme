@@ -1052,6 +1052,8 @@ typedef struct {
 
 	color4ub_t				colorIdentity[SHADER_MAX_VERTEXES];
 	color4ub_t				colorIdentityLight[SHADER_MAX_VERTEXES];
+
+	qboolean capturingDofOrStereo;
 } trGlobals_t;
 
 typedef struct {
@@ -1763,6 +1765,7 @@ typedef struct {
 	char	name[MAX_OSPATH];
 	float	fps;
 	float	focus;
+	float	radius;
 } captureCommand_t;
 
 typedef struct commandHeader_s {
@@ -1839,7 +1842,7 @@ void R_MME_Init( void );
 void R_MME_Shutdown( void );
 void R_MME_TakeShot( void );
 const void *R_MME_CaptureShotCmd( const void *data );
-void R_MME_Capture( const char *shotName, float fps, float focus );
+void R_MME_Capture( const char *shotName, float fps, float focus, float radius );
 void R_MME_BlurInfo( int* total, int* index );
 void R_MME_JitterView( float *pixels, float* eyes );
 qboolean R_MME_JitterOrigin( float *x, float *y );

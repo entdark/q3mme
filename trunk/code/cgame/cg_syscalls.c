@@ -458,8 +458,8 @@ qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
 
 /* New MME Syscalls */
 
-void trap_MME_Capture( const char *baseName, float fps, float focus ) {
-	syscall( CG_MME_CAPTURE, baseName, PASSFLOAT(fps), PASSFLOAT( focus ) );
+void trap_MME_Capture( const char *baseName, float fps, float focus, float radius ) {
+	syscall( CG_MME_CAPTURE, baseName, PASSFLOAT(fps), PASSFLOAT( focus ), PASSFLOAT( radius ) );
 }
 void trap_MME_BlurInfo( int* total, int* index ) {
 	syscall( CG_MME_BLURINFO, total, index );

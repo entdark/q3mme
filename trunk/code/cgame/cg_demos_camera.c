@@ -616,7 +616,7 @@ void cameraMove(void) {
 		demo.camera.timeShift -= shift;
 		cameraPointShift( shift );
 	} else if ( demo.cmd.forwardmove > 0 ) {
-		if ( demo.camera.locked) {
+		if ( (demo.camera.flags & CAM_FOV) && !(demo.editType == editDof)) {
 			fov[0] -= demo.cmdDeltaAngles[YAW];
 			if (fov[0] < -180)
 				fov[0] = -180;

@@ -105,7 +105,7 @@ typedef struct {
 	qboolean (*GetEntityToken)( char *buffer, int size );
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );
 
-	void	(*Capture)( const char *baseName, float fps, float focus );
+	void	(*Capture)( const char *baseName, float fps, float focus, float radius );
 	void	(*BlurInfo)( int* total, int* index );
 	void	(*TimeFraction)( float timeFraction );
 } refexport_t;

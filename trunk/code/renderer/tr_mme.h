@@ -77,4 +77,11 @@ void MME_AccumClearSSE( void *w, const void *r, short int mul, int count );
 void MME_AccumAddSSE( void* w, const void* r, short int mul, int count );
 void MME_AccumShiftSSE( const void *r, void *w, int count );
 
+float R_MME_FocusScale(float focus);
+void R_MME_ClampDof(float *focus, float *radius);
+
 extern cvar_t	*mme_aviFormat;
+
+extern cvar_t	*mme_dofFrames;
+extern cvar_t	*mme_dofRadius;
+

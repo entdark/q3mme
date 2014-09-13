@@ -98,6 +98,10 @@ typedef enum {
 	hudLineSpeed,
 	hudLineStart,
 	hudLineEnd,
+	
+	hudDofFocus,
+	hudDofRadius,
+	hudDofTarget,
 
 	hudScriptInit,
 	hudScriptRun,
@@ -112,6 +116,7 @@ typedef enum {
 #define MASK_CAPTURE			0x00020
 #define MASK_LINE				0x00040
 #define MASK_CHASE				0x00080
+#define MASK_DOF				0x00400
 
 #define MASK_HUD				0x1
 #define MASK_POINT				0x2
@@ -128,6 +133,8 @@ typedef enum {
 #define MASK_LINE_HUD			( MASK_LINE | MASK_HUD )
 
 #define MASK_CHASE_POINT		( MASK_CHASE | MASK_POINT )
+
+#define MASK_DOF_EDIT			( MASK_DOF | MASK_EDIT )
 
 #define MASK_EFFECT_HUD			( MASK_EFFECT | MASK_HUD )
 #define MASK_EFFECT_EDIT		( MASK_EFFECT | MASK_EDIT )
@@ -155,6 +162,10 @@ static struct {
 		int *flags;
 		demoChasePoint_t *point;
 	} chase;
+	struct {
+		float *focus, *radius;
+		demoDofPoint_t *point;
+	} dof;
 	struct {
 		float *origin, *angles, *color, *size;
 		int *flags;
@@ -316,6 +327,10 @@ static float *hudGetFloat( hudItem_t *item ) {
 		return hud.chase.angles + item->handler - hudChasePitch;
 	case hudChaseDistance:
 		return hud.chase.distance;
+	case hudDofFocus:
+		return hud.dof.focus;
+	case hudDofRadius:
+		return hud.dof.radius;
 	case hudEffectPosX:
 	case hudEffectPosY:
 	case hudEffectPosZ:
@@ -358,6 +373,9 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 			break;
 		case editLine:
 			Com_sprintf( buf, bufSize, "Line%s", demo.line.locked ? " locked" : "" );
+			break;
+		case editDof:
+			Com_sprintf( buf, bufSize, "Dof%s", demo.dof.locked ? " locked" : "" );
 			break;
 		case editScript:
 			Com_sprintf( buf, bufSize, "Script%s", demo.script.locked ? " locked" : "" );
@@ -431,6 +449,9 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 			Q_strncpyz( buf, "Quat", bufSize );
 			break;
 		}
+		return;
+	case hudDofTarget:
+		hudMakeTarget( demo.dof.target, buf, bufSize );
 		return;
 	case hudChaseTarget:
 		hudMakeTarget( demo.chase.target, buf, bufSize );
@@ -792,6 +813,24 @@ void hudDraw( void ) {
 			hud.showMask |= MASK_EDIT;
 		}
 		break;
+	case editDof:
+		hud.showMask = MASK_DOF;
+		if ( demo.dof.locked ) {
+			hud.dof.point = dofPointSynch(  demo.play.time );
+			if (!hud.dof.point || hud.dof.point->time != demo.play.time || demo.play.fraction) {
+				hud.dof.point = 0;
+			} else {
+				hud.dof.focus = &hud.dof.point->focus;
+				hud.dof.radius = &hud.dof.point->radius;
+				hud.showMask |= MASK_EDIT | MASK_POINT;
+			}
+		} else {
+			hud.dof.focus = &demo.dof.focus;
+			hud.dof.radius = &demo.dof.radius;
+			hud.dof.point = 0;
+			hud.showMask |= MASK_EDIT;
+		}
+		break;
 	default:
 		hud.showMask = 0;
 		break;
@@ -983,6 +1022,11 @@ void hudInitTables(void) {
 	hudAddCvar(   0,  16, MASK_LINE_HUD, "saveStencil:", "mme_saveStencil" );
 	hudAddCvar(   0,  17, MASK_LINE_HUD, "MusicFile:", "mov_musicFile" );
 	hudAddCvar(   0,  18, MASK_LINE_HUD, "MusicStart:", "mov_musicStart" );
+	
+	// Depth of field Items
+	hudAddFloat(   0,  4, MASK_DOF_EDIT, "Focus:",  hudDofFocus );
+	hudAddFloat(   0,  5, MASK_DOF_EDIT, "Radius:",  hudDofRadius );
+	hudAddHandler( 0,  6, MASK_DOF_EDIT, "Target:", hudDofTarget );
 
 }
 

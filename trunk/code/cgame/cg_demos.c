@@ -32,7 +32,7 @@ extern void CG_PlayBufferedSounds( void );
 extern void CG_PowerupTimerSounds( void );
 
 extern void trap_MME_BlurInfo( int* total, int * index );
-extern void trap_MME_Capture( const char *baseName, float fps, float focus );
+extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius );
 extern int trap_MME_SeekTime( int seekTime );
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern int trap_MME_DemoInfo( mmeDemoInfo_t *info );
@@ -89,6 +89,9 @@ static void CG_DemosUpdatePlayer( void ) {
 	case editChase:
 		demoMoveChase();
 		break;
+	case editDof:
+		dofMove();
+		break;
 	case editEffect:
 		demoEffectMove();
 		break;
@@ -102,6 +105,7 @@ static void CG_DemosUpdatePlayer( void ) {
 void demoSetupView( void) {
 	centity_t *cent = 0;
 	vec3_t forward;
+	qboolean behindView = qfalse;
 
 	cg.playerPredicted = qfalse;
 	cg.playerCent = 0;
@@ -150,6 +154,7 @@ void demoSetupView( void) {
 		demo.viewFov = demo.camera.fov + cg_fov.value;
 		demo.viewTarget = demo.camera.target;
 		cg.renderingThirdPerson = qtrue;
+		cameraMove();
 		break;
 	case viewEffect:
 		memset( &cg.refdef, 0, sizeof(refdef_t));
@@ -173,14 +178,42 @@ void demoSetupView( void) {
 	VectorCopy( demo.viewOrigin, cg.refdef.vieworg );
 	AnglesToAxis( demo.viewAngles, cg.refdef.viewaxis );
 
-	if ( demo.viewTarget >= 0 ) {
+	/* find focus ditance to certain target but don't apply if dof is not locked, use for drawing */
+	if ( demo.dof.target >= 0 ) {
+		centity_t* targetCent = demoTargetEntity( demo.dof.target );
+		if ( targetCent ) {
+			vec3_t targetOrigin;
+			chaseEntityOrigin( targetCent, targetOrigin );
+			//Find distance betwene plane of camera and this target
+			demo.viewFocus = DotProduct( cg.refdef.viewaxis[0], targetOrigin ) - DotProduct( cg.refdef.viewaxis[0], cg.refdef.vieworg  );
+			demo.dof.focus = demo.viewFocusOld = demo.viewFocus;
+		} else {
+			demo.dof.focus = demo.viewFocus = demo.viewFocusOld;
+		}
+		if (demo.dof.focus < 0.001f) {
+			behindView = qtrue;
+		}
+	}
+	if ( demo.dof.locked ) {
+		if (!behindView) {
+			demo.viewFocus = demo.dof.focus;		
+			demo.viewRadius = demo.dof.radius;
+		} else {
+			demo.viewFocus = 0.002f;		// no matter what value, just not less or equal zero
+			demo.viewRadius = 0.0f;
+		}
+	} else if ( demo.viewTarget >= 0 ) {
 		centity_t* targetCent = demoTargetEntity( demo.viewTarget );
 		if ( targetCent ) {
 			vec3_t targetOrigin;
 			chaseEntityOrigin( targetCent, targetOrigin );
 			//Find distance betwene plane of camera and this target
 			demo.viewFocus = DotProduct( cg.refdef.viewaxis[0], targetOrigin ) - DotProduct( cg.refdef.viewaxis[0], cg.refdef.vieworg  );
+			demo.viewRadius = CG_Cvar_Get( "mme_dofRadius" );
 		}
+	} else if ( demo.dof.target >= 0 ) {
+		demo.viewFocus = 0;
+		demo.viewRadius = 0;
 	}
 
 	cg.refdef.width = cgs.glconfig.vidWidth*cg_viewsize.integer/100;
@@ -471,6 +504,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	CG_DemosUpdatePlayer( );
 	chaseUpdate( demo.play.time, demo.play.fraction );
 	cameraUpdate( demo.play.time, demo.play.fraction );
+	dofUpdate( demo.play.time, demo.play.fraction );
 	demoEffectUpdate( demo.play.time, demo.play.fraction );
 	cg.clientFrame++;
 	// update cg.predictedPlayerState
@@ -516,6 +550,9 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 			break;
 		case editChase:
 			chaseDraw( demo.play.time, demo.play.fraction );
+			break;
+		case editDof:
+			dofDraw( demo.play.time, demo.play.fraction );
 			break;
 		case editEffect:
 			demoEffectDraw( demo.play.time, demo.play.fraction );
@@ -574,11 +611,11 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS, demo.viewFocus );
+		trap_MME_Capture( fileName, captureFPS, demo.viewFocus, demo.viewRadius );
 		if ( mov_captureCamera.integer )
 			demoAddViewPos( fileName, demo.viewOrigin, demo.viewAngles, demo.viewFov );
 	} else {
-		if (demo.editType)
+		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
 		hudDraw();
 	}
@@ -668,6 +705,9 @@ static void demoEditCommand_f(void) {
 		}
 		demo.editType = editCamera;
 		CG_DemosAddLog("Editing camera");
+	} else if (!Q_stricmp(cmd, "dof")) {
+		demo.editType = editDof;
+		CG_DemosAddLog("Editing depth of field");
 	} else if (!Q_stricmp(cmd, "line")) {
 		if ( demo.cmd.upmove > 0 ) {
 			demoViewCommand_f();
@@ -695,6 +735,9 @@ static void demoEditCommand_f(void) {
 			break;
 		case editLine:
 			demoLineCommand_f();
+			break;
+		case editDof:
+			demoDofCommand_f();
 			break;
 		case editScript:
 			demoScriptCommand_f();
@@ -783,6 +826,10 @@ void demoPlaybackInit(void) {
 	demo.chase.distance = 0;
 	demo.chase.locked = qfalse;
 	demo.chase.target = -1;
+	
+	demo.dof.focus = 256.0f;
+	demo.dof.radius = 5.0f;
+	demo.dof.target = -1;
 
 	demo.camera.target = -1;
 	demo.camera.fov = 0;
@@ -801,6 +848,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("edit");
 	trap_AddCommand("view");
 	trap_AddCommand("chase");
+	trap_AddCommand("dof");
 	trap_AddCommand("speed");
 	trap_AddCommand("pause");
 	trap_AddCommand("seek");
@@ -878,6 +926,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demo.play.paused = !demo.play.paused;
 		if ( demo.play.paused )
 			demo.find = findNone;
+	} else if (!Q_stricmp(cmd, "dof")) {
+		demoDofCommand_f();
 	} else if (!Q_stricmp(cmd, "chase")) {
 		demoChaseCommand_f();
 	} else if (!Q_stricmp(cmd, "effect")) {
