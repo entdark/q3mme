@@ -1164,7 +1164,7 @@ void CG_DrawWeaponSelect( void ) {
 		}
 	}
 
-	x = 320 - count * 20;
+	x = 320 - count * 20*cgs.widthRatioCoef;
 	y = 380;
 
 	for ( i = 1 ; i < 16 ; i++ ) {
@@ -1173,26 +1173,26 @@ void CG_DrawWeaponSelect( void ) {
 		}
 
 		// draw weapon icon
-		CG_DrawPic( x, y, 32, 32, cg_weapons[i].weaponIcon );
+		CG_DrawPic( x, y, 32*cgs.widthRatioCoef, 32, cg_weapons[i].weaponIcon );
 
 		// draw selection marker
 		if ( i == cg.weaponSelect ) {
-			CG_DrawPic( x-4, y-4, 40, 40, cgs.media.selectShader );
+			CG_DrawPic( x-4*cgs.widthRatioCoef, y-4, 40*cgs.widthRatioCoef, 40, cgs.media.selectShader );
 		}
 
 		// no ammo cross on top
 		if ( !cg.snap->ps.ammo[ i ] ) {
-			CG_DrawPic( x, y, 32, 32, cgs.media.noammoShader );
+			CG_DrawPic( x, y, 32*cgs.widthRatioCoef, 32, cgs.media.noammoShader );
 		}
 
-		x += 40;
+		x += 40*cgs.widthRatioCoef;
 	}
 
 	// draw the selected name
 	if ( cg_weapons[ cg.weaponSelect ].item ) {
 		name = cg_weapons[ cg.weaponSelect ].item->pickup_name;
 		if ( name ) {
-			w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
+			w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH*cgs.widthRatioCoef;
 			x = ( SCREEN_WIDTH - w ) / 2;
 			CG_DrawBigStringColor(x, y - 22, name, color);
 		}

@@ -640,9 +640,9 @@ void demoDrawCrosshair( void ) {
 		ca = 0;
 	}
 	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
-	trap_R_DrawStretchPic( x + cg.refdef.x + 0.5 * (cg.refdef.width - w), 
+	trap_R_DrawStretchPic( x + cg.refdef.x + 0.5 * (cg.refdef.width - w*cgs.widthRatioCoef), 
 		y + cg.refdef.y + 0.5 * (cg.refdef.height - h), 
-		w, h, 0, 0, 1, 1, hShader );
+		w*cgs.widthRatioCoef, h, 0, 0, 1, 1, hShader );
 }
 
 

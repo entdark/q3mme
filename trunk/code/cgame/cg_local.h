@@ -1039,6 +1039,8 @@ typedef struct {
 	cgFX_t			fx;
 	fontInfo_t		textFont;
 	qboolean		textFontValid;
+
+	float widthRatioCoef;	//to make 2Ds be not stretched
 } cgs_t;
 
 //==============================================================================
@@ -1174,6 +1176,8 @@ extern vmCvar_t			mov_hudOverlay;
 extern	vmCvar_t		mov_deltaYaw;
 extern	vmCvar_t		mov_deltaPitch;
 extern	vmCvar_t		mov_deltaRoll;
+
+extern	vmCvar_t		mov_ratioFix;
 
 extern	vmCvar_t		mme_demoFileName;
 

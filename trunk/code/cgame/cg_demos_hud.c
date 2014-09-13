@@ -689,7 +689,7 @@ static void hudDrawItem( hudItem_t *item ) {
 		break;
 	case hudTypeCheck:
 		checked = hudGetChecked( item, colorWhite );
-		CG_DrawPic( x, y, HUD_TEXT_WIDTH, HUD_TEXT_SPACING, checked ? 
+		CG_DrawPic( x, y, HUD_TEXT_SPACING*cgs.widthRatioCoef, HUD_TEXT_SPACING, checked ? 
 			demo.media.switchOn : demo.media.switchOff ); 
 		break;
 	}
@@ -826,12 +826,12 @@ void hudDraw( void ) {
 
 	if ( hud.keyCatcher & KEYCATCH_CGAME ) {
 		float x,y,w,h;
-		x = hud.cursorX - 16;
+		x = hud.cursorX - 16*cgs.widthRatioCoef;
 		y = hud.cursorY - 16;
 		w = 32;
 		h = 32;
 		CG_AdjustFrom640( &x, &y, &w, &h );
-		trap_R_DrawStretchPic( x,y,w,h, 0,0,1,1, demo.media.mouseCursor );
+		trap_R_DrawStretchPic( x,y,w*cgs.widthRatioCoef,h, 0,0,1,1, demo.media.mouseCursor );
 	} else {
 		hud.edit.item = 0;
 	}

@@ -77,6 +77,20 @@ long vmMain( long command, long arg0, long arg1, long arg2, long arg3, long arg4
 }
 
 
+static void CG_Set2DRatio(void) {
+	if (mov_ratioFix.integer)
+		cgs.widthRatioCoef = (float)(SCREEN_WIDTH * cgs.glconfig.vidHeight) / (float)(SCREEN_HEIGHT * cgs.glconfig.vidWidth);
+	else
+		cgs.widthRatioCoef = 1.0f;
+}
+
+static void CG_SetNewSkin(void) {
+	int i;
+	for ( i = 0; i < MAX_CLIENTS ; i++ )
+		CG_NewClientInfo( i );
+}
+
+
 cg_t				cg;
 cgs_t				cgs;
 centity_t			cg_entities[MAX_GENTITIES];
@@ -215,147 +229,151 @@ vmCvar_t	mov_deltaYaw;
 vmCvar_t	mov_deltaPitch;
 vmCvar_t	mov_deltaRoll;
 
+vmCvar_t	mov_ratioFix;
+
 vmCvar_t	mme_demoFileName;
 
 typedef struct {
 	vmCvar_t	*vmCvar;
 	char		*cvarName;
 	char		*defaultString;
+	void		(*update)( void );
 	int			cvarFlags;
 } cvarTable_t;
 
 static cvarTable_t cvarTable[] = { // bk001129
-	{ &cg_ignore, "cg_ignore", "0", 0 },	// used for debugging
-	{ &cg_autoswitch, "cg_autoswitch", "1", CVAR_ARCHIVE },
-	{ &cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE },
-	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE },
-	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },
-	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE },
-	{ &cg_stereoSeparation, "cg_stereoSeparation", "0.4", CVAR_ARCHIVE  },
-	{ &cg_shadows, "cg_shadows", "1", CVAR_ARCHIVE  },
-	{ &cg_gibs, "cg_gibs", "1", CVAR_ARCHIVE  },
-	{ &cg_draw2D, "cg_draw2D", "1", CVAR_ARCHIVE  },
-	{ &cg_drawStatus, "cg_drawStatus", "1", CVAR_ARCHIVE  },
-	{ &cg_drawTimer, "cg_drawTimer", "0", CVAR_ARCHIVE  },
-	{ &cg_drawFPS, "cg_drawFPS", "0", CVAR_ARCHIVE  },
-	{ &cg_drawSnapshot, "cg_drawSnapshot", "0", CVAR_ARCHIVE  },
-	{ &cg_draw3dIcons, "cg_draw3dIcons", "1", CVAR_ARCHIVE  },
-	{ &cg_drawIcons, "cg_drawIcons", "1", CVAR_ARCHIVE  },
-	{ &cg_drawAmmoWarning, "cg_drawAmmoWarning", "1", CVAR_ARCHIVE  },
-	{ &cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE  },
-	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
-	{ &cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE },
-	{ &cg_drawRewards, "cg_drawRewards", "1", CVAR_ARCHIVE },
-	{ &cg_crosshairSize, "cg_crosshairSize", "24", CVAR_ARCHIVE },
-	{ &cg_crosshairHealth, "cg_crosshairHealth", "1", CVAR_ARCHIVE },
-	{ &cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE },
-	{ &cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE },
-	{ &cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
-	{ &cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE },
-	{ &cg_addMarks, "cg_marks", "1", CVAR_ARCHIVE },
-	{ &cg_lagometer, "cg_lagometer", "1", CVAR_ARCHIVE },
-	{ &cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE  },
-	{ &cg_gun_x, "cg_gunX", "0", CVAR_CHEAT },
-	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT },
-	{ &cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT },
-	{ &cg_centertime, "cg_centertime", "3", CVAR_CHEAT },
-	{ &cg_runpitch, "cg_runpitch", "0.002", CVAR_ARCHIVE},
-	{ &cg_runroll, "cg_runroll", "0.005", CVAR_ARCHIVE },
-	{ &cg_damageKick , "cg_damageKick", "0", CVAR_ARCHIVE },
-	{ &cg_bobup , "cg_bobup", "0.005", CVAR_CHEAT },
-	{ &cg_bobpitch, "cg_bobpitch", "0.002", CVAR_ARCHIVE },
-	{ &cg_bobroll, "cg_bobroll", "0.002", CVAR_ARCHIVE },
-	{ &cg_swingSpeed, "cg_swingSpeed", "0.3", CVAR_CHEAT },
-	{ &cg_animSpeed, "cg_animspeed", "1", CVAR_CHEAT },
-	{ &cg_debugAnim, "cg_debuganim", "0", CVAR_CHEAT },
-	{ &cg_debugPosition, "cg_debugposition", "0", CVAR_CHEAT },
-	{ &cg_debugEvents, "cg_debugevents", "0", CVAR_CHEAT },
-	{ &cg_errorDecay, "cg_errordecay", "100", 0 },
-	{ &cg_nopredict, "cg_nopredict", "0", 0 },
-	{ &cg_noPlayerAnims, "cg_noplayeranims", "0", CVAR_CHEAT },
-	{ &cg_showmiss, "cg_showmiss", "0", 0 },
-	{ &cg_footsteps, "cg_footsteps", "1", CVAR_CHEAT },
-	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT },
-	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "60", CVAR_CHEAT },
-	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT },
-	{ &cg_thirdPerson, "cg_thirdPerson", "0", 0 },
-	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE  },
-	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE  },
-	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE },
-	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE },
-	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE },
-	{ &cg_noVoiceChats, "cg_noVoiceChats", "0", CVAR_ARCHIVE },
-	{ &cg_noVoiceText, "cg_noVoiceText", "0", CVAR_ARCHIVE },
+	{ &cg_ignore, "cg_ignore", "0", NULL, 0 },	// used for debugging
+	{ &cg_autoswitch, "cg_autoswitch", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_drawGun, "cg_drawGun", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_zoomFov, "cg_zoomfov", "22.5", NULL, CVAR_ARCHIVE },
+	{ &cg_fov, "cg_fov", "90", NULL, CVAR_ARCHIVE },
+	{ &cg_viewsize, "cg_viewsize", "100", NULL, CVAR_ARCHIVE },
+	{ &cg_stereoSeparation, "cg_stereoSeparation", "0.4", NULL, CVAR_ARCHIVE  },
+	{ &cg_shadows, "cg_shadows", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_gibs, "cg_gibs", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_draw2D, "cg_draw2D", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawStatus, "cg_drawStatus", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawTimer, "cg_drawTimer", "0", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawFPS, "cg_drawFPS", "0", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawSnapshot, "cg_drawSnapshot", "0", NULL, CVAR_ARCHIVE  },
+	{ &cg_draw3dIcons, "cg_draw3dIcons", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawIcons, "cg_drawIcons", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawAmmoWarning, "cg_drawAmmoWarning", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawAttacker, "cg_drawAttacker", "1", NULL, CVAR_ARCHIVE  },
+	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", NULL, CVAR_ARCHIVE },
+	{ &cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_drawRewards, "cg_drawRewards", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_crosshairSize, "cg_crosshairSize", "24", NULL, CVAR_ARCHIVE },
+	{ &cg_crosshairHealth, "cg_crosshairHealth", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_crosshairX, "cg_crosshairX", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_crosshairY, "cg_crosshairY", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_brassTime, "cg_brassTime", "2500", NULL, CVAR_ARCHIVE },
+	{ &cg_simpleItems, "cg_simpleItems", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_addMarks, "cg_marks", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_lagometer, "cg_lagometer", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_railTrailTime, "cg_railTrailTime", "400", NULL, CVAR_ARCHIVE  },
+	{ &cg_gun_x, "cg_gunX", "0", NULL, CVAR_CHEAT },
+	{ &cg_gun_y, "cg_gunY", "0", NULL, CVAR_CHEAT },
+	{ &cg_gun_z, "cg_gunZ", "0", NULL, CVAR_CHEAT },
+	{ &cg_centertime, "cg_centertime", "3", NULL, CVAR_CHEAT },
+	{ &cg_runpitch, "cg_runpitch", "0.002", NULL, CVAR_ARCHIVE},
+	{ &cg_runroll, "cg_runroll", "0.005", NULL, CVAR_ARCHIVE },
+	{ &cg_damageKick , "cg_damageKick", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_bobup , "cg_bobup", "0.005", NULL, CVAR_CHEAT },
+	{ &cg_bobpitch, "cg_bobpitch", "0.002", NULL, CVAR_ARCHIVE },
+	{ &cg_bobroll, "cg_bobroll", "0.002", NULL, CVAR_ARCHIVE },
+	{ &cg_swingSpeed, "cg_swingSpeed", "0.3", NULL, CVAR_CHEAT },
+	{ &cg_animSpeed, "cg_animspeed", "1", NULL, CVAR_CHEAT },
+	{ &cg_debugAnim, "cg_debuganim", "0", NULL, CVAR_CHEAT },
+	{ &cg_debugPosition, "cg_debugposition", "0", NULL, CVAR_CHEAT },
+	{ &cg_debugEvents, "cg_debugevents", "0", NULL, CVAR_CHEAT },
+	{ &cg_errorDecay, "cg_errordecay", "100", NULL, 0 },
+	{ &cg_nopredict, "cg_nopredict", "0", NULL, 0 },
+	{ &cg_noPlayerAnims, "cg_noplayeranims", "0", NULL, CVAR_CHEAT },
+	{ &cg_showmiss, "cg_showmiss", "0", NULL, 0 },
+	{ &cg_footsteps, "cg_footsteps", "1", NULL, CVAR_CHEAT },
+	{ &cg_tracerChance, "cg_tracerchance", "0.4", NULL, CVAR_CHEAT },
+	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "60", NULL, CVAR_CHEAT },
+	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", NULL, CVAR_CHEAT },
+	{ &cg_thirdPerson, "cg_thirdPerson", "0", NULL, 0 },
+	{ &cg_teamChatTime, "cg_teamChatTime", "3000", NULL, CVAR_ARCHIVE  },
+	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", NULL, CVAR_ARCHIVE  },
+	{ &cg_predictItems, "cg_predictItems", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_drawFriend, "cg_drawFriend", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_noVoiceChats, "cg_noVoiceChats", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_noVoiceText, "cg_noVoiceText", "0", NULL, CVAR_ARCHIVE },
 	// the following variables are created in other parts of the system,
 	// but we also reference them here
-	{ &cg_buildScript, "com_buildScript", "0", 0 },	// force loading of all possible data amd error on failures
-	{ &cg_paused, "cl_paused", "0", CVAR_ROM },
-	{ &cg_blood, "com_blood", "1", CVAR_ARCHIVE },
-	{ &cg_synchronousClients, "g_synchronousClients", "0", 0 },	// communicated by systeminfo
-	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
-	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
-	{ &cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0},
-	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
-	{ &cg_timescale, "timescale", "1", 0},
-	{ &cg_scorePlum, "cg_scorePlums", "1", CVAR_USERINFO | CVAR_ARCHIVE},
-	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
-	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
+	{ &cg_buildScript, "com_buildScript", "0", NULL, 0 },	// force loading of all possible data amd error on failures
+	{ &cg_paused, "cl_paused", "0", NULL, CVAR_ROM },
+	{ &cg_blood, "com_blood", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_synchronousClients, "g_synchronousClients", "0", NULL, 0 },	// communicated by systeminfo
+	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", NULL, CVAR_CHEAT},
+	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", NULL, CVAR_ARCHIVE},
+	{ &cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", NULL, 0},
+	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", NULL, 0},
+	{ &cg_timescale, "timescale", "1", NULL, 0},
+	{ &cg_scorePlum, "cg_scorePlums", "1", NULL, CVAR_USERINFO | CVAR_ARCHIVE},
+	{ &cg_smoothClients, "cg_smoothClients", "0", NULL, CVAR_USERINFO | CVAR_ARCHIVE},
+	{ &cg_cameraMode, "com_cameraMode", "0", NULL, CVAR_CHEAT},
 
-	{ &pmove_fixed, "pmove_fixed", "0", 0},
-	{ &pmove_msec, "pmove_msec", "8", 0},
-	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
-	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE},
-	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE},
-	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
-	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
-	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
+	{ &pmove_fixed, "pmove_fixed", "0", NULL, 0},
+	{ &pmove_msec, "pmove_msec", "8", NULL, 0},
+	{ &cg_noTaunt, "cg_noTaunt", "0", NULL, CVAR_ARCHIVE},
+	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", NULL, CVAR_ARCHIVE},
+	{ &cg_oldRail, "cg_oldRail", "1", NULL, CVAR_ARCHIVE},
+	{ &cg_oldRocket, "cg_oldRocket", "1", NULL, CVAR_ARCHIVE},
+	{ &cg_oldPlasma, "cg_oldPlasma", "1", NULL, CVAR_ARCHIVE},
+	{ &cg_trueLightning, "cg_trueLightning", "0.0", NULL, CVAR_ARCHIVE},
 	//New MME ones
-	{ &cg_drawDamageBlob,	"cg_drawDamageBlob",	"1",		CVAR_ARCHIVE	},
-	{ &cg_drawPowerups,		"cg_drawPowerups",		"1",		CVAR_ARCHIVE	},
-	{ &cg_drawPickupItem,	"cg_drawPickupItem",	"1",		CVAR_ARCHIVE	},
-	{ &cg_drawVote,			"cg_drawVote",			"1",		CVAR_ARCHIVE	},
-	{ &cg_drawFollow,		"cg_drawFollow",		"1",		CVAR_ARCHIVE	},
-	{ &cg_drawScores,		"cg_drawScores",		"1",		CVAR_ARCHIVE	},
-	{ &cg_drawWeaponSelect,	"cg_drawWeaponSelect",	"1",		CVAR_ARCHIVE	},
-	{ &cg_centerScale,		"cg_centerScale",		"1",		CVAR_ARCHIVE	},
-	{ &cg_centerPrint,		"cg_centerPrint",		"1",		CVAR_ARCHIVE	},
-	{ &cg_gibDirectional,	"cg_gibDirectional",	"1",		CVAR_ARCHIVE	},
-	{ &cg_muzzleFlash,		"cg_muzzleFlash",		"1",		CVAR_ARCHIVE	},
+	{ &cg_drawDamageBlob,	"cg_drawDamageBlob",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawPowerups,		"cg_drawPowerups",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawPickupItem,	"cg_drawPickupItem",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawVote,			"cg_drawVote",			"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawFollow,		"cg_drawFollow",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawScores,		"cg_drawScores",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawWeaponSelect,	"cg_drawWeaponSelect",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_centerScale,		"cg_centerScale",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_centerPrint,		"cg_centerPrint",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_gibDirectional,	"cg_gibDirectional",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_muzzleFlash,		"cg_muzzleFlash",		"1",			NULL,	CVAR_ARCHIVE	},
 
-	{ &mov_Obituaries,		"mov_Obituaries",		"1",		CVAR_ARCHIVE	},
-	{ &mov_chatBeep,		"mov_chatBeep",			"1",		CVAR_ARCHIVE	},
-	{ &mov_fragFormat,		"mov_fragFormat",		"You fragged %t%n%p place with %s",		CVAR_ARCHIVE	},
-	{ &mov_fragOnly,		"mov_fragOnly",			"0",		CVAR_ARCHIVE	},
-	{ &mov_gameType,		"mov_gameType",			"0",		CVAR_ARCHIVE	},
-	{ &mov_debug,			"mov_debug",			"0",		CVAR_ARCHIVE	},
-	{ &mov_filterMask,		"mov_filterMask",		"0",		CVAR_ARCHIVE	},
-	{ &mov_stencilMask,		"mov_stencilMask",		"0",		CVAR_ARCHIVE	},
-	{ &mov_seekInterval,	"mov_seekInterval",		"4",		CVAR_ARCHIVE	},
-	{ &mov_deltaYaw,		"mov_deltaYaw",			"0",		CVAR_ARCHIVE	},
-	{ &mov_deltaPitch,		"mov_deltaPitch",		"0",		CVAR_ARCHIVE	},
-	{ &mov_deltaRoll,		"mov_deltaRoll",		"0",		CVAR_ARCHIVE	},
-
+	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_fragFormat, "mov_fragFormat", "You fragged %t%n%p place with %s", NULL,	CVAR_ARCHIVE},
+	{ &mov_fragOnly,		"mov_fragOnly",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_gameType,		"mov_gameType",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_debug,			"mov_debug",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_filterMask,		"mov_filterMask",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_stencilMask,		"mov_stencilMask",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_seekInterval,	"mov_seekInterval",		"4",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_deltaYaw,		"mov_deltaYaw",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_deltaPitch,		"mov_deltaPitch",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_deltaRoll,		"mov_deltaRoll",		"0",			NULL,	CVAR_ARCHIVE	},
+	
+	{ &mov_ratioFix,		"mov_ratioFix",			"1",   CG_Set2DRatio,	CVAR_ARCHIVE	},
 
 	/* Copy over some cvar's from the renderer */
-//	{ &mme_blurFrames,		"mme_blurFrames",		"",			0		},
-//	{ &mme_blurOverlap,		"mme_blurOverlap",		"",			0		},
-	{ &mme_demoFileName,	"mme_demoFileName",		"",			0		},
+//	{ &mme_blurFrames,		"mme_blurFrames",		"",				NULL,	0				},
+//	{ &mme_blurOverlap,		"mme_blurOverlap",		"",				NULL,	0				},
+	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},
 
-	{ &mov_captureCamera,	"mov_captureCamera",	"0",		CVAR_ARCHIVE	},
-	{ &mov_captureName,		"mov_captureName",		"",			CVAR_TEMP		},
-	{ &mov_captureFPS,		"mov_captureFPS",		"25",		CVAR_ARCHIVE	},
-	{ &mov_musicFile,		"mov_musicFile",		"",			CVAR_TEMP		},
-	{ &mov_musicStart,		"mov_musicStart",		"0",		CVAR_TEMP		},
-	{ &mov_chaseRange,		"mov_chaseRange",		"20",		CVAR_ARCHIVE	},
-	{ &mov_fontName,		"mov_fontName",			"",			CVAR_ARCHIVE	},
-	{ &mov_fontSize,		"mov_fontSize",			"20",		CVAR_ARCHIVE	},
-	{ &mov_teamSkins,		"mov_teamSkins",		"1",		CVAR_ARCHIVE	},
-	{ &mov_gridOffset,		"mov_gridOffset",		"0 0 0",	CVAR_ARCHIVE	},
-	{ &mov_gridWidth,		"mov_gridWidth",		"0.2",		CVAR_ARCHIVE	},
-	{ &mov_gridStep,		"mov_gridStep",			"0",		CVAR_ARCHIVE	},
-	{ &mov_gridRange,		"mov_gridRange",		"500",		CVAR_ARCHIVE	},
-	{ &mov_gridColor,		"mov_gridColor",		"x222222",	CVAR_ARCHIVE	},
-	{ &mov_hudOverlay,		"mov_hudOverlay",		"",			CVAR_ARCHIVE	},
+	{ &mov_captureCamera,	"mov_captureCamera",	"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_captureName,		"mov_captureName",		"",				NULL,	CVAR_TEMP		},
+	{ &mov_captureFPS,		"mov_captureFPS",		"25",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_musicFile,		"mov_musicFile",		"",				NULL,	CVAR_TEMP		},
+	{ &mov_musicStart,		"mov_musicStart",		"0",			NULL,	CVAR_TEMP		},
+	{ &mov_chaseRange,		"mov_chaseRange",		"20",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_fontName,		"mov_fontName",			"",				NULL,	CVAR_ARCHIVE	},
+	{ &mov_fontSize,		"mov_fontSize",			"20",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_teamSkins,		"mov_teamSkins",		"1",   CG_SetNewSkin,	CVAR_ARCHIVE	},
+	{ &mov_gridOffset,		"mov_gridOffset",		"0 0 0",		NULL,	CVAR_ARCHIVE	},
+	{ &mov_gridWidth,		"mov_gridWidth",		"0.2",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_gridStep,		"mov_gridStep",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_gridRange,		"mov_gridRange",		"500",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_gridColor,		"mov_gridColor",		"x222222",		NULL,	CVAR_ARCHIVE	},
+	{ &mov_hudOverlay,		"mov_hudOverlay",		"",				NULL,	CVAR_ARCHIVE	},
 };
 
 static int  cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );
@@ -371,8 +389,9 @@ void CG_RegisterCvars( void ) {
 	char		var[MAX_TOKEN_CHARS];
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
-		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
-			cv->defaultString, cv->cvarFlags );
+		trap_Cvar_Register( cv->vmCvar, cv->cvarName, cv->defaultString, cv->cvarFlags );
+		if ( cv->update )
+			cv->update();
 	}
 
 	// see if we are also running the server on this machine
@@ -391,16 +410,18 @@ CG_UpdateCvars
 void CG_UpdateCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
-	int			mov_teamSkinsModified = mov_teamSkins.modificationCount;
-	
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
-		trap_Cvar_Update( cv->vmCvar );
+		if ( cv->vmCvar ) {
+			int modCount = cv->vmCvar->modificationCount;
+			trap_Cvar_Update( cv->vmCvar );
+			if ( cv->vmCvar->modificationCount > modCount ) {
+				if ( cv->update )
+					cv->update();
+			}
+		}
 	}
+}
 
-	if ( mov_teamSkinsModified != mov_teamSkins.modificationCount ) {
-		for ( i = 0; i < MAX_CLIENTS ; i++ )
-			CG_NewClientInfo( i );
-	}
 }
 
 int CG_CrosshairPlayer( void ) {
@@ -1040,6 +1061,7 @@ Called after every level change or subsystem restart
 Will perform callbacks to make the loading info screen update.
 =================
 */
+extern void CG_SetConfigValues( void );
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	const char	*s;
 
@@ -1171,6 +1193,8 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	trap_S_ClearLoopingSounds( qtrue );
 	cg.loading = qfalse;
+
+	CG_Set2DRatio();
 }
 
 /*

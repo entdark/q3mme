@@ -77,7 +77,7 @@ static void CG_DrawField (float x, float y, int width, int value) {
 	l = strlen(num);
 	if (l > width)
 		l = width;
-	x += 2 + CHAR_WIDTH*(width - l);
+	x += (2 + CHAR_WIDTH*(width - l))*cgs.widthRatioCoef;
 
 	ptr = num;
 	while (*ptr && l)
@@ -87,8 +87,8 @@ static void CG_DrawField (float x, float y, int width, int value) {
 		else
 			frame = *ptr -'0';
 
-		CG_DrawPic( x,y, CHAR_WIDTH, CHAR_HEIGHT, cgs.media.numberShaders[frame] );
-		x += CHAR_WIDTH;
+		CG_DrawPic( x,y, CHAR_WIDTH*cgs.widthRatioCoef, CHAR_HEIGHT, cgs.media.numberShaders[frame] );
+		x += CHAR_WIDTH*cgs.widthRatioCoef;
 		ptr++;
 		l--;
 	}
@@ -304,7 +304,7 @@ static void CG_DrawStatusBarHead( float x ) {
 	angles[YAW] = cg.headStartYaw + ( cg.headEndYaw - cg.headStartYaw ) * frac;
 	angles[PITCH] = cg.headStartPitch + ( cg.headEndPitch - cg.headStartPitch ) * frac;
 
-	CG_DrawHead( x, 480 - size, size, size, 
+	CG_DrawHead( x, 480 - size, size*cgs.widthRatioCoef, size, 
 				cg.snap->ps.clientNum, angles );
 }
 #endif // MISSIONPACK
@@ -317,7 +317,7 @@ CG_DrawStatusBarFlag
 */
 #ifndef MISSIONPACK
 static void CG_DrawStatusBarFlag( float x, int team ) {
-	CG_DrawFlagModel( x, 480 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
+	CG_DrawFlagModel( x, 480 - ICON_SIZE, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE, team, qfalse );
 }
 #endif // MISSIONPACK
 
@@ -387,12 +387,12 @@ static void CG_DrawStatusBar( void ) {
 		origin[0] = 70;
 		origin[1] = 0;
 		origin[2] = 0;
-		angles[YAW] = 90 + 20 * sin( cg.time / 1000.0 );
-		CG_Draw3DModel( CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE,
+		angles[YAW] = 90 + 20 * sin( (cg.time / 1000.0) + cg.timeFraction / 1000.0 );
+		CG_Draw3DModel( (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE,
 					   cg_weapons[ cent->currentState.weapon ].ammoModel, 0, origin, angles );
 	}
 
-	CG_DrawStatusBarHead( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE );
+	CG_DrawStatusBarHead( 185 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef );
 
 	if( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
 		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
@@ -406,8 +406,8 @@ static void CG_DrawStatusBar( void ) {
 		origin[0] = 90;
 		origin[1] = 0;
 		origin[2] = -10;
-		angles[YAW] = ( cg.time & 2047 ) * 360 / 2048.0;
-		CG_Draw3DModel( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE,
+		angles[YAW] = ( (cg.time & 2047) + cg.timeFraction ) * 360 / 2048.0;
+		CG_Draw3DModel( 370 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE,
 					   cgs.media.armorModel, 0, origin, angles );
 	}
 
@@ -439,7 +439,7 @@ static void CG_DrawStatusBar( void ) {
 
 				icon = cg_weapons[ cg.predictedPlayerState.weapon ].ammoIcon;
 				if ( icon ) {
-					CG_DrawPic( CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE, icon );
+					CG_DrawPic( (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE, icon );
 				}
 			}
 		}
@@ -476,7 +476,7 @@ static void CG_DrawStatusBar( void ) {
 		trap_R_SetColor( NULL );
 		// if we didn't draw a 3D icon, draw a 2D icon for armor
 		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
-			CG_DrawPic( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE, cgs.media.armorIcon );
+			CG_DrawPic( 370 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE, cgs.media.armorIcon );
 		}
 
 	}
@@ -530,11 +530,11 @@ static float CG_DrawAttacker( float y ) {
 	angles[PITCH] = 0;
 	angles[YAW] = 180;
 	angles[ROLL] = 0;
-	CG_DrawHead( 640 - size, y, size, size, clientNum, angles );
+	CG_DrawHead( 640 - size*cgs.widthRatioCoef, y, size*cgs.widthRatioCoef, size, clientNum, angles );
 
 	name = cgs.clientinfo[clientNum].name;
 	y += size;
-	CG_DrawBigString( 640 - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH), y, name, 0.5 );
+	CG_DrawBigString( 640 - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH)*cgs.widthRatioCoef, y, name, 0.5 );
 
 	return y + BIGCHAR_HEIGHT + 2;
 }
@@ -552,7 +552,7 @@ static float CG_DrawSnapshot( float y ) {
 
 	s = va( "time:%i snap:%i cmd:%i", cg.snap->serverTime, 
 		cg.latestSnapshotNum, cgs.serverCommandSequence );
-	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH*cgs.widthRatioCoef;
 
 	CG_DrawBigString( 635 - w, y + 2, s, 1.0F);
 
@@ -595,7 +595,7 @@ static float CG_DrawFPS( float y ) {
 		fps = 1000 * FPS_FRAMES / total;
 
 		s = va( "%ifps", fps );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH*cgs.widthRatioCoef;
 
 		CG_DrawBigString( 635 - w, y + 2, s, 1.0F);
 	}
@@ -645,7 +645,7 @@ static float CG_DrawTimer( float y ) {
 	seconds -= tens * 10;
 
 	s = va( "%i:%i%i", mins, tens, seconds );
-	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH*cgs.widthRatioCoef;
 
 	CG_DrawBigString( 635 - w, y + 2, s, 1.0F);
 
@@ -719,7 +719,7 @@ static float CG_DrawFollow( float y ) {
 	}
 
 	y -= BIGCHAR_HEIGHT - 4;
-	CG_DrawBigString( 640 - ( Q_PrintStrlen(s ) * BIGCHAR_WIDTH), y, s, 0.5 );
+	CG_DrawBigString( 640 - ( Q_PrintStrlen(s ) * BIGCHAR_WIDTH)*cgs.widthRatioCoef, y, s, 0.5 );
 	return y;
 }
 
@@ -794,7 +794,7 @@ static float CG_DrawPowerups( float y ) {
 		  y -= ICON_SIZE;
 
 		  trap_R_SetColor( colors[color] );
-		  CG_DrawField( x, y, 2, sortedTime[ i ] / 1000 );
+		  CG_DrawField( 640 - (640 - x)*cgs.widthRatioCoef, y, 2, sortedTime[ i ] / 1000 );
 
 		  t = ps->powerups[ sorted[i] ];
 		  if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
@@ -837,7 +837,7 @@ Draw the small two score display
 static float CG_DrawScores( float y ) {
 	const char	*s;
 	int			s1, s2, score;
-	int			x, w;
+	float		x, w;
 	vec4_t		color;
 	float		y1;
 	//gitem_t		*item;
@@ -857,26 +857,26 @@ static float CG_DrawScores( float y ) {
 		color[2] = 1.0f;
 		color[3] = 0.33f;
 		s = va( "%2i", s2 );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
+		w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 		x -= w;
 		CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
 		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_BLUE ) {
 			CG_DrawPic( x, y-4, w, BIGCHAR_HEIGHT+8, cgs.media.selectShader );
 		}
-		CG_DrawBigString( x + 4, y, s, 1.0F);
+		CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
 
 		color[0] = 1.0f;
 		color[1] = 0.0f;
 		color[2] = 0.0f;
 		color[3] = 0.33f;
 		s = va( "%2i", s1 );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
+		w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 		x -= w;
 		CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
 		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED ) {
 			CG_DrawPic( x, y-4, w, BIGCHAR_HEIGHT+8, cgs.media.selectShader );
 		}
-		CG_DrawBigString( x + 4, y, s, 1.0F);
+		CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
 	} else {
 		qboolean	spectator;
 
@@ -890,7 +890,7 @@ static float CG_DrawScores( float y ) {
 		}
 		if ( s2 != SCORE_NOT_PRESENT ) {
 			s = va( "%2i", s2 );
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
+			w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 			x -= w;
 			if ( !spectator && score == s2 && score != s1 ) {
 				color[0] = 1.0f;
@@ -906,13 +906,13 @@ static float CG_DrawScores( float y ) {
 				color[3] = 0.33f;
 				CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
 			}	
-			CG_DrawBigString( x + 4, y, s, 1.0F);
+			CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
 		}
 
 		// first place
 		if ( s1 != SCORE_NOT_PRESENT ) {
 			s = va( "%2i", s1 );
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
+			w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 			x -= w;
 			if ( !spectator && score == s1 ) {
 				color[0] = 0.0f;
@@ -928,12 +928,12 @@ static float CG_DrawScores( float y ) {
 				color[3] = 0.33f;
 				CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
 			}	
-			CG_DrawBigString( x + 4, y, s, 1.0F);
+			CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
 		}
 
 		if ( cgs.fraglimit ) {
 			s = va( "%2i", cgs.fraglimit );
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
+			w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 			x -= w;
 			CG_DrawBigString( x + 4, y, s, 1.0F);
 		}
@@ -988,8 +988,8 @@ static int CG_DrawPickupItem( int y ) {
 		if ( fadeColor ) {
 			CG_RegisterItemVisuals( value );
 			trap_R_SetColor( fadeColor );
-			CG_DrawPic( 8, y, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
-			CG_DrawBigString( ICON_SIZE + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), bg_itemlist[ value ].pickup_name, fadeColor[0] );
+			CG_DrawPic( 8, y, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE, cg_items[ value ].icon );
+			CG_DrawBigString( ICON_SIZE*cgs.widthRatioCoef + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), bg_itemlist[ value ].pickup_name, fadeColor[0] );
 			trap_R_SetColor( NULL );
 		}
 	}
@@ -1083,22 +1083,22 @@ static void CG_DrawReward( void ) {
 
 	if ( cg.rewardCount[0] >= 10 ) {
 		y = 56;
-		x = 320 - ICON_SIZE/2;
-		CG_DrawPic( x, y, ICON_SIZE-4, ICON_SIZE-4, cg.rewardShader[0] );
+		x = 320 - (ICON_SIZE/2)*cgs.widthRatioCoef;
+		CG_DrawPic( x, y, (ICON_SIZE-4)*cgs.widthRatioCoef, ICON_SIZE-4, cg.rewardShader[0] );
 		Com_sprintf(buf, sizeof(buf), "%d", cg.rewardCount[0]);
-		x = ( SCREEN_WIDTH - SMALLCHAR_WIDTH * CG_DrawStrlen( buf ) ) / 2;
+		x = ( SCREEN_WIDTH - SMALLCHAR_WIDTH * CG_DrawStrlen( buf )*cgs.widthRatioCoef ) / 2;
 		CG_DrawStringExt( x, y+ICON_SIZE, buf, color, qfalse, qtrue,
-								SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+								SMALLCHAR_WIDTH*cgs.widthRatioCoef, SMALLCHAR_HEIGHT, 0 );
 	}
 	else {
 
 		count = cg.rewardCount[0];
 
 		y = 56;
-		x = 320 - count * ICON_SIZE/2;
+		x = 320 - count * (ICON_SIZE/2)*cgs.widthRatioCoef;
 		for ( i = 0 ; i < count ; i++ ) {
-			CG_DrawPic( x, y, ICON_SIZE-4, ICON_SIZE-4, cg.rewardShader[0] );
-			x += ICON_SIZE;
+			CG_DrawPic( x, y, (ICON_SIZE-4)*cgs.widthRatioCoef, ICON_SIZE-4, cg.rewardShader[0] );
+			x += ICON_SIZE*cgs.widthRatioCoef;
 		}
 	}
 	trap_R_SetColor( NULL );
@@ -1197,7 +1197,7 @@ static void CG_DrawDisconnect( void ) {
 		return;
 	}
 
-	x = 640 - 48;
+	x = 640 - 48*cgs.widthRatioCoef;
 	y = 480 - 48;
 
 	CG_DrawPic( x, y, 48, 48, trap_R_RegisterShader("gfx/2d/net.tga" ) );
@@ -1213,7 +1213,8 @@ CG_DrawLagometer
 ==============
 */
 static void CG_DrawLagometer( void ) {
-	int		a, x, y, i;
+	int		a, i;
+	float	x, y;
 	float	v;
 	float	ax, ay, aw, ah, mid, range;
 	int		color;
@@ -1227,20 +1228,20 @@ static void CG_DrawLagometer( void ) {
 	//
 	// draw the graph
 	//
-	x = 640 - 48;
-	y = 480 - 48;
+	x = (float)SCREEN_WIDTH - 48.0f*cgs.widthRatioCoef;
+	y = (float)SCREEN_HEIGHT - 48.0f;
 
 	trap_R_SetColor( NULL );
-	CG_DrawPic( x, y, 48, 48, cgs.media.lagometerShader );
+	CG_DrawPic( x, y, 48.0f*cgs.widthRatioCoef, 48.0f, cgs.media.lagometerShader );
 
 	ax = x;
 	ay = y;
-	aw = 48;
-	ah = 48;
+	aw = 48.0f*2.0f;
+	ah = 48.0f;
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	color = -1;
-	range = ah / 3;
+	range = ah / 3.0f;
 	mid = ay + range;
 
 	vscale = range / MAX_LAGOMETER_RANGE;
@@ -1258,7 +1259,7 @@ static void CG_DrawLagometer( void ) {
 			if ( v > range ) {
 				v = range;
 			}
-			trap_R_DrawStretchPic ( ax + aw - a, mid - v, 1, v, 0, 0, 0, 0, cgs.media.whiteShader );
+			trap_R_DrawStretchPic ( ax + (0.5*aw - a*0.5)*cgs.widthRatioCoef, mid - v, 0.5*cgs.widthRatioCoef, v, 0, 0, 0, 0, cgs.media.whiteShader );
 		} else if ( v < 0 ) {
 			if ( color != 2 ) {
 				color = 2;
@@ -1268,7 +1269,7 @@ static void CG_DrawLagometer( void ) {
 			if ( v > range ) {
 				v = range;
 			}
-			trap_R_DrawStretchPic( ax + aw - a, mid, 1, v, 0, 0, 0, 0, cgs.media.whiteShader );
+			trap_R_DrawStretchPic( ax + (0.5*aw - a*0.5)*cgs.widthRatioCoef, mid, 0.5*cgs.widthRatioCoef, v, 0, 0, 0, 0, cgs.media.whiteShader );
 		}
 	}
 
@@ -1295,13 +1296,13 @@ static void CG_DrawLagometer( void ) {
 			if ( v > range ) {
 				v = range;
 			}
-			trap_R_DrawStretchPic( ax + aw - a, ay + ah - v, 1, v, 0, 0, 0, 0, cgs.media.whiteShader );
+			trap_R_DrawStretchPic( ax + (0.5*aw - 0.5*a)*cgs.widthRatioCoef, ay + ah - v, 0.5*cgs.widthRatioCoef, v, 0, 0, 0, 0, cgs.media.whiteShader );
 		} else if ( v < 0 ) {
 			if ( color != 4 ) {
 				color = 4;		// RED for dropped snapshots
 				trap_R_SetColor( colorRed );
 			}
-			trap_R_DrawStretchPic( ax + aw - a, ay + ah - range, 1, range, 0, 0, 0, 0, cgs.media.whiteShader );
+			trap_R_DrawStretchPic( ax + (0.5*aw - 0.5*a)*cgs.widthRatioCoef, ay + ah - range, 0.5*cgs.widthRatioCoef, range, 0, 0, 0, 0, cgs.media.whiteShader );
 		}
 	}
 
@@ -1400,8 +1401,8 @@ static void CG_DrawCenterString( void ) {
 			y += 1.3 * CG_Text_Height( linebuffer, scale, 0 );;
 		} else {
 			w = cg_centerScale.value * charW * CG_DrawStrlen( linebuffer );
-			x = ( SCREEN_WIDTH - w ) / 2;
-			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, scale * charW, scale * charW, 0 );
+			x = ( SCREEN_WIDTH - w*cgs.widthRatioCoef ) / 2;
+			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
 			y += scale * charW * 1.5;
 		}
 
@@ -1482,9 +1483,9 @@ static void CG_DrawCrosshair(void) {
 	}
 	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
 
-	trap_R_DrawStretchPic( x + cg.refdef.x + 0.5 * (cg.refdef.width - w), 
+	trap_R_DrawStretchPic( x + cg.refdef.x + 0.5 * (cg.refdef.width - w*cgs.widthRatioCoef), 
 		y + cg.refdef.y + 0.5 * (cg.refdef.height - h), 
-		w, h, 0, 0, 1, 1, hShader );
+		w*cgs.widthRatioCoef, h, 0, 0, 1, 1, hShader );
 }
 
 
@@ -1556,7 +1557,7 @@ static void CG_DrawCrosshairNames( void ) {
 	}
 
 	name = cgs.clientinfo[ cg.crosshairClientNum ].name;
-	w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
+	w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH*cgs.widthRatioCoef;
 	CG_DrawBigString( 320 - w / 2, 170, name, color[3] * 0.5f );
 	trap_R_SetColor( NULL );
 }
