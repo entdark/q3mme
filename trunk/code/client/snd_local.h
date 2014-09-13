@@ -159,6 +159,8 @@ extern cvar_t	*s_dopplerFactor;
 extern cvar_t	*s_mixahead;
 extern cvar_t	*s_mixPreStep;
 
+extern cvar_t	*s_attenuate;
+
 extern cvar_t	*s_testsound;
 extern cvar_t	*s_separation;
 extern cvar_t	*s_musicVolume;

@@ -201,7 +201,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
     vec3_t		source_vec;
     vec3_t		vec;
 
-	const float dist_mult = SOUND_ATTENUATE;
+	const float dist_mult = SOUND_ATTENUATE * s_attenuate->value;
 	
 	// calculate stereo seperation and distance attenuation
 	VectorSubtract(origin, s_listenOrigin, source_vec);

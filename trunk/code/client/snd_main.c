@@ -78,6 +78,7 @@ cvar_t		*s_dopplerSpeed;
 cvar_t		*s_dopplerFactor;
 cvar_t		*s_timescale;
 cvar_t		*s_forceScale;
+cvar_t		*s_attenuate;
 
 int						s_rawend;
 portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
@@ -115,6 +116,7 @@ void S_Init( void ) {
 	s_dopplerSpeed = Cvar_Get ("s_dopplerSpeed", "4000", CVAR_ARCHIVE);
 	s_dopplerFactor = Cvar_Get ("s_dopplerFactor", "1", CVAR_ARCHIVE);
 	s_timescale = Cvar_Get ("s_timescale", "1", CVAR_ARCHIVE);
+	s_attenuate = Cvar_Get ("s_attenuate", "1.0", CVAR_ARCHIVE);
 	s_playScale = 1.0f;
 	s_forceScale = Cvar_Get ("s_forceScale", "0", CVAR_TEMP);
 
