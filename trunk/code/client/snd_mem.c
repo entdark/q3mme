@@ -489,6 +489,7 @@ static int S_MP3Read( openSound_t *open, qboolean stereo, int size, short *data 
 		/* Sound parameters. */
 		if (mp3->frame.header.samplerate != open->rate ) {
 			Com_Printf( "mp3read, samplerate change?!?!?!\n");
+			open->rate = mp3->frame.header.samplerate;
 			return done;
 		}
 		mad_synth_frame (&mp3->synth, &mp3->frame);
