@@ -300,6 +300,8 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) 
 		return;
 	}
 	data = sound->data;
+	if (!indexAdd)
+		return;
 	indexLeft /= indexAdd;
 	if ( indexLeft <= count) {
 		count = indexLeft;
