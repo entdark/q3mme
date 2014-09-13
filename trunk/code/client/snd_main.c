@@ -583,7 +583,7 @@ S_StartBackgroundTrack
 ======================
 */
 void S_StartBackgroundTrack( const char *intro, const char *loop ){
-	if ( !intro || !intro[0] )
+	if ( !intro || !intro[0] || s_background.override )
 		return;
 
 	if ( !loop || !loop[0] ) 
