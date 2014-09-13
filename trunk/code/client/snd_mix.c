@@ -373,7 +373,7 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 			if ( q->handle != scanChan->handle )
 				continue;
 			/* Reasonably same start ? */
-			if ( scanChan->index > (MIX_SPEED * 50 / 1000))
+			if ( scanChan->index > (MIX_SPEED * s_mixSameTime->value))
 				continue;
 			if ( q->hasOrigin ) {
 				vec3_t dist;
@@ -476,7 +476,7 @@ void S_MixBackground( mixBackground_t *background, int speed, int count, int *ou
 	int		volumeMul;
 	short	buf[2048][2];
 
-	speed = 1 << 8;
+	speed = (MIX_SPEED << MIX_SHIFT) << 8;
 	if ( s_background.playing ) {
 		/* Do we need a reload */
 		if ( s_background.reload ) {
@@ -606,7 +606,7 @@ void S_MixInit( void ) {
 		free( mixAllocSounds );
 		mixAllocSounds = 0;
 	}
-	mixEmptySound.speed = (22050 << MIX_SHIFT) / MIX_SPEED;;
+	mixEmptySound.speed = (MIX_SPEED << MIX_SHIFT) / MIX_SPEED;;
 	mixEmptySound.samples = 1 << MIX_SHIFT;
 
 	cv = Cvar_Get( "com_soundMegs", DEF_COMSOUNDMEGS, CVAR_LATCH | CVAR_ARCHIVE );

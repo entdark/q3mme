@@ -95,11 +95,31 @@ void S_MMEWavClose(void) {
 	if (!mmeSound.fileHandle)
 		return;
 
-	S_MMEFillWavHeader( header, mmeSound.fileSize, 22050 );
+	S_MMEFillWavHeader( header, mmeSound.fileSize, MME_SAMPLERATE );
 	FS_Seek( mmeSound.fileHandle, 0, FS_SEEK_SET );
 	FS_Write( header, sizeof(header), mmeSound.fileHandle );
 	FS_FCloseFile( mmeSound.fileHandle );
 	Com_Memset( &mmeSound, 0, sizeof(mmeSound) );
+}
+
+static byte wavExportBuf[MME_SAMPLERATE] = {0};
+static int bytesInBuf = 0;
+qboolean S_MMEAviImport(byte *out, int *size) {
+	const char *format = Cvar_VariableString("mme_screenShotFormat");
+	const int shot = Cvar_VariableIntegerValue("mme_saveShot");
+	const int depth = Cvar_VariableIntegerValue("mme_saveDepth");
+	const int stencil = Cvar_VariableIntegerValue("mme_saveStencil");
+	if (mme_saveWav->integer != 2 || Q_stricmp(format, "avi") || (!shot && !depth && !stencil))
+		return qfalse;
+	*size = 0;
+	if (bytesInBuf >= MME_SAMPLERATE)
+		bytesInBuf -= MME_SAMPLERATE;
+	if (bytesInBuf <= 0)
+		return qtrue;
+	Com_Memcpy( out, wavExportBuf, bytesInBuf );
+	*size = bytesInBuf;
+	bytesInBuf = 0;
+	return qtrue;
 }
 
 #define MAXUPDATE 4096
@@ -108,10 +128,11 @@ void S_MMEUpdate( float scale ) {
 	int mixTemp[MAXUPDATE*2];
 	short mixClip[MAXUPDATE*2];
 
-	if (!mmeSound.fileHandle)
+	if (!mmeSound.fileHandle && mme_saveWav->integer != 2)
 		return;
 	if (!mmeSound.gotFrame) {
-		S_MMEWavClose();
+		if (mme_saveWav->integer != 2)
+			S_MMEWavClose();
 		return;
 	}
 	count = (int)mmeSound.deltaSamples;
@@ -121,7 +142,7 @@ void S_MMEUpdate( float scale ) {
 	if (count > MAXUPDATE)
 		count = MAXUPDATE;
 
-	speed = (scale * (MIX_SPEED << MIX_SHIFT)) / 22050;
+	speed = (scale * (MIX_SPEED << MIX_SHIFT)) / MME_SAMPLERATE;
 	if (speed < 0 || (speed == 0 && scale) )
 		speed = 1;
 
@@ -132,17 +153,25 @@ void S_MMEUpdate( float scale ) {
 		S_MixEffects( &mmeSound.effect, speed, count, mixTemp );
 	}	
 	S_MixClipOutput( count, mixTemp, mixClip, 0, MAXUPDATE - 1 );
-	FS_Write( mixClip, count*4, mmeSound.fileHandle );
+	if (mme_saveWav->integer != 2) {
+		FS_Write( mixClip, count*4, mmeSound.fileHandle );
+	} else if (mme_saveWav->integer == 2) {
+		Com_Memcpy(&wavExportBuf[bytesInBuf], mixClip, count*4 );
+		bytesInBuf += count*4;
+	}
 	mmeSound.fileSize += count * 4;
 	mmeSound.gotFrame = qfalse;
 }
 
 void S_MMERecord( const char *baseName, float deltaTime ) {
-	char fileName[MAX_OSPATH];
-
-	if (!mme_saveWav->integer)
+	const char *format = Cvar_VariableString("mme_screenShotFormat");
+	const int shot = Cvar_VariableIntegerValue("mme_saveShot");
+	const int depth = Cvar_VariableIntegerValue("mme_saveDepth");
+	const int stencil = Cvar_VariableIntegerValue("mme_saveStencil");
+	if (!mme_saveWav->integer || (mme_saveWav->integer == 2 && (Q_stricmp(format, "avi") || (!shot && !depth && !stencil))))
 		return;
-	if (Q_stricmp(baseName, mmeSound.baseName)) {
+	if (Q_stricmp(baseName, mmeSound.baseName) && mme_saveWav->integer != 2) {
+		char fileName[MAX_OSPATH];
 		if (mmeSound.fileHandle)
 			S_MMEWavClose();
 		Com_sprintf( fileName, sizeof(fileName), "%s.wav", baseName );
@@ -154,7 +183,7 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 		}
 		Q_strncpyz( mmeSound.baseName, baseName, sizeof( mmeSound.baseName ));
 		mmeSound.deltaSamples = 0;
-		mmeSound.sampleRate = 22050;
+		mmeSound.sampleRate = MME_SAMPLERATE;
 		FS_Seek( mmeSound.fileHandle, 0, FS_SEEK_END );
 		mmeSound.fileSize = FS_filelength( mmeSound.fileHandle );
 		if ( mmeSound.fileSize < WAV_HEADERSIZE) {
@@ -165,6 +194,12 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
        		}
 			mmeSound.fileSize = WAV_HEADERSIZE;
 		}
+	} else if (Q_stricmp(baseName, mmeSound.baseName) && mme_saveWav->integer == 2) {
+		Q_strncpyz( mmeSound.baseName, baseName, sizeof( mmeSound.baseName ));
+		mmeSound.deltaSamples = 0;
+		mmeSound.sampleRate = MME_SAMPLERATE;
+		mmeSound.fileSize = 0;
+		bytesInBuf = 0;
 	}
 	mmeSound.deltaSamples += deltaTime * mmeSound.sampleRate;
 	mmeSound.gotFrame = qtrue;

@@ -271,8 +271,10 @@ static void R_MME_MultiShot( byte * target ) {
 
 qboolean R_MME_TakeShot( void ) {
 	int pixelCount;
+	byte inSound[MME_SAMPLERATE] = {0};
+	int sizeSound = 0;
+	qboolean audio = qfalse, audioTaken = qfalse;
 	qboolean doGamma;
-	qboolean doShot;
 	mmeBlurControl_t* blurControl = &blurData.control;
 
 	if ( !shotData.take || allocFailed || tr.finishStereo )
@@ -287,6 +289,7 @@ qboolean R_MME_TakeShot( void ) {
 	if ( mme_saveShot->integer && blurControl->totalFrames > 0 &&
 		R_FrameBuffer_Blur( blurControl->Float[ blurControl->totalIndex ], blurControl->totalIndex, blurControl->totalFrames ) ) {
 		byte *shotBuf;
+		float fps;
 		if ( ++(blurControl->totalIndex) < blurControl->totalFrames ) 
 			return qtrue;
 		blurControl->totalIndex = 0;
@@ -295,7 +298,9 @@ qboolean R_MME_TakeShot( void ) {
 		if ( doGamma ) 
 			R_GammaCorrect( shotBuf, pixelCount * 3 );
 
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf );
+		fps = shotData.fps / ( blurControl->totalFrames );
+		audio = ri.S_MMEAviImport(inSound, &sizeSound);
+		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, shotBuf, audio, sizeSound, inSound );
 		ri.Hunk_FreeTempMemory( shotBuf );
 		return qtrue;
 	}
@@ -385,6 +390,8 @@ qboolean R_MME_TakeShot( void ) {
 			if ( mme_saveStencil->integer == 1 )
 				R_MME_BlurAccumShift( blurStencil );
 		
+			audio = ri.S_MMEAviImport(inSound, &sizeSound);
+			audioTaken = qtrue;
 			// Big test for an rgba shot
 			if ( mme_saveShot->integer == 1 && shotData.main.type == mmeShotTypeRGBA ) 
 			{
@@ -408,19 +415,16 @@ qboolean R_MME_TakeShot( void ) {
 						alphaShot[i*4+3] = stencilData[i];
 					}
 				}
-				R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, alphaShot );
+				R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, alphaShot, audio, sizeSound, inSound );
 				ri.Hunk_FreeTempMemory( alphaShot );
 			} else {
 				if ( mme_saveShot->integer == 1 )
-					R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurShot->accum ));
+					R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurShot->accum ), audio, sizeSound, inSound );
 				if ( mme_saveDepth->integer == 1 )
-					R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurDepth->accum ));
+					R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurDepth->accum ), audio, sizeSound, inSound );
 				if ( mme_saveStencil->integer == 1 )
-					R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurStencil->accum) );
+					R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, fps, (byte *)( blurStencil->accum), audio, sizeSound, inSound );
 			}
-			doShot = qtrue;
-		} else {
-			doShot = qfalse;
 		}
 	} 
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
@@ -445,7 +449,10 @@ qboolean R_MME_TakeShot( void ) {
 				shotBuf[i * 4 + 3] = alphaBuf[i];
 			}
 		}
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf );
+		if (!audioTaken)
+			audio = ri.S_MMEAviImport(inSound, &sizeSound);
+		audioTaken = qtrue;
+		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf, audio, sizeSound, inSound );
 		ri.Hunk_FreeTempMemory( shotBuf );
 	}
 
@@ -453,13 +460,19 @@ qboolean R_MME_TakeShot( void ) {
 		if ( mme_saveStencil->integer > 1 || ( !blurControl->totalFrames && mme_saveStencil->integer) ) {
 			byte *stencilShot = ri.Hunk_AllocateTempMemory( pixelCount * 1);
 			R_MME_GetStencil( stencilShot );
-			R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, stencilShot );
+			if (!audioTaken && ((mme_saveStencil->integer > 1 && mme_saveShot->integer > 1)
+				|| (mme_saveStencil->integer == 1 && mme_saveShot->integer == 1)))
+				audio = ri.S_MMEAviImport(inSound, &sizeSound);
+			R_MME_SaveShot( &shotData.stencil, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, stencilShot, audio, sizeSound, inSound );
 			ri.Hunk_FreeTempMemory( stencilShot );
 		}
 		if ( mme_saveDepth->integer > 1 || ( !blurControl->totalFrames && mme_saveDepth->integer) ) {
 			byte *depthShot = ri.Hunk_AllocateTempMemory( pixelCount * 1);
 			R_MME_GetDepth( depthShot );
-			R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, depthShot );
+			if (!audioTaken && ((mme_saveDepth->integer > 1 && mme_saveShot->integer > 1)
+				|| (mme_saveDepth->integer == 1 && mme_saveShot->integer == 1)))
+				audio = ri.S_MMEAviImport(inSound, &sizeSound);
+			R_MME_SaveShot( &shotData.depth, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, depthShot, audio, sizeSound, inSound );
 			ri.Hunk_FreeTempMemory( depthShot );
 		}
 	}
@@ -499,13 +512,14 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 			shotData.main.format = mmeShotFormatTGA;
 		}
 		
-//		if (shotData.main.format != mmeShotFormatAVI) {
+		//grayscale works fine only with compressed avi :(
+		if (shotData.main.format != mmeShotFormatAVI || !mme_aviFormat->integer) {
 			shotData.depth.format = mmeShotFormatPNG;
 			shotData.stencil.format = mmeShotFormatPNG;
-//		} else {
-//			shotData.depth.format = mmeShotFormatAVI;
-//			shotData.stencil.format = mmeShotFormatAVI;
-//		}
+		} else {
+			shotData.depth.format = mmeShotFormatAVI;
+			shotData.stencil.format = mmeShotFormatAVI;
+		}
 
 		shotData.main.type = mmeShotTypeRGB;
 		if ( mme_screenShotAlpha->integer ) {

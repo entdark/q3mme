@@ -2249,6 +2249,9 @@ void CL_InitRef( void ) {
 	ri.CIN_UploadCinematic = CIN_UploadCinematic;
 	ri.CIN_PlayCinematic = CIN_PlayCinematic;
 	ri.CIN_RunCinematic = CIN_RunCinematic;
+	
+	//mme
+	ri.S_MMEAviImport = S_MMEAviImport;
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 

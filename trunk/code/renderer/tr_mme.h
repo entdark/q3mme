@@ -23,9 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include <mmintrin.h>
 
-#define AVI_MAX_FRAMES	20000
+#define AVI_MAX_FRAMES	2000000
 #define AVI_MAX_SIZE	((2*1024-10)*1024*1024)
 #define AVI_HEADER_SIZE	2048
+#define AVI_MAX_FILES	1000
 
 #define BLURMAX 256
 #define PASSMAX 256
@@ -35,10 +36,13 @@ typedef struct mmeAviFile_s {
 	FILE *file;
 	float fps;
 	int	width, height;
-	int frames;
-	int index[AVI_MAX_FRAMES];
-	int	written;
+	unsigned int frames, aframes, iframes;
+	int index[2*AVI_MAX_FRAMES];
+	int aindex[2*AVI_MAX_FRAMES];
+	int	written, awritten, maxSize;
+	int header;
 	int format;
+	qboolean audio;
 	mmeShotType_t type;
 } mmeAviFile_t;
 
@@ -69,12 +73,13 @@ typedef struct {
 	mmeBlurControl_t *control;
 } mmeBlurBlock_t;
 
-void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, int width, int height, float fps, byte *inBuf );
 void R_MME_GetShot( void* output );
 void R_MME_GetStencil( void *output );
 void R_MME_GetDepth( byte *output );
 void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf );
 
+void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, int width, int height, float fps, byte *inBuf, qboolean audio );
+void mmeAviSound( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, int width, int height, float fps, const byte *soundBuf, int size );
 void aviClose( mmeAviFile_t *aviFile );
 
 void R_MME_BlurAccumAdd( mmeBlurBlock_t *block, const __m64 *add );

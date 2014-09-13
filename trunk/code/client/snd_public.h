@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
+#define MME_SAMPLERATE	22050
+
 void S_Init( void );
 void S_Shutdown( void );
 
@@ -73,6 +75,7 @@ void S_UpdateBackgroundTrack( void );
 // MME
 void S_MMERecord( const char *baseName, float deltaTime );
 void S_MMEWavClose( void );
+qboolean S_MMEAviImport(byte *out, int *size);
 void S_MMEUpdate( float scale );
 void S_MMEMusic( const char *musicName, float time, float length );
 
