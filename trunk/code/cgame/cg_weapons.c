@@ -662,10 +662,7 @@ CG_CalculateWeaponPosition
 ==============
 */
 static void CG_CalculateWeaponPosition(  vec3_t origin, vec3_t angles ) {
-	float	scale;
-	int		delta;
-	float	fracsin;
-	
+	float scale, delta, fracsin;	
 	playerEntity_t *pe = &cg.playerCent->pe;
 
 	VectorCopy( cg.refdef.vieworg, origin );
@@ -684,7 +681,7 @@ static void CG_CalculateWeaponPosition(  vec3_t origin, vec3_t angles ) {
 	angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
 
 	// drop the weapon when landing
-	delta = cg.time - pe->landTime;
+	delta = (cg.time - pe->landTime) + cg.timeFraction;
 	if ( delta < LAND_DEFLECT_TIME ) {
 		origin[2] += pe->landChange*0.25 * delta / LAND_DEFLECT_TIME;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
@@ -694,7 +691,7 @@ static void CG_CalculateWeaponPosition(  vec3_t origin, vec3_t angles ) {
 
 	// idle drift
 	scale = cg.xyspeed + 40;
-	fracsin = sin( cg.time * 0.001 );
+	fracsin = sin( cg.time * 0.001 + cg.timeFraction * 0.001 );
 	angles[ROLL] += scale * fracsin * 0.01;
 	angles[YAW] += scale * fracsin * 0.01;
 	angles[PITCH] += scale * fracsin * 0.01;
@@ -816,28 +813,21 @@ CG_MachinegunSpinAngle
 #define		SPIN_SPEED	0.9
 #define		COAST_TIME	1000
 static float	CG_MachinegunSpinAngle( centity_t *cent ) {
-	int		delta;
-	float	angle;
-	float	speed;
-
-	delta = cg.time - cent->pe.barrelTime;
+	float angle, speed, delta = (cg.time - cent->pe.barrelTime) + cg.timeFraction;
 	if ( cent->pe.barrelSpinning ) {
 		angle = cent->pe.barrelAngle + delta * SPIN_SPEED;
 	} else {
 		if ( delta > COAST_TIME ) {
 			delta = COAST_TIME;
 		}
-
 		speed = 0.5 * ( SPIN_SPEED + (float)( COAST_TIME - delta ) / COAST_TIME );
 		angle = cent->pe.barrelAngle + delta * speed;
 	}
-
 	if ( cent->pe.barrelSpinning == !(cent->currentState.eFlags & EF_FIRING) ) {
 		cent->pe.barrelTime = cg.time;
 		cent->pe.barrelAngle = AngleMod( angle );
 		cent->pe.barrelSpinning = !!(cent->currentState.eFlags & EF_FIRING);
 	}
-
 	return angle;
 }
 
@@ -929,7 +919,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, qboolean firstPerson, centity_t *c
 	if ( cent->currentState.weapon == WP_RAILGUN ) {
 		clientInfo_t *ci = &cgs.clientinfo[ cent->currentState.clientNum ];
 		if ( cent->pe.railFireTime + 1500 > cg.time ) {
-			int scale = 255 * (cg.time - cent->pe.railFireTime) / 1500;
+			int scale = 255 * ((cg.time - cent->pe.railFireTime) + cg.timeFraction) / 1500;
 			gun.shaderRGBA[0] = (ci->c1RGBA[0] * scale) >> 8;
 			gun.shaderRGBA[1] = (ci->c1RGBA[1] * scale) >> 8;
 			gun.shaderRGBA[2] = (ci->c1RGBA[2] * scale) >> 8;
@@ -1038,7 +1028,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, qboolean firstPerson, centity_t *c
 		VectorCopy( flash.origin, fxParent.origin );
 		VectorCopy( cent->currentState.pos.trDelta, fxParent.velocity );
 		AxisCopy( flash.axis, fxParent.axis );
-		fxParent.life = (cg.time - cent->muzzleFlashTime) * 0.001f;
+		fxParent.life = ((cg.time - cent->muzzleFlashTime) + cg.timeFraction) * 0.001f;
 		trap_FX_Run( weaponFX->flash, &fxParent, cent );
 	}
 }

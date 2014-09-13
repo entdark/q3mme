@@ -36,6 +36,7 @@ extern void trap_MME_Capture( const char *baseName, float fps, float focus );
 extern int trap_MME_SeekTime( int seekTime );
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern int trap_MME_DemoInfo( mmeDemoInfo_t *info );
+extern void trap_MME_TimeFraction( float timeFraction );
 int lastMusicStart;
 
 static void demoSynchMusic( int start, float length ) {

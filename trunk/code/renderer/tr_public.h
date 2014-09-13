@@ -107,6 +107,7 @@ typedef struct {
 
 	void	(*Capture)( const char *baseName, float fps, float focus );
 	void	(*BlurInfo)( int* total, int* index );
+	void	(*TimeFraction)( float timeFraction );
 } refexport_t;
 
 //

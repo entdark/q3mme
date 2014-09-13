@@ -227,7 +227,7 @@ static void CG_Item( centity_t *cent ) {
 	refEntity_t		ent;
 	entityState_t	*es;
 	gitem_t			*item;
-	int				msec;
+	float			msec;
 	float			frac;
 	float			scale;
 	weaponInfo_t	*wi;
@@ -316,9 +316,9 @@ static void CG_Item( centity_t *cent ) {
 	ent.nonNormalizedAxes = qfalse;
 
 	// if just respawned, slowly scale up
-	msec = cg.time - cent->miscTime;
+	msec = (cg.time - cent->miscTime) + cg.timeFraction;
 	if ( msec >= 0 && msec < ITEM_SCALEUP_TIME ) {
-		frac = (float)msec / ITEM_SCALEUP_TIME;
+		frac = msec / ITEM_SCALEUP_TIME;
 		VectorScale( ent.axis[0], frac, ent.axis[0] );
 		VectorScale( ent.axis[1], frac, ent.axis[1] );
 		VectorScale( ent.axis[2], frac, ent.axis[2] );
@@ -366,7 +366,7 @@ static void CG_Item( centity_t *cent ) {
 				if ( item->giType == IT_POWERUP )
 				{
 					ent.origin[2] += 12;
-					spinAngles[1] = ( cg.time & 1023 ) * 360 / -1024.0f;
+					spinAngles[1] = ( ( cg.time & 1023 ) + cg.timeFraction ) * 360.0f / -1024.0f;
 				}
 				AnglesToAxis( spinAngles, ent.axis );
 				
@@ -499,7 +499,7 @@ static void CG_Missile( centity_t *cent ) {
 
 	// spin as it moves
 	if ( es->pos.trType != TR_STATIONARY ) {
-		RotateAroundDirection( ent.axis, 0.25 * cg.timeFraction + ((cg.time / 4) % 360)  );
+		RotateAroundDirection( ent.axis, 0.25f * cg.timeFraction + (float)((cg.time) % (360 * 4)) * 0.25f );
 	} else {
 		RotateAroundDirection( ent.axis, es->time );
 	}
@@ -685,8 +685,13 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
 	BG_EvaluateTrajectory( &cent->currentState.pos, fromTime, oldOrigin );
 	BG_EvaluateTrajectory( &cent->currentState.apos, fromTime, oldAngles );
 
-	BG_EvaluateTrajectory( &cent->currentState.pos, toTime, origin );
-	BG_EvaluateTrajectory( &cent->currentState.apos, toTime, angles );
+	if (toTime == cg.time) {
+		demoNowTrajectory( &cent->currentState.pos, origin );
+		demoNowTrajectory( &cent->currentState.apos, angles );
+	} else {
+		BG_EvaluateTrajectory( &cent->currentState.pos, toTime, origin );
+		BG_EvaluateTrajectory( &cent->currentState.apos, toTime, angles );
+	}
 
 	VectorSubtract( origin, oldOrigin, deltaOrigin );
 	VectorSubtract( angles, oldAngles, deltaAngles );

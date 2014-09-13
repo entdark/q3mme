@@ -215,6 +215,7 @@ typedef enum {
 	CG_MME_SEEKTIME,
 	CG_MME_DEMOINFO,
 	CG_MME_MUSIC,
+	CG_MME_TIMEFRACTION,
 
 } cgameImport_t;
 

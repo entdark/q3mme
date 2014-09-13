@@ -254,7 +254,8 @@ Draw the normal in-game scoreboard
 =================
 */
 qboolean CG_DrawOldScoreboard( void ) {
-	int		x, y, w, i, n1, n2;
+	int		i;
+	float	x, y, w, n1, n2;
 	float	fade;
 	float	*fadeColor;
 	char	*s;

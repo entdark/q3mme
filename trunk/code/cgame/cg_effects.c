@@ -161,10 +161,11 @@ localEntity_t *CG_SmokePuff( const vec3_t p, const vec3_t vel,
 	le->fadeInTime = fadeInTime;
 	le->endTime = startTime + duration;
 	if ( fadeInTime > startTime ) {
-		le->lifeRate = 1.0 / ( le->endTime - le->fadeInTime );
-	}
-	else {
-		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+		le->lifeRate = 1.0f / ( le->endTime - le->fadeInTime );
+	} else if (startTime == cg.time) {
+		le->lifeRate = 1.0f / ( ( le->endTime - le->startTime ) - cg.timeFraction );
+	} else {
+		le->lifeRate = 1.0f / ( le->endTime - le->startTime );
 	}
 	le->color[0] = r;
 	le->color[1] = g; 
@@ -216,7 +217,7 @@ void CG_SpawnEffect( vec3_t org ) {
 	le->leType = LE_FADE_RGB;
 	le->startTime = cg.time;
 	le->endTime = cg.time + 500;
-	le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+	le->lifeRate = 1.0 / ( ( le->endTime - le->startTime ) - cg.timeFraction);
 
 	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
 
@@ -254,7 +255,7 @@ void CG_ScorePlum( int client, vec3_t org, int score ) {
 	le->leType = LE_SCOREPLUM;
 	le->startTime = cg.time;
 	le->endTime = cg.time + 4000;
-	le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+	le->lifeRate = 1.0 / ( ( le->endTime - le->startTime ) - cg.timeFraction);
 	
 	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
 	le->radius = score;

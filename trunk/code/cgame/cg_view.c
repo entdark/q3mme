@@ -291,10 +291,7 @@ static void CG_OffsetThirdPersonView( void ) {
 
 // this causes a compiler bug on mac MrC compiler
 static void CG_StepOffset( void ) {
-	int		timeDelta;
-	
-	// smooth out stair climbing
-	timeDelta = cg.time - cg.playerCent->pe.stepTime;
+	float timeDelta = (cg.time - cg.playerCent->pe.stepTime) + cg.timeFraction;
 	if ( timeDelta < STEP_TIME ) {
 		cg.refdef.vieworg[2] -= cg.playerCent->pe.stepChange 
 			* (STEP_TIME - timeDelta) / STEP_TIME;
@@ -311,12 +308,11 @@ static void CG_OffsetFirstPersonView( void ) {
 	float			*origin;
 	float			*angles;
 	float			bob;
-	float			ratio;
 	float			delta;
 	float			speed;
 	float			f;
 	vec3_t			predictedVelocity;
-	int				timeDelta;
+	float			timeDelta;
 
 	centity_t		*cent = cg.playerCent;
 	playerEntity_t	*pe = &cent->pe;
@@ -347,14 +343,14 @@ static void CG_OffsetFirstPersonView( void ) {
 
 	// add angles based on damage kick
 	if ( cg.damageTime && cg.playerPredicted && cg_damageKick.value > 0 ) {
-		ratio = cg.time - cg.damageTime;
+		float ratio = (cg.time - cg.damageTime) + cg.timeFraction;
 		if ( ratio < DAMAGE_DEFLECT_TIME ) {
 			ratio /= DAMAGE_DEFLECT_TIME;
 			ratio *= cg_damageKick.value;
 			angles[PITCH] += ratio * cg.v_dmg_pitch;
 			angles[ROLL] += ratio * cg.v_dmg_roll;
 		} else {
-			ratio = 1.0 - ( ratio - DAMAGE_DEFLECT_TIME ) / DAMAGE_RETURN_TIME;
+			ratio = 1.0f - ( ratio - DAMAGE_DEFLECT_TIME ) / DAMAGE_RETURN_TIME;
 			if ( ratio > 0 ) {
 				ratio *= cg_damageKick.value;
 				angles[PITCH] += ratio * cg.v_dmg_pitch;
@@ -402,7 +398,7 @@ static void CG_OffsetFirstPersonView( void ) {
 	origin[2] += pe->viewHeight;
 
 	// smooth out duck height changes
-	timeDelta = cg.time - pe->duckTime;
+	timeDelta = (cg.time - pe->duckTime) + cg.timeFraction;
 	if ( timeDelta >= 0 && timeDelta < DUCK_TIME) {
 		cg.refdef.vieworg[2] -= pe->duckChange 
 			* (DUCK_TIME - timeDelta) / DUCK_TIME;
@@ -413,12 +409,10 @@ static void CG_OffsetFirstPersonView( void ) {
 	if (bob > 6) {
 		bob = 6;
 	}
-
 	origin[2] += bob;
 
-
 	// add fall height
-	delta = cg.time - pe->landTime;
+	delta = (cg.time - pe->landTime) + cg.timeFraction;
 	if ( delta < LAND_DEFLECT_TIME ) {
 		f = delta / LAND_DEFLECT_TIME;
 		origin[2] += pe->landChange * f;
@@ -471,9 +465,6 @@ CG_CalcFov
 Fixed fov at intermissions, otherwise account for fov variable and zooms.
 ====================
 */
-#define	WAVE_AMPLITUDE	1
-#define	WAVE_FREQUENCY	0.4
-
 static int CG_CalcFov( void ) {
 	float	x;
 	float	phase;
@@ -510,15 +501,15 @@ static int CG_CalcFov( void ) {
 		}
 
 		if ( cg.zoomed ) {
-			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
-			if ( f > 1.0 ) {
+			f = ( ( cg.time - cg.zoomTime ) + cg.timeFraction ) / ZOOM_TIME;
+			if ( f > 1.0f ) {
 				fov_x = zoomFov;
 			} else {
 				fov_x = fov_x + f * ( zoomFov - fov_x );
 			}
 		} else {
-			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
-			if ( f > 1.0 ) {
+			f = ( ( cg.time - cg.zoomTime ) + cg.timeFraction ) / ZOOM_TIME;
+			if ( f > 1.0f ) {
 				fov_x = fov_x;
 			} else {
 				fov_x = zoomFov + f * ( fov_x - zoomFov );
@@ -534,12 +525,11 @@ static int CG_CalcFov( void ) {
 	contents = CG_PointContents( cg.refdef.vieworg, -1 );
 	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
 		phase = cg.time / 1000.0 * WAVE_FREQUENCY * M_PI * 2;
-		v = WAVE_AMPLITUDE * sin( phase );
+		v = WAVE_AMPLITUDE * sin( phase + cg.timeFraction / 1000.0 * WAVE_FREQUENCY * M_PI * 2 );
 		fov_x += v;
 		fov_y -= v;
 		inwater = qtrue;
-	}
-	else {
+	} else {
 		inwater = qfalse;
 	}
 
@@ -566,7 +556,7 @@ CG_DamageBlendBlob
 ===============
 */
 void CG_DamageBlendBlob( void ) {
-	int			t;
+	float		t;
 	int			maxTime;
 	refEntity_t		ent;
 
@@ -586,7 +576,7 @@ void CG_DamageBlendBlob( void ) {
 	}
 
 	maxTime = DAMAGE_TIME;
-	t = cg.time - cg.damageTime;
+	t = (cg.time - cg.damageTime) + cg.timeFraction;
 	if ( t <= 0 || t >= maxTime ) {
 		return;
 	}
@@ -605,7 +595,7 @@ void CG_DamageBlendBlob( void ) {
 	ent.shaderRGBA[0] = 255;
 	ent.shaderRGBA[1] = 255;
 	ent.shaderRGBA[2] = 255;
-	ent.shaderRGBA[3] = 200 * ( 1.0 - ((float)t / maxTime) );
+	ent.shaderRGBA[3] = 200 * ( 1.0f - (t / maxTime) );
 	trap_R_AddRefEntityToScene( &ent );
 }
 

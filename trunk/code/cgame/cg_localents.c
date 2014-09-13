@@ -212,10 +212,9 @@ void CG_AddFragment( localEntity_t *le ) {
 
 	if ( le->pos.trType == TR_STATIONARY ) {
 		// sink into the ground if near the removal time
-		int		t;
-		float	oldZ;
+		float t, oldZ;
 		
-		t = le->endTime - cg.time;
+		t = (le->endTime - cg.time) - cg.timeFraction;
 		if ( t < SINK_TIME ) {
 			// we must use an explicit lighting origin, otherwise the
 			// lighting would be lost as soon as the origin went
@@ -223,7 +222,7 @@ void CG_AddFragment( localEntity_t *le ) {
 			VectorCopy( le->refEntity.origin, le->refEntity.lightingOrigin );
 			le->refEntity.renderfx |= RF_LIGHTING_ORIGIN;
 			oldZ = le->refEntity.origin[2];
-			le->refEntity.origin[2] -= 16 * ( 1.0 - (float)t / SINK_TIME );
+			le->refEntity.origin[2] -= 16 * ( 1.0f - t / SINK_TIME );
 			trap_R_AddRefEntityToScene( &le->refEntity );
 			le->refEntity.origin[2] = oldZ;
 		} else {
@@ -295,7 +294,7 @@ void CG_AddFadeRGB( localEntity_t *le ) {
 
 	re = &le->refEntity;
 
-	c = ( le->endTime - cg.time - cg.timeFraction) * le->lifeRate;
+	c = ( ( le->endTime - cg.time ) - cg.timeFraction) * le->lifeRate;
 	c *= 0xff;
 
 	re->shaderRGBA[0] = le->color[0] * c;
@@ -321,7 +320,7 @@ static void CG_AddMoveScaleFade( localEntity_t *le ) {
 
 	if ( le->fadeInTime > le->startTime && cg.time < le->fadeInTime ) {
 		// fade / grow time
-		c = 1.0 - (( le->fadeInTime - cg.time) - cg.timeFraction) / ( le->fadeInTime - le->startTime );
+		c = 1.0f - (( le->fadeInTime - cg.time) - cg.timeFraction) / ( le->fadeInTime - le->startTime );
 	}
 	else {
 		// fade / grow time
@@ -367,7 +366,7 @@ static void CG_AddScaleFade( localEntity_t *le ) {
 	re = &le->refEntity;
 
 	// fade / grow time
-	c = ( le->endTime - cg.time - cg.timeFraction) * le->lifeRate;
+	c = ( ( le->endTime - cg.time ) - cg.timeFraction) * le->lifeRate;
 
 	re->shaderRGBA[3] = 0xff * c * le->color[3];
 	re->radius = le->radius * ( 1.0 - c ) + 8;
@@ -404,7 +403,7 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 	re = &le->refEntity;
 
 	// fade time
-	c = ( le->endTime - cg.time - cg.timeFraction) * le->lifeRate;
+	c = ( ( le->endTime - cg.time ) - cg.timeFraction) * le->lifeRate;
 
 	re->shaderRGBA[3] = 0xff * c * le->color[3];
 
@@ -441,13 +440,13 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 
 	// add the dlight
 	if ( ex->light ) {
-		float		light;
+		float light;
 
-		light = (float)( cg.time - ex->startTime + cg.timeFraction) / ( ex->endTime - ex->startTime );
-		if ( light < 0.5 ) {
-			light = 1.0;
+		light = (float)( ( cg.time - ex->startTime ) + cg.timeFraction) / ( ex->endTime - ex->startTime );
+		if ( light < 0.5f ) {
+			light = 1.0f;
 		} else {
-			light = 1.0 - ( light - 0.5 ) * 2;
+			light = 1.0f - ( light - 0.5f ) * 2.0f;
 		}
 		light = ex->light * light;
 		trap_R_AddLightToScene(ent->origin, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
@@ -465,9 +464,9 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 
 	re = le->refEntity;
 
-	c = ( le->endTime - cg.time - cg.timeFraction) / ( float ) ( le->endTime - le->startTime );
-	if ( c > 1 ) {
-		c = 1.0;	// can happen during connection problems
+	c = ( ( le->endTime - cg.time ) - cg.timeFraction) / ( float ) ( le->endTime - le->startTime );
+	if ( c > 1.0f ) {
+		c = 1.0f;	// can happen during connection problems
 	}
 
 	re.shaderRGBA[0] = 0xff;
@@ -485,10 +484,10 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 		float		light;
 
 		light = (( cg.time - le->startTime ) + cg.timeFraction) / ( le->endTime - le->startTime );
-		if ( light < 0.5 ) {
-			light = 1.0;
+		if ( light < 0.5f ) {
+			light = 1.0f;
 		} else {
-			light = 1.0 - ( light - 0.5 ) * 2;
+			light = 1.0f - ( light - 0.5f ) * 2.0f;
 		}
 		light = le->light * light;
 		trap_R_AddLightToScene(re.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
@@ -510,7 +509,7 @@ void CG_AddScorePlum( localEntity_t *le ) {
 
 	re = &le->refEntity;
 
-	c = ( le->endTime - cg.time - cg.timeFraction ) * le->lifeRate;
+	c = ( ( le->endTime - cg.time ) - cg.timeFraction ) * le->lifeRate;
 
 	score = le->radius;
 	if (score < 0) {
@@ -533,21 +532,21 @@ void CG_AddScorePlum( localEntity_t *le ) {
 		}
 
 	}
-	if (c < 0.25)
-		re->shaderRGBA[3] = 0xff * 4 * c;
+	if (c < 0.25f)
+		re->shaderRGBA[3] = 0xff * 4.0f * c;
 	else
 		re->shaderRGBA[3] = 0xff;
 
 	re->radius = NUMBER_SIZE / 2;
 
 	VectorCopy(le->pos.trBase, origin);
-	origin[2] += 110 - c * 100;
+	origin[2] += 110.0f - c * 100.0f;
 
 	VectorSubtract(cg.refdef.vieworg, origin, dir);
 	CrossProduct(dir, up, vec);
 	VectorNormalize(vec);
 
-	VectorMA(origin, -10 + 20 * sin(c * 2 * M_PI), vec, origin);
+	VectorMA(origin, -10.0f + 20 * sin(c * 2 * M_PI), vec, origin);
 
 	// if the view would be "inside" the sprite, kill the sprite
 	// so it doesn't add too much overdraw

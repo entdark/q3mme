@@ -723,13 +723,13 @@ qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf,
 			// if a speed is specified
 			if ( portal->rotateSpeed ) {
 				// continuous rotate
-				d = (trScene.refdef->time/1000.0f) * portal->rotateSpeed;
+				d = (trScene.refdef->time/1000.0f) * portal->rotateSpeed + (trScene.refdef->timeFraction/1000.0f) * portal->rotateSpeed;
 				VectorCopy( camera->axis[1], transformed );
 				RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
 				CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
 			} else {
 				// bobbing rotate, with skinNum being the rotation offset
-				d = sin( trScene.refdef->time * 0.003f );
+				d = sin( trScene.refdef->time * 0.003 + trScene.refdef->timeFraction * 0.003 );
 				d = portal->rotateOffset + d * 4;
 				VectorCopy( camera->axis[1], transformed );
 				RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );

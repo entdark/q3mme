@@ -1145,5 +1145,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.Capture = R_MME_Capture;
 	re.BlurInfo = R_MME_BlurInfo;
+
+	re.TimeFraction = R_MME_TimeFraction;
 	return &re;
 }

@@ -502,6 +502,7 @@ typedef struct {
 	vec3_t		viewaxis[3];		// transformation matrix
 
 	int			time;				// time in milliseconds for shader effects and other time dependent rendering issues
+	float		timeFraction;
 	int			rdflags;			// RDF_NOWORLDMODEL, etc
 
 	// 1 bits will prevent the associated area from rendering at all
@@ -905,6 +906,9 @@ typedef struct {
 #define FUNCTABLE_SIZE2		10
 #define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
 
+float NewSinTable (double index);
+float NewCosTable (double index);
+
 
 // the renderer front end should never modify glstate_t
 typedef struct {
@@ -1231,7 +1235,7 @@ extern cvar_t	*mme_saveDepth;
 
 //====================================================================
 
-float R_NoiseGet4f( float x, float y, float z, float t );
+float R_NoiseGet4f( float x, float y, float z, double t );
 void  R_NoiseInit( void );
 
 void R_SwapBuffers( int );
@@ -1842,6 +1846,8 @@ qboolean R_MME_JitterOrigin( float *x, float *y );
 
 int R_MME_MultiPassBegin( void );
 int R_MME_MultiPassNext( );
+
+void R_MME_TimeFraction(float timeFraction);
 
 //Bloom Stuff
 void R_BloomInit( void );

@@ -468,7 +468,7 @@ Rendering a scene may require multiple views to be rendered
 to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
-
+static qboolean timeFractionSet = qfalse;
 void RE_RenderScene( const refdef_t *fd ) {
 	viewParms_t		parms;
 	trRefdef_t		*refdef;
@@ -505,6 +505,9 @@ void RE_RenderScene( const refdef_t *fd ) {
 	VectorCopy( fd->viewaxis[2], refdef->viewaxis[2] );
 
 	refdef->time = fd->time;
+	if (!timeFractionSet)
+		refdef->timeFraction = 0.0f;
+	timeFractionSet = qfalse;
 	refdef->rdflags = fd->rdflags;
 
 	// copy the areamask data over and note if it has changed, which
@@ -566,4 +569,9 @@ void RE_RenderScene( const refdef_t *fd ) {
 	R_RenderView( &parms );
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
+}
+
+void R_MME_TimeFraction(float timeFraction) {
+	trScene.refdef->timeFraction = timeFraction;
+	timeFractionSet = qtrue;
 }

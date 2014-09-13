@@ -182,8 +182,8 @@ static void fxDoVibrate( const vec3_t origin, const vec3_t position, float stren
 
 
 void FX_VibrateView( float scale, vec3_t origin, vec3_t angles ) {
-	int i, time;
-	float magnitude;
+	float magnitude, time;
+	int i;
 
 	scale *= fx_Vibrate->value;
 	if (scale <= 0) {
@@ -197,9 +197,9 @@ void FX_VibrateView( float scale, vec3_t origin, vec3_t angles ) {
 	if( !fx.vibrate.time )
 		return;
 
-	time = fx.time - fx.vibrate.time;
-	if( time < 20 )
-		time = 20;
+	time = (fx.time - fx.vibrate.time) + fx.timeFraction;
+	if( time < 20.0f )
+		time = 20.0f;
 	magnitude = ((fx.vibrate.magnitude > 100) ? 100 : fx.vibrate.magnitude) / (time / 20.0f);
 	if( magnitude <= 3 )
 	{

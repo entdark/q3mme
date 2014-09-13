@@ -40,7 +40,7 @@ Draws large numbers for status bar and powerups
 ==============
 */
 #ifndef MISSIONPACK
-static void CG_DrawField (int x, int y, int width, int value) {
+static void CG_DrawField (float x, float y, int width, int value) {
 	char	num[16], *ptr;
 	int		l;
 	int		frame;
@@ -101,6 +101,7 @@ CG_Draw3DModel
 
 ================
 */
+extern void trap_MME_TimeFraction( float timeFraction );
 void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
@@ -133,6 +134,7 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandl
 	refdef.height = h;
 
 	refdef.time = cg.time;
+	trap_MME_TimeFraction(cg.timeFraction);
 
 	trap_R_ClearScene();
 	trap_R_AddRefEntityToScene( &ent );
@@ -217,7 +219,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		len = 0.5 * ( maxs[2] - mins[2] );		
 		origin[0] = len / 0.268;	// len / tan( fov/2 )
 
-		angles[YAW] = 60 * sin( cg.time / 2000.0 );;
+		angles[YAW] = 60 * sin( (cg.time / 2000.0) + cg.timeFraction / 2000.0 );;
 
 		if( team == TEAM_RED ) {
 			handle = cgs.media.redFlagModel;
@@ -263,7 +265,7 @@ static void CG_DrawStatusBarHead( float x ) {
 	VectorClear( angles );
 
 	if ( cg.damageTime && cg.time - cg.damageTime < DAMAGE_TIME ) {
-		frac = (float)(cg.time - cg.damageTime ) / DAMAGE_TIME;
+		frac = ((cg.time - cg.damageTime ) + cg.timeFraction) / DAMAGE_TIME;
 		size = ICON_SIZE * 1.25 * ( 1.5 - frac * 0.5 );
 
 		stretch = size - ICON_SIZE * 1.25;
@@ -297,7 +299,7 @@ static void CG_DrawStatusBarHead( float x ) {
 		cg.headStartTime = cg.time;
 	}
 
-	frac = ( cg.time - cg.headStartTime ) / (float)( cg.headEndTime - cg.headStartTime );
+	frac = ( ( cg.time - cg.headStartTime ) + cg.timeFraction ) / (float)( cg.headEndTime - cg.headStartTime );
 	frac = frac * frac * ( 3 - 2 * frac );
 	angles[YAW] = cg.headStartYaw + ( cg.headEndYaw - cg.headStartYaw ) * frac;
 	angles[PITCH] = cg.headStartPitch + ( cg.headEndPitch - cg.headStartPitch ) * frac;
@@ -800,7 +802,7 @@ static float CG_DrawPowerups( float y ) {
 		  } else {
 			  vec4_t	modulate;
 
-			  f = (float)( t - cg.time ) / POWERUP_BLINK_TIME;
+			  f = ( ( t - cg.time ) - cg.timeFraction ) / POWERUP_BLINK_TIME;
 			  f -= (int)f;
 			  modulate[0] = modulate[1] = modulate[2] = modulate[3] = f;
 			  trap_R_SetColor( modulate );
@@ -808,14 +810,14 @@ static float CG_DrawPowerups( float y ) {
 
 		  if ( cg.powerupActive == sorted[i] && 
 			  cg.time - cg.powerupTime < PULSE_TIME ) {
-			  f = 1.0 - ( ( (float)cg.time - cg.powerupTime ) / PULSE_TIME );
+			  f = 1.0f - ( ( cg.time - cg.powerupTime ) + cg.timeFraction ) / PULSE_TIME;
 			  size = ICON_SIZE * ( 1.0 + ( PULSE_SCALE - 1.0 ) * f );
 		  } else {
 			  size = ICON_SIZE;
 		  }
 
-		  CG_DrawPic( 640 - size, y + ICON_SIZE / 2 - size / 2, 
-			  size, size, trap_R_RegisterShader( item->icon ) );
+		  CG_DrawPic( 640 - size*cgs.widthRatioCoef, y + ICON_SIZE / 2 - size / 2, 
+			  size*cgs.widthRatioCoef, size, trap_R_RegisterShader( item->icon ) );
     }
 	}
 	trap_R_SetColor( NULL );
@@ -1463,7 +1465,7 @@ static void CG_DrawCrosshair(void) {
 	w = h = cg_crosshairSize.value;
 
 	// pulse the size of the crosshair when picking up items
-	f = cg.time - cg.itemPickupBlendTime;
+	f = (cg.time - cg.itemPickupBlendTime) + cg.timeFraction;
 	if ( f > 0 && f < ITEM_BLOB_TIME ) {
 		f /= ITEM_BLOB_TIME;
 		w *= ( 1 + f );

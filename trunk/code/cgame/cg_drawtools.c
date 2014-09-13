@@ -457,22 +457,24 @@ CG_FadeColor
 ================
 */
 float *CG_FadeColor( int startMsec, int totalMsec ) {
-	static vec4_t		color;
-	int			t;
+	static vec4_t color;
+	float t;
 
 	if ( startMsec == 0 ) {
 		return NULL;
 	}
 
-	t = cg.time - startMsec;
+	t = (cg.time - startMsec) + cg.timeFraction;
 
 	if ( t >= totalMsec ) {
+		return NULL;
+	} else if (t < 0){
 		return NULL;
 	}
 
 	// fade out
-	if ( totalMsec - t < FADE_TIME ) {
-		color[3] = ( totalMsec - t ) * 1.0/FADE_TIME;
+	if ( (float)totalMsec - t < FADE_TIME ) {
+		color[3] = ( (float)totalMsec - t ) * 1.0/FADE_TIME;
 	} else {
 		color[3] = 1.0;
 	}
@@ -945,7 +947,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[0] = color[0];
 		drawcolor[1] = color[1];
 		drawcolor[2] = color[2];
-		drawcolor[3] = 0.5 + 0.5 * sin( cg.time / PULSE_DIVISOR );
+		drawcolor[3] = 0.5 + 0.5 * sin( ((double)cg.time / PULSE_DIVISOR) + cg.timeFraction / PULSE_DIVISOR );
 		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, cgs.media.charsetPropGlow );
 		return;
 	}

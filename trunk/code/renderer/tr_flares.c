@@ -276,13 +276,13 @@ void RB_TestFlare( flare_t *f ) {
 			f->visible = qtrue;
 			f->fadeTime = backEnd.refdef->time - 1;
 		}
-		fade = ( ( backEnd.refdef->time - f->fadeTime ) /1000.0f ) * r_flareFade->value;
+		fade = ( (( backEnd.refdef->time - f->fadeTime ) + backEnd.refdef->timeFraction) /1000.0f ) * r_flareFade->value;
 	} else {
 		if ( f->visible ) {
 			f->visible = qfalse;
 			f->fadeTime = backEnd.refdef->time - 1;
 		}
-		fade = 1.0f - ( ( backEnd.refdef->time - f->fadeTime ) / 1000.0f ) * r_flareFade->value;
+		fade = 1.0f - ( (( backEnd.refdef->time - f->fadeTime ) + backEnd.refdef->timeFraction) / 1000.0f ) * r_flareFade->value;
 	}
 
 	if ( fade < 0 ) {

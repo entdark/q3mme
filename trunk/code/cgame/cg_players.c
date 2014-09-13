@@ -1266,7 +1266,7 @@ static void CG_RunLerpFrame( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation
 	if ( lf->frameTime == lf->oldFrameTime ) {
 		lf->backlerp = 0;
 	} else {
-		lf->backlerp = 1.0 - (cg.timeFraction + ( cg.time - lf->oldFrameTime )) / ( lf->frameTime - lf->oldFrameTime );
+		lf->backlerp = 1.0f - (cg.timeFraction + ( cg.time - lf->oldFrameTime )) / ( lf->frameTime - lf->oldFrameTime );
 	}
 }
 
@@ -1402,20 +1402,15 @@ CG_AddPainTwitch
 =================
 */
 static void CG_AddPainTwitch( centity_t *cent, vec3_t torsoAngles ) {
-	int		t;
-	float	f;
-
-	t = cg.time - cent->pe.painTime;
+	float t = (cg.time - cent->pe.painTime) + cg.timeFraction;
 	if ( t >= PAIN_TWITCH_TIME ) {
 		return;
 	}
-
-	f = 1.0 - (float)t / PAIN_TWITCH_TIME;
-
+	t = 1.0f - t / PAIN_TWITCH_TIME;
 	if ( cent->pe.painDirection ) {
-		torsoAngles[ROLL] += 20 * f;
+		torsoAngles[ROLL] += 20 * t;
 	} else {
-		torsoAngles[ROLL] -= 20 * f;
+		torsoAngles[ROLL] -= 20 * t;
 	}
 }
 

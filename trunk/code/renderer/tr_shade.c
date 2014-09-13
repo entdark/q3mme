@@ -846,10 +846,8 @@ static void ComputeColors( const shaderStage_t *pStage )
 	// fog adjustment for colors to fade out as fog increases
 	//
 	//CANATODO, another check to refill the color table....
-	if ( tess.fogNum )
-	{
-		switch ( pStage->adjustColorsForFog )
-		{
+	if ( tess.fogNum ) {
+		switch ( pStage->adjustColorsForFog ) {
 		case ACFF_MODULATE_RGB:
 			RB_CalcModulateColorsByFog( tess.storage.stageColors[0] );
 			break;

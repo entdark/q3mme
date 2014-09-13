@@ -761,6 +761,10 @@ long CL_CgameSystemCalls( long *args ) {
 		S_MMEMusic( VMA(1), VMF(2), VMF(3) );
         return 0; 		
 
+	case CG_MME_TIMEFRACTION:
+		re.TimeFraction(VMF(1));
+		return 0;
+	
 	case CG_R_ADDSPRITETOSCENE:
 		re.AddSpriteToScene( VMA(1) );
 		return 0;

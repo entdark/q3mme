@@ -393,18 +393,18 @@ void RB_SurfaceDecal( const srfDecal_t *decal ) {
 	RB_CheckShaderTime( backEnd.refdef->time );
 	Byte4Copy( decal->color, color );
 	if (!(decal->flags & DECAL_TEMP)) {
-		int	leftTime = (decal->endTime - backEnd.refdef->time); 
+		float leftTime = (decal->endTime - backEnd.refdef->time) - backEnd.refdef->timeFraction; 
 		if ( decal->flags & DECAL_ENERGY) {
 			if ( leftTime > 7000) {
 
 			} else if ( leftTime > (7000 - 2048)) {
-				int fade = leftTime - (7000 - 2048);
-				color[0] = (color[0] * fade) >> 11;
-				color[1] = (color[1] * fade) >> 11;
-				color[2] = (color[2] * fade) >> 11;
+				float fade = leftTime - (7000 - 2048);
+				color[0] = (color[0] * fade) / 2048.0f;
+				color[1] = (color[1] * fade) / 2048.0f;
+				color[2] = (color[2] * fade) / 2048.0f;
 			} else {
 				if ( leftTime < 1024) {
-					color[3] = (color[3] * leftTime) >> 10;
+					color[3] = (color[3] * leftTime) / 1024.0f;
 				}
 				color[0] = 0;
 				color[1] = 0;
@@ -412,13 +412,13 @@ void RB_SurfaceDecal( const srfDecal_t *decal ) {
 			}
 		} else if ( decal->flags & DECAL_ALPHA ) {
 			if ( leftTime < 1024) {
-				color[3] = (color[3] * leftTime) >> 10;
+				color[3] = (color[3] * leftTime) / 1024.0f;
 			}
 		} else {
 			if ( leftTime < 1024) {
-				color[0] = (color[0] * leftTime) >> 10;
-				color[1] = (color[1] * leftTime) >> 10;
-				color[2] = (color[2] * leftTime) >> 10;
+				color[0] = (color[0] * leftTime) / 1024.0f;
+				color[1] = (color[1] * leftTime) / 1024.0f;
+				color[2] = (color[2] * leftTime) / 1024.0f;
 			}
 		}
 	}
