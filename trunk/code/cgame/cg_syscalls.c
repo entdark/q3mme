@@ -474,6 +474,9 @@ void trap_MME_Music( const char *musicName, float time, float length ) {
 int trap_MME_DemoInfo( mmeDemoInfo_t *info ) {
 	return syscall( CG_MME_DEMOINFO, info );
 }
+void trap_MME_TimeFraction( float timeFraction ) {
+	syscall( CG_MME_TIMEFRACTION, PASSFLOAT(timeFraction) );
+}
 void trap_R_AddSpriteToScene( const refSprite_t *sprite ) {
 	syscall( CG_R_ADDSPRITETOSCENE, sprite );
 }
