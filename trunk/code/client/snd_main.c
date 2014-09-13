@@ -435,6 +435,8 @@ void S_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwat
 	
 	s_hadSpatialize = qtrue;
 	s_playScale *= com_timescale->value;
+
+	s_underWater = (qboolean)inwater;
 }
 
 
