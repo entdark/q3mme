@@ -31,7 +31,8 @@ static  mixSound_t		*mixAllocSounds = 0;
 static  mixSound_t		mixEmptySound;
 static  int				zeroFill;		//So emptySound.data has some data
 
-cvar_t	*s_mixSame;
+static cvar_t	*s_mixSame;
+static cvar_t	*s_mixSameTime;
 cvar_t			*s_effects;
 
 static mixSound_t *S_MixAllocSound( int samples ) {
@@ -621,6 +622,7 @@ void S_MixInit( void ) {
 	}
 	/* How many similar sounding close to eachother sound effects */
 	s_mixSame = Cvar_Get( "s_mixSame", "2", CVAR_ARCHIVE );
+	s_mixSameTime = Cvar_Get( "s_mixSameTime", "10", CVAR_ARCHIVE );
 
 	s_effects = Cvar_Get( "s_effects", "1", CVAR_ARCHIVE );
 	S_EffectInit();
