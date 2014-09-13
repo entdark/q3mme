@@ -489,6 +489,7 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 	shotData.take = qtrue;
 	shotData.fps = cmd->fps;
 	shotData.dofFocus = cmd->focus;
+	shotData.dofRadius = cmd->radius;
 	if (strcmp( cmd->name, shotData.main.name) || mme_screenShotFormat->modified || mme_screenShotAlpha->modified ) {
 		/* Also reset the the other data */
 		blurData.control.totalIndex = 0;
@@ -538,7 +539,7 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 	return (const void *)(cmd + 1);	
 }
 
-void R_MME_Capture( const char *shotName, float fps, float focus ) {
+void R_MME_Capture( const char *shotName, float fps, float focus, float radius ) {
 	captureCommand_t *cmd;
 	
 	if ( !tr.registered || !fps ) {
@@ -548,8 +549,11 @@ void R_MME_Capture( const char *shotName, float fps, float focus ) {
 	if ( !cmd ) {
 		return;
 	}
+	if (mme_dofFrames->integer > 0)
+		tr.capturingDofOrStereo = qtrue;
 	cmd->fps = fps;
 	cmd->focus = focus;
+	cmd->radius = radius;
 	Q_strncpyz( cmd->name, shotName, sizeof( cmd->name ));
 }
 
