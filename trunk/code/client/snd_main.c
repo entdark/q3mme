@@ -68,6 +68,7 @@ vec3_t		s_listenVelocity;
 vec3_t		s_listenAxis[3];
 float		s_playScale;
 qboolean	s_hadSpatialize;
+qboolean	s_underWater;
 
 cvar_t		*s_volume;
 cvar_t		*s_musicVolume;
@@ -137,6 +138,7 @@ void S_Init( void ) {
 	s_soundMuted = 1;
 	S_StopAllSounds ();
 	S_SoundInfo_f();
+	s_underWater = qfalse;
 }
 
 

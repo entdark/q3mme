@@ -102,10 +102,11 @@ static void CG_DemosUpdatePlayer( void ) {
 }
 
 
-void demoSetupView( void) {
-	centity_t *cent = 0;
+static int demoSetupView( void) {
 	vec3_t forward;
+	int inwater = qfalse;
 	qboolean behindView = qfalse;
+	int contents;
 
 	cg.playerPredicted = qfalse;
 	cg.playerCent = 0;
@@ -167,7 +168,7 @@ void demoSetupView( void) {
 		}
 		break;
 	default:
-		return;
+		return inwater;
 	}
 
 	demo.viewAngles[YAW]	+= mov_deltaYaw.value;
@@ -227,6 +228,17 @@ void demoSetupView( void) {
 
 	cg.refdef.fov_x = demo.viewFov;
 	cg.refdef.fov_y = atan2( cg.refdef.height, (cg.refdef.width / tan( demo.viewFov / 360 * M_PI )) ) * 360 / M_PI;
+	
+	contents = CG_PointContents( cg.refdef.vieworg, -1 );
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
+		double v = WAVE_AMPLITUDE * sin(((double)cg.time + (double)cg.timeFraction) / 1000.0 * WAVE_FREQUENCY * M_PI * 2);
+		cg.refdef.fov_x += v;
+		cg.refdef.fov_y -= v;
+		inwater = qtrue;
+	} else {
+		inwater = qfalse;
+	}
+	return inwater;
 }
 
 extern snapshot_t *CG_ReadNextSnapshot( void );
@@ -323,6 +335,8 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	float frameSpeed;
 	int blurTotal, blurIndex;
 	float blurFraction;
+
+	int inwater, entityNum;
 
 	if (!demo.initDone) {
 		if ( !cg.snap ) {
@@ -518,7 +532,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	VectorCopy( cg.predictedPlayerEntity.currentState.pos.trBase, cg.predictedPlayerEntity.lerpOrigin );
 	VectorCopy( cg.predictedPlayerEntity.currentState.apos.trBase, cg.predictedPlayerEntity.lerpAngles );
 
-	demoSetupView();
+	inwater = demoSetupView();
 
 	CG_TileClear();
 	trap_FX_Begin( cg.time, cg.timeFraction );

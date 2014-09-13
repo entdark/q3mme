@@ -41,6 +41,7 @@ dma_t			dma;
 static mixBackground_t	dmaBackground;
 static mixLoop_t		dmaLoops[DMA_LOOPCHANNELS];
 static mixChannel_t		dmaChannels[DMA_SNDCHANNELS];
+static mixEffect_t	dmaEffect;
 static qboolean			dmaInit;
 static int   			dmaWrite;
 
@@ -66,6 +67,7 @@ void S_DMAClearBuffer( void ) {
 	/* Clear the active channels and loops */
 	Com_Memset( dmaLoops, 0, sizeof( dmaLoops ));
 	Com_Memset( dmaChannels, 0, sizeof( dmaChannels ));
+	Com_Memset( &dmaEffect, 0, sizeof( &dmaEffect ));
 
 	s_rawend = 0;
 
@@ -111,9 +113,8 @@ void S_DMAShowInfo(void) {
 
 void S_DMA_Update( float scale ) {
 	int				ma, count;
-	static int		lastTime, lastPos;
-	int				thisTime, thisPos;
-	int				msec;
+	static int		lastPos;
+	int				thisPos;
 	int				lastWrite, lastRead;
 	int				bufSize, bufDone;
 	int				speed;
@@ -139,17 +140,7 @@ void S_DMA_Update( float scale ) {
 //	Com_Printf( "lastRead %d lastWrite %d done %d\n", lastRead, lastWrite, bufDone );
 	lastPos = thisPos;
 
-	/* How much time has passed since the last buffer fill */
-	/* TODO, maybe just use the cl values for time passed, why do another milli call */
-	thisTime = Com_Milliseconds();
-	msec = thisTime - lastTime;
-	if (msec < 11) {
-		msec = 11;			// 85hz
-	}
-	lastTime = thisTime;
-
 	ma = s_mixahead->value * dma.speed;
-	count = msec*dma.speed*0.001f;
 	count = lastRead;
 	if (bufDone + count < ma) {
 		count = ma - bufDone + 1;
@@ -177,6 +168,7 @@ void S_DMA_Update( float scale ) {
 		S_MixBackground( &dmaBackground, speed, count, buf );
 		S_MixChannels( dmaChannels, DMA_SNDCHANNELS, speed, count, buf );
 		S_MixLoops( dmaLoops, DMA_LOOPCHANNELS, speed, count, buf );
+		S_MixEffects(&dmaEffect, speed, count, buf);
 	} else {
 		Com_Memset( buf, 0, sizeof( buf[0] ) * count * 2);
 	}

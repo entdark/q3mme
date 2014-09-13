@@ -32,6 +32,7 @@ static  mixSound_t		mixEmptySound;
 static  int				zeroFill;		//So emptySound.data has some data
 
 cvar_t	*s_mixSame;
+cvar_t			*s_effects;
 
 static mixSound_t *S_MixAllocSound( int samples ) {
 	int allocSize, lastUsed = (1 << 30);
@@ -116,7 +117,7 @@ takeNext:
 	return allocSound;
 }
 
-static const mixSound_t *S_MixGetSound( sfxHandle_t sfxHandle ) {
+const mixSound_t *S_MixGetSound( sfxHandle_t sfxHandle ) {
 	sfxEntry_t *entry;
 	mixSound_t *sound;
 	openSound_t *openSound;
@@ -620,6 +621,10 @@ void S_MixInit( void ) {
 	}
 	/* How many similar sounding close to eachother sound effects */
 	s_mixSame = Cvar_Get( "s_mixSame", "2", CVAR_ARCHIVE );
+
+	s_effects = Cvar_Get( "s_effects", "1", CVAR_ARCHIVE );
+	S_EffectInit();
+
 	/* Init the first block */
 	mixAllocSounds->prev = 0;
 	mixAllocSounds->next = 0;
