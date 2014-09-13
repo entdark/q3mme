@@ -1647,6 +1647,12 @@ void CG_Draw2D( void ) {
 				CG_DrawReward();
 			}
 		}
+	} else {
+		// don't draw any status if dead or the scoreboard is being explicitly shown
+		if ( !cg.showScores && !(cg.playerCent->currentState.eFlags & EF_DEAD) ) {
+			CG_DrawCrosshair();
+			CG_DrawCrosshairNames();
+		}
 	}
 	CG_DrawLagometer();
 	CG_DrawUpperRight();
