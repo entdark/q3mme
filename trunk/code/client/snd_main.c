@@ -208,8 +208,9 @@ Creates a default buzz sound if the file can't be loaded
 ==================
 */
 sfxHandle_t	S_RegisterSound( const char *name, qboolean compressed ) {
+	const char *fileExt;
 	char fileName[MAX_QPATH];
-	int len;
+	int len, lenExt;
 	unsigned long hashIndex;
 	sfxEntry_t *entry;
 
@@ -226,15 +227,29 @@ sfxHandle_t	S_RegisterSound( const char *name, qboolean compressed ) {
 		return 0;
 	}
 	
+	fileExt = strchr(name, '.');
+	lenExt = 0;
+	if (!fileExt) {
+		fileExt = ".wav";
+		lenExt = 4;
+	}
 	hashIndex = 0;
 	for ( len = 0; name[0] && len < (sizeof( fileName ) - 1); name ++, len++ ) {
 		char c = tolower( name [0] );
 		hashIndex = (hashIndex << 5 ) ^ (hashIndex >> 27) ^ c;
 		fileName[len] = c;
 	}
+	for ( ; fileExt[0] && len < (sizeof( fileName ) - 1) && lenExt > 0; lenExt--, fileExt++, len++ ) {
+		char c = tolower( fileExt [0] );
+		hashIndex = (hashIndex << 5 ) ^ (hashIndex >> 27) ^ c;
+		fileName[len] = c;
+	}
 	hashIndex = ( hashIndex ^ (hashIndex >> 10) ^ (hashIndex >> 20) ) & (SFX_HASH - 1);
 	fileName[len] = 0;
 	
+	if (!S_FileExists(fileName)) {
+		return 0;
+	}
 	entry = sfxHash[ hashIndex ];
 	while (entry) {
 		if (!strcmp( entry->name, fileName ))

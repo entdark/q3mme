@@ -212,12 +212,16 @@ void S_MMEMusic( const char *musicName, float time, float length ) {
 		s_background.override = qfalse;
 		return;
 	}
-	s_background.override = qtrue;
-	s_background.seekTime = time;
-	s_background.length = length;
-	s_background.playing = qtrue;
-	s_background.reload = qtrue;
-
 	Q_strncpyz( s_background.startName, musicName, sizeof( s_background.startName ));
-	COM_DefaultExtension( s_background.startName, sizeof( s_background.startName ), ".wav" );
+	/* S_FileExists sets correct extension */
+	if (!S_FileExists(s_background.startName)) {
+		s_background.playing = qfalse;
+		s_background.override = qfalse;
+	} else {
+		s_background.override = qtrue;
+		s_background.seekTime = time;
+		s_background.length = length;
+		s_background.playing = qtrue;
+		s_background.reload = qtrue;
+	}
 }

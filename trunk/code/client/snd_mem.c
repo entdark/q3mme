@@ -40,6 +40,24 @@ memory management
 ===============================================================================
 */
 
+qboolean S_FileExists(char *fileName) {
+	fileHandle_t f;
+	COM_StripExtension(fileName, fileName);
+	COM_DefaultExtension(fileName, MAX_QPATH, ".wav");
+	FS_FOpenFileRead(fileName, &f, qtrue);
+	if (!f) {
+#ifdef HAVE_LIBMAD
+		COM_StripExtension(fileName, fileName);
+		COM_DefaultExtension(fileName, MAX_QPATH, ".mp3");
+		FS_FOpenFileRead(fileName, &f, qtrue);
+		if (!f)
+#endif
+			return qfalse;
+	}
+	FS_FCloseFile(f);
+	return qtrue;
+}
+
 /*
 ===============================================================================
 

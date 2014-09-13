@@ -172,6 +172,8 @@ extern vec3_t	s_listenAxis[3];
 
 extern qboolean	s_underWater;
 
+qboolean S_FileExists(char *fileName);
+
 void	*S_Malloc( int size );
 openSound_t *S_SoundOpen( const char *fileName );
 int S_SoundRead( openSound_t *open, qboolean stereo, int size, short *data );
