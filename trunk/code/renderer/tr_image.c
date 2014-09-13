@@ -24,10 +24,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+//#include "../qcommon/unzip.h"
+
 #ifdef SUPPORT_PNG
-#include <png.h>
-#pragma comment (lib, "libpng.lib")
-#pragma comment (lib, "zlib.lib")
+//#include <png.h>
+//#include "png.h"
+#include "libpng/png.h"
+#include "zlib/zlib.h"
+//#pragma comment (lib, "libpng.lib")
+//#pragma comment (lib, "zlib.lib")
 #endif
 /*
  * Include file for users of JPEG library.
@@ -678,7 +683,8 @@ static void Upload32( unsigned *data,
 
 			goto done;
 		}
-		Com_Memcpy (scaledBuffer, data, width*height*4);
+		
+		Com_Memcpy (scaledBuffer, data, width*height*4);		
 	}
 	else
 	{
@@ -2978,8 +2984,8 @@ skip_shot:
 	return writeData.bufferUsed;
 }
 #else
-void SavePNG(const char * filename, const int compresslevel, const int image_width, const int image_height, const byte *image_buffer, const int image_hasalpha) {
-
-}
+//void SavePNG(const char * filename, const int compresslevel, const int image_width, const int image_height, const byte *image_buffer, const int image_hasalpha) {
+//
+//}
 #endif
 
