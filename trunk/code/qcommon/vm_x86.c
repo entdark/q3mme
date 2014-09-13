@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // vm_x86.c -- load time compiler and execution environment for x86
-
+#ifndef IOQ3_VM
 #include "vm_local.h"
 
 #ifdef __FreeBSD__ // rb0101023
@@ -399,6 +399,8 @@ qboolean EmitMovEBXEDI(vm_t *vm, int andit) {
 	EmitString( "8B 1F" );		// mov ebx, dword ptr [edi]
 	return qfalse;
 }
+
+#include <Windows.h> // terrible practice, never do that at home
 
 /*
 =================
@@ -1090,7 +1092,16 @@ void VM_Compile( vm_t *vm, vmHeader_t *header ) {
 			Com_Error( ERR_FATAL, "mprotect failed to change PROT_EXEC" );
 	}
 #endif
-
+#if 1
+	if( 1 ) {
+		DWORD oldProtect = 0;
+		
+		// remove write permissions. // rather grant exec permissions
+		if(!VirtualProtect(vm->codeBase, compiledOfs, PAGE_EXECUTE_READ, &oldProtect)) {
+			Com_Error(ERR_FATAL, "VM_CompileX86: VirtualProtect failed");
+		}		
+	}
+#endif
 }
 
 /*
@@ -1149,6 +1160,8 @@ int	VM_CallCompiled( vm_t *vm, int *args ) {
 	entryPoint = vm->codeBase;
 	opStack = &stack;
 
+	
+
 #ifdef _MSC_VER
 	__asm  {
 		push	ebx
@@ -1206,4 +1219,5 @@ int	VM_CallCompiled( vm_t *vm, int *args ) {
 }
 #endif // !DLL_ONLY
 
+#endif
 

@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define MAX_TEAMNAME 32
 
+#define DEMOEXT	"dm_"			// standard demo extension
+
 #ifdef _MSC_VER
 
 #ifndef _CRT_SECURE_NO_DEPRECATE
@@ -96,6 +98,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <ctype.h>
 #include <limits.h>
 
+#ifdef _MSC_VER
+  #include <io.h>
+
+  typedef __int64 int64_t;
+  typedef __int32 int32_t;
+  typedef __int16 int16_t;
+  typedef __int8 int8_t;
+  typedef unsigned __int64 uint64_t;
+  typedef unsigned __int32 uint32_t;
+  typedef unsigned __int16 uint16_t;
+  typedef unsigned __int8 uint8_t;
+
+  // vsnprintf is ISO/IEC 9899:1999
+  // abstracting this to make it portable
+  int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap);
+#else
+  #include <stdint.h>
+
+  #define Q_vsnprintf vsnprintf
+#endif
+
 #endif
 
 #ifdef _MSC_VER
@@ -112,10 +135,21 @@ typedef unsigned char 		byte;
 
 typedef enum {qfalse, qtrue}	qboolean;
 
+typedef union {
+	float f;
+	int i;
+	unsigned int ui;
+} floatint_t;
+
 typedef int		qhandle_t;
 typedef int		sfxHandle_t;
 typedef int		fileHandle_t;
 typedef int		clipHandle_t;
+
+#define PAD(base, alignment)	(((base)+(alignment)-1) & ~((alignment)-1))
+#define PADLEN(base, alignment)	(PAD((base), (alignment)) - (base))
+
+#define PADP(base, alignment)	((void *) PAD((intptr_t) (base), (alignment)))
 
 
 #ifndef NULL
@@ -124,6 +158,8 @@ typedef int		clipHandle_t;
 
 #define	MAX_QINT			0x7fffffff
 #define	MIN_QINT			(-MAX_QINT-1)
+
+#define ARRAY_LEN(x)			(sizeof(x) / sizeof(*(x)))
 
 
 // angle indexes
@@ -349,6 +385,41 @@ extern	vec3_t	axisDefault[3];
 #define	nanmask (255<<23)
 
 #define	IS_NAN(x) (((*(int *)&x)&nanmask)==nanmask)
+
+#if idx64
+/*  extern long qftolsse(float f);
+  extern int qvmftolsse(void);
+  extern void qsnapvectorsse(vec3_t vec);
+
+  #define Q_ftol qftolsse
+  #define Q_SnapVector qsnapvectorsse
+  */
+  extern int (*Q_VMftol)(void);
+#elif id386
+/*  extern long QDECL qftolx87(float f);
+  extern long QDECL qftolsse(float f);*/
+  extern int QDECL qvmftolx87(void);
+/*  extern int QDECL qvmftolsse(void);
+  extern void QDECL qsnapvectorx87(vec3_t vec);
+  extern void QDECL qsnapvectorsse(vec3_t vec);
+
+  extern long (QDECL *Q_ftol)(float f);*/
+  extern int (QDECL *Q_VMftol)(void);
+/*  extern void (QDECL *Q_SnapVector)(vec3_t vec);*/
+#else
+  // Q_ftol must expand to a function name so the pluggable renderer can take
+  // its address
+  #define Q_ftol lrintf
+  #define Q_SnapVector(vec)\
+	do\
+	{\
+		vec3_t *temp = (vec);\
+		\
+		(*temp)[0] = round((*temp)[0]);\
+		(*temp)[1] = round((*temp)[1]);\
+		(*temp)[2] = round((*temp)[2]);\
+	} while(0)
+#endif
 
 #if idppc
 

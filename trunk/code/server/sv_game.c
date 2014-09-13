@@ -287,17 +287,6 @@ void SV_GetUsercmd( int clientNum, usercmd_t *cmd ) {
 
 //==============================================
 
-static int	FloatAsInt( float f ) {
-	union
-	{
-	    int i;
-	    float f;
-	} temp;
-	
-	temp.f = f;
-	return temp.i;
-}
-
 /*
 ====================
 SV_GameSystemCalls
@@ -305,7 +294,26 @@ SV_GameSystemCalls
 The module is making a system call
 ====================
 */
+#ifdef IOQ3_VM
+static int	FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
+intptr_t SV_GameSystemCalls( intptr_t *args ) {
+#else
+static int	FloatAsInt( float f ) {
+	union {
+	    int i;
+	    float f;
+	} temp;	
+	temp.f = f;
+	return temp.i;
+}
+
 long SV_GameSystemCalls( long *args ) {
+#endif
 	switch( args[0] ) {
 	case G_PRINT:
 		Com_Printf( "%s", VMA(1) );
@@ -917,7 +925,11 @@ void SV_RestartGameProgs( void ) {
 	VM_Call( gvm, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
+#ifndef IOQ3_VM
 	gvm = VM_Restart( gvm );
+#else
+	gvm = VM_Restart(gvm, qtrue);
+#endif
 	if ( !gvm ) { // bk001212 - as done below
 		Com_Error( ERR_FATAL, "VM_Restart on game failed" );
 	}

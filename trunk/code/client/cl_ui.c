@@ -746,25 +746,38 @@ static int GetConfigString(int index, char *buf, int size)
 
 /*
 ====================
-FloatAsInt
-====================
-*/
-static int FloatAsInt( float f ) {
-	int		temp;
-
-	*(float *)&temp = f;
-
-	return temp;
-}
-
-/*
-====================
 CL_UISystemCalls
 
 The ui module is making a system call
 ====================
 */
+#ifdef IOQ3_VM
+/*
+====================
+FloatAsInt
+====================
+*/
+static int FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
+intptr_t CL_UISystemCalls( intptr_t *args ) {
+#else
+/*
+====================
+FloatAsInt
+====================
+*/
+static int FloatAsInt( float f ) {
+	int		temp;
+	*(float *)&temp = f;
+	return temp;
+}
+
 long CL_UISystemCalls( long *args ) {
+#endif
 	switch( args[0] ) {
 	case UI_ERROR:
 		Com_Error( ERR_DROP, "%s", VMA(1) );

@@ -436,14 +436,6 @@ void CL_ShutdownCGame( void ) {
 	cgvm = NULL;
 }
 
-static int	FloatAsInt( float f ) {
-	int		temp;
-
-	*(float *)&temp = f;
-
-	return temp;
-}
-
 /*
 ====================
 CL_CgameSystemCalls
@@ -451,7 +443,23 @@ CL_CgameSystemCalls
 The cgame module is making a system call
 ====================
 */
+#ifdef IOQ3_VM
+static int	FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
+intptr_t CL_CgameSystemCalls( intptr_t *args ) {
+#else
+static int	FloatAsInt( float f ) {
+	int		temp;
+	*(float *)&temp = f;
+	return temp;
+}
+
 long CL_CgameSystemCalls( long *args ) {
+#endif
 	switch( args[0] ) {
 	case CG_PRINT:
 		Com_Printf( "%s", VMA(1) );

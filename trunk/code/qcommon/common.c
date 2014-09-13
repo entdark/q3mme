@@ -81,6 +81,14 @@ cvar_t	*com_cameraMode;
 cvar_t	*com_noErrorInterrupt;
 #endif
 
+#if idx64
+	int (*Q_VMftol)(void);
+#elif id386
+/*	long (QDECL *Q_ftol)(float f);*/
+	int (QDECL *Q_VMftol)(void);
+/*	void (QDECL *Q_SnapVector)(vec3_t vec);*/
+#endif
+
 // com_speeds times
 int		time_game;
 int		time_frontend;		// renderer frontend time
@@ -2337,6 +2345,55 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 
 /*
 =================
+Com_DetectSSE
+Find out whether we have SSE support for Q_ftol function
+=================
+*/
+
+#if 0 && id386 || idx64
+
+static void Com_DetectSSE(void) {
+#if !idx64
+	cpuFeatures_t feat;
+	
+	feat = 0;Sys_GetProcessorFeatures();
+
+	if(feat & CF_SSE) {
+		if(feat & CF_SSE2)
+			Q_SnapVector = qsnapvectorsse;
+		else
+			Q_SnapVector = qsnapvectorx87;
+
+		Q_ftol = qftolsse;
+#endif
+		Q_VMftol = qvmftolsse;
+
+		Com_Printf("Have SSE support\n");
+#if !idx64
+	} else {
+		Q_ftol = qftolx87;
+		Q_VMftol = qvmftolx87;
+		Q_SnapVector = qsnapvectorx87;
+
+		Com_Printf("No SSE support on this machine\n");
+	}
+#endif
+}
+
+#elif 1
+//TODO: use actual SSE detection above (necessary? doubts so)
+static void Com_DetectSSE(void) {
+	Q_VMftol = qvmftolx87;
+}
+
+#else
+
+#define Com_DetectSSE()
+
+#endif
+
+/*
+=================
 Com_Init
 =================
 */
@@ -2361,6 +2418,8 @@ void Com_Init( char *commandLine ) {
 
 //	Swap_Init ();
 	Cbuf_Init ();
+	
+	Com_DetectSSE();
 
 	Com_InitZoneMemory();
 	Cmd_Init ();

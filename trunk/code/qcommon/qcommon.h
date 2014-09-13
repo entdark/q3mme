@@ -307,24 +307,37 @@ typedef enum {
 } sharedTraps_t;
 
 void	VM_Init( void );
+#ifdef IOQ3_VM
+vm_t	*VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
+				   vmInterpret_t interpret );
+vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
+intptr_t QDECL VM_Call( vm_t *vm, int callNum, ... );
+void	*VM_ArgPtr( intptr_t intValue );
+void	*VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue );
+#else
 vm_t	*VM_Create( const char *module, long (*systemCalls)(long *), 
 				   vmInterpret_t interpret );
+vm_t	*VM_Restart( vm_t *vm );
+long	QDECL VM_Call( vm_t *vm, long callNum, ... );
+void	*VM_ArgPtr( long intValue );
+void	*VM_ExplicitArgPtr( vm_t *vm, long intValue );
+#endif
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 
 void	VM_Free( vm_t *vm );
 void	VM_Clear(void);
-vm_t	*VM_Restart( vm_t *vm );
-
-long		QDECL VM_Call( vm_t *vm, long callNum, ... );
 
 void	VM_Debug( int level );
 
-void	*VM_ArgPtr( long intValue );
-void	*VM_ExplicitArgPtr( vm_t *vm, long intValue );
-
 #define	VMA(x) VM_ArgPtr(args[x])
-static __inline float _vmf(long x)
-{
+#ifdef IOQ3_VM
+static ID_INLINE float _vmf(intptr_t x) {
+	floatint_t fi;
+	fi.i = (int) x;
+	return fi.f;
+}
+#else
+static __inline float _vmf(long x) {
 	union {
 		long l;
 		float f;
@@ -332,6 +345,7 @@ static __inline float _vmf(long x)
 	t.l = x;
 	return t.f;
 }
+#endif
 #define	VMF(x)	_vmf(args[x])
 /*
 ==============================================================
@@ -474,6 +488,8 @@ void Cvar_SetLatched( const char *var_name, const char *value);
 void	Cvar_SetValue( const char *var_name, float value );
 // expands value to a string and calls Cvar_Set
 
+void Cvar_SetValue2( const char *var_name, float value, qboolean force );
+
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
 // returns 0 if not defined or non numeric
@@ -562,6 +578,8 @@ qboolean FS_FileExists( const char *file );
 qboolean FS_FileErase( const char *file );
 int		FS_LoadStack( void );
 
+int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, int enableDll);
+
 int		FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
 int		FS_GetModList(  char *listbuf, int bufsize );
 
@@ -593,6 +611,7 @@ int		FS_Read( void *buffer, int len, fileHandle_t f );
 void	FS_FCloseFile( fileHandle_t f );
 // note: you can't just fclose from another DLL, due to MS libc issues
 
+long	FS_ReadFileDir(const char *qpath, void *searchPath, qboolean unpure, void **buffer);
 int		FS_ReadFile( const char *qpath, void **buffer );
 // returns the length of the file
 // a null buffer will just return the file length without loading
@@ -659,6 +678,7 @@ qboolean FS_idPak( char *pak, char *base );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
 void FS_Rename( const char *from, const char *to );
+qboolean FS_Which(const char *filename, void *searchPath);
 
 /*
 ==============================================================
@@ -700,6 +720,19 @@ MISC
 // centralizing the declarations for cl_cdkey
 // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=470
 extern char cl_cdkey[34];
+
+// returned by Sys_GetProcessorFeatures
+typedef enum
+{
+  CF_RDTSC      = 1 << 0,
+  CF_MMX        = 1 << 1,
+  CF_MMX_EXT    = 1 << 2,
+  CF_3DNOW      = 1 << 3,
+  CF_3DNOW_EXT  = 1 << 4,
+  CF_SSE        = 1 << 5,
+  CF_SSE2       = 1 << 6,
+  CF_ALTIVEC    = 1 << 7
+} cpuFeatures_t;
 
 // returnbed by Sys_GetProcessorId
 #define CPUID_GENERIC			0			// any unrecognized processor
@@ -962,6 +995,8 @@ sysEvent_t	Sys_GetEvent( void );
 void	Sys_Init (void);
 
 // general development dll loading for virtual machine testing
+void	* QDECL Sys_LoadGameDll( const char *name, intptr_t (QDECL **entryPoint)(int, ...),
+				  intptr_t (QDECL *systemcalls)(intptr_t, ...) );
 // fqpath param added 7/20/02 by T.Ray - Sys_LoadDll is only called in vm.c at this time
 void	* QDECL Sys_LoadDll( const char *name, char *fqpath , long (QDECL **entryPoint)(long, ...), byte **dataBase, 
 				  long (QDECL *systemcalls)(long, ...) );
@@ -1017,6 +1052,7 @@ void		Sys_ShowIP(void);
 
 qboolean	Sys_CheckCD( void );
 
+FILE	*Sys_FOpen( const char *ospath, const char *mode );
 void	Sys_Mkdir( const char *path );
 char	*Sys_Cwd( void );
 void	Sys_SetDefaultCDPath(const char *path);

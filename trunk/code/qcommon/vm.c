@@ -237,9 +237,11 @@ void VM_LoadSymbols( vm_t *vm ) {
 		Com_Printf( "Couldn't load symbol file: %s\n", symbols );
 		return;
 	}
-
+#ifndef IOQ3_VM
 	numInstructions = vm->instructionPointersLength >> 2;
-
+#else
+	numInstructions = vm->instructionCount;
+#endif
 	// parse the symbols
 	text_p = mapfile;
 	prev = &vm->symbols;
@@ -329,7 +331,11 @@ Dlls will call this directly
  
 ============
 */
+#ifdef IOQ3_VM
+intptr_t QDECL VM_DllSyscall( intptr_t arg, ... ) {
+#else
 long QDECL VM_DllSyscall( long arg, ... ) {
+#endif
 #if ((defined __GNUC__) && !(defined __i386__))
   // rcg010206 - see commentary above
   long args[16];
@@ -349,6 +355,171 @@ long QDECL VM_DllSyscall( long arg, ... ) {
 #endif
 }
 
+#ifdef IOQ3_VM
+/*
+=================
+VM_LoadQVM
+
+Load a .qvm file
+=================
+*/
+vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
+{
+	int					dataLength;
+	int					i;
+	char				filename[MAX_QPATH];
+	union {
+		vmHeader_t	*h;
+		void				*v;
+	} header;
+
+	// load the image
+	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", vm->name );
+	Com_Printf( "Loading vm file %s...\n", filename );
+
+	FS_ReadFileDir(filename, vm->searchPath, unpure, &header.v);
+
+	if ( !header.h ) {
+		Com_Printf( "Failed.\n" );
+		VM_Free( vm );
+
+		Com_Printf(S_COLOR_YELLOW "Warning: Couldn't open VM file %s\n", filename);
+
+		return NULL;
+	}
+
+	// show where the qvm was loaded from
+	FS_Which(filename, vm->searchPath);
+
+	if( LittleLong( header.h->vmMagic ) == VM_MAGIC_VER2 ) {
+		Com_Printf( "...which has vmMagic VM_MAGIC_VER2\n" );
+
+		// byte swap the header
+		for ( i = 0 ; i < sizeof( vmHeader_t ) / 4 ; i++ ) {
+			((int *)header.h)[i] = LittleLong( ((int *)header.h)[i] );
+		}
+
+		// validate
+		if ( header.h->jtrgLength < 0
+			|| header.h->bssLength < 0
+			|| header.h->dataLength < 0
+			|| header.h->litLength < 0
+			|| header.h->codeLength <= 0 )
+		{
+			VM_Free(vm);
+			FS_FreeFile(header.v);
+			
+			Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
+			return NULL;
+		}
+	} else if( LittleLong( header.h->vmMagic ) == VM_MAGIC ) {
+		// byte swap the header
+		// sizeof( vmHeader_t ) - sizeof( int ) is the 1.32b vm header size
+		for ( i = 0 ; i < ( sizeof( vmHeader_t ) - sizeof( int ) ) / 4 ; i++ ) {
+			((int *)header.h)[i] = LittleLong( ((int *)header.h)[i] );
+		}
+
+		// validate
+		if ( header.h->bssLength < 0
+			|| header.h->dataLength < 0
+			|| header.h->litLength < 0
+			|| header.h->codeLength <= 0 )
+		{
+			VM_Free(vm);
+			FS_FreeFile(header.v);
+
+			Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
+			return NULL;
+		}
+	} else {
+		VM_Free( vm );
+		FS_FreeFile(header.v);
+
+		Com_Printf(S_COLOR_YELLOW "Warning: %s does not have a recognisable "
+				"magic number in its header\n", filename);
+		return NULL;
+	}
+
+	// round up to next power of 2 so all data operations can
+	// be mask protected
+	dataLength = header.h->dataLength + header.h->litLength +
+		header.h->bssLength;
+	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) {
+	}
+	dataLength = 1 << i;
+
+	if(alloc)
+	{
+		// allocate zero filled space for initialized and uninitialized data
+		vm->dataBase = Hunk_Alloc(dataLength, h_high);
+		vm->dataMask = dataLength - 1;
+	}
+	else
+	{
+		// clear the data, but make sure we're not clearing more than allocated
+		if(vm->dataMask + 1 != dataLength)
+		{
+			VM_Free(vm);
+			FS_FreeFile(header.v);
+
+			Com_Printf(S_COLOR_YELLOW "Warning: Data region size of %s not matching after "
+					"VM_Restart()\n", filename);
+			return NULL;
+		}
+		
+		Com_Memset(vm->dataBase, 0, dataLength);
+	}
+
+	// copy the intialized data
+	Com_Memcpy( vm->dataBase, (byte *)header.h + header.h->dataOffset,
+		header.h->dataLength + header.h->litLength );
+
+	// byte swap the longs
+	for ( i = 0 ; i < header.h->dataLength ; i += 4 ) {
+		*(int *)(vm->dataBase + i) = LittleLong( *(int *)(vm->dataBase + i ) );
+	}
+
+	if(header.h->vmMagic == VM_MAGIC_VER2)
+	{
+		int previousNumJumpTableTargets = vm->numJumpTableTargets;
+
+		header.h->jtrgLength &= ~0x03;
+
+		vm->numJumpTableTargets = header.h->jtrgLength >> 2;
+		Com_Printf("Loading %d jump table targets\n", vm->numJumpTableTargets);
+
+		if(alloc)
+		{
+			vm->jumpTableTargets = Hunk_Alloc(header.h->jtrgLength, h_high);
+		}
+		else
+		{
+			if(vm->numJumpTableTargets != previousNumJumpTableTargets)
+			{
+				VM_Free(vm);
+				FS_FreeFile(header.v);
+
+				Com_Printf(S_COLOR_YELLOW "Warning: Jump table size of %s not matching after "
+						"VM_Restart()\n", filename);
+				return NULL;
+			}
+
+			Com_Memset(vm->jumpTableTargets, 0, header.h->jtrgLength);
+		}
+
+		Com_Memcpy(vm->jumpTableTargets, (byte *) header.h + header.h->dataOffset +
+				header.h->dataLength + header.h->litLength, header.h->jtrgLength);
+
+		// byte swap the longs
+		for ( i = 0 ; i < header.h->jtrgLength ; i += 4 ) {
+			*(int *)(vm->jumpTableTargets + i) = LittleLong( *(int *)(vm->jumpTableTargets + i ) );
+		}
+	}
+
+	return header.h;
+}
+#endif
+
 /*
 =================
 VM_Restart
@@ -357,7 +528,11 @@ Reload the data, but leave everything else in place
 This allows a server to do a map_restart without changing memory allocation
 =================
 */
+#ifdef IOQ3_VM
+vm_t *VM_Restart(vm_t *vm, qboolean unpure) {
+#else
 vm_t *VM_Restart( vm_t *vm ) {
+#endif
 	vmHeader_t	*header;
 	int			length;
 	int			dataLength;
@@ -367,7 +542,11 @@ vm_t *VM_Restart( vm_t *vm ) {
 	// DLL's can't be restarted in place
 	if ( vm->dllHandle ) {
 		char	name[MAX_QPATH];
+#ifdef IOQ3_VM
+		intptr_t	(*systemCall)( intptr_t *parms );
+#else
 		long	(*systemCall)( long *parms );
+#endif
 		
 		systemCall = vm->systemCall;	
 		Q_strncpyz( name, vm->name, sizeof( name ) );
@@ -378,6 +557,7 @@ vm_t *VM_Restart( vm_t *vm ) {
 		return vm;
 	}
 
+#ifndef IOQ3_VM
 	// load the image
 	Com_Printf( "VM_Restart()\n", filename );
 	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", vm->name );
@@ -419,6 +599,16 @@ vm_t *VM_Restart( vm_t *vm ) {
 	for ( i = 0 ; i < header->dataLength ; i += 4 ) {
 		*(int *)(vm->dataBase + i) = LittleLong( *(int *)(vm->dataBase + i ) );
 	}
+#else
+	// load the image
+	Com_Printf("VM_Restart()\n");
+
+	if(!(header = VM_LoadQVM(vm, qfalse, unpure)))
+	{
+		Com_Error(ERR_DROP, "VM_Restart failed");
+		return NULL;
+	}
+#endif
 
 	// free the original file
 	FS_FreeFile( header );
@@ -436,15 +626,20 @@ it will attempt to load as a system dll
 */
 
 #define	STACK_SIZE	0x20000
-
+#ifdef IOQ3_VM
+vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
+				vmInterpret_t interpret ) {
+#else
 vm_t *VM_Create( const char *module, long (*systemCalls)(long *), 
 				vmInterpret_t interpret ) {
+#endif
 	vm_t		*vm;
 	vmHeader_t	*header;
 	int			length;
 	int			dataLength;
-	int			i, remaining;
+	int			i, remaining, retval;
 	char		filename[MAX_QPATH];
+	void		*startSearch = NULL;
 
 	if ( !module || !module[0] || !systemCalls ) {
 		Com_Error( ERR_FATAL, "VM_Create: bad parms" );
@@ -474,8 +669,41 @@ vm_t *VM_Create( const char *module, long (*systemCalls)(long *),
 	vm = &vmTable[i];
 
 	Q_strncpyz( vm->name, module, sizeof( vm->name ) );
-	vm->systemCall = systemCalls;
+#ifdef IOQ3_VM
+	do
+	{
+		retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, (interpret == VMI_NATIVE));
+		
+		if(retval == VMI_NATIVE)
+		{
+			Com_Printf("Try loading dll file %s\n", filename);
 
+			vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
+			
+			if(vm->dllHandle)
+			{
+				vm->systemCall = systemCalls;
+				return vm;
+			}
+			
+			Com_Printf("Failed loading dll, trying next\n");
+		}
+		else if(retval == VMI_COMPILED)
+		{
+			vm->searchPath = startSearch;
+			if((header = VM_LoadQVM(vm, qtrue, qfalse)))
+				break;
+
+			// VM_Free overwrites the name on failed load
+			Q_strncpyz(vm->name, module, sizeof(vm->name));
+		}
+	} while(retval >= 0);
+	
+	if(retval < 0)
+		return NULL;
+#endif
+	vm->systemCall = systemCalls;
+#ifndef IOQ3_VM
 	// never allow dll loading with a demo
 //	if ( interpret == VMI_NATIVE ) {
 //		if ( Cvar_VariableValue( "fs_restrict" ) ) {
@@ -538,10 +766,15 @@ vm_t *VM_Create( const char *module, long (*systemCalls)(long *),
 	for ( i = 0 ; i < header->dataLength ; i += 4 ) {
 		*(int *)(vm->dataBase + i) = LittleLong( *(int *)(vm->dataBase + i ) );
 	}
-
 	// allocate space for the jump targets, which will be filled in by the compile/prep functions
 	vm->instructionPointersLength = header->instructionCount * 4;
 	vm->instructionPointers = Hunk_Alloc( vm->instructionPointersLength, h_high );
+#else
+	vm->instructionCount = header->instructionCount;
+	vm->instructionPointers = Hunk_Alloc(vm->instructionCount * sizeof(*vm->instructionPointers), h_high);
+	
+	vm->compiled = qfalse;
+#endif
 
 	// copy or compile the instructions
 	vm->codeLength = header->codeLength;
@@ -552,7 +785,11 @@ vm_t *VM_Create( const char *module, long (*systemCalls)(long *),
 		interpret = VMI_BYTECODE;
 	}
 #else
+#ifdef IOQ3_VM
+	if(interpret != VMI_BYTECODE) {
+#else
 	if ( interpret >= VMI_COMPILED ) {
+#endif
 		vm->compiled = qtrue;
 		VM_Compile( vm, header );
 	} else
@@ -570,7 +807,11 @@ vm_t *VM_Create( const char *module, long (*systemCalls)(long *),
 
 	// the stack is implicitly at the end of the image
 	vm->programStack = vm->dataMask + 1;
+#ifdef IOQ3_VM	
+	vm->stackBottom = vm->programStack - PROGRAM_STACK_SIZE;
+#else
 	vm->stackBottom = vm->programStack - STACK_SIZE;
+#endif
 
 	Com_Printf("%s loaded in %d bytes on the hunk\n", module, remaining - Hunk_MemoryRemaining());
 
@@ -583,7 +824,13 @@ VM_Free
 ==============
 */
 void VM_Free( vm_t *vm ) {
-
+#ifdef IOQ3_VM	
+	if(!vm) {
+		return;
+	}
+	if(vm->destroy)
+		vm->destroy(vm);
+#endif
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
 		Com_Memset( vm, 0, sizeof( *vm ) );
@@ -617,7 +864,11 @@ void VM_Clear(void) {
 	lastVM = NULL;
 }
 
+#ifdef IOQ3_VM
+void *VM_ArgPtr( intptr_t intValue ) {
+#else
 void *VM_ArgPtr( long intValue ) {
+#endif
 	if ( !intValue ) {
 		return NULL;
 	}
@@ -633,7 +884,11 @@ void *VM_ArgPtr( long intValue ) {
 	}
 }
 
+#ifdef IOQ3_VM
+void *VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue ) {
+#else
 void *VM_ExplicitArgPtr( vm_t *vm, long intValue ) {
+#endif
 	if ( !intValue ) {
 		return NULL;
 	}
@@ -678,9 +933,14 @@ locals from sp
 #define	MAX_STACK	256
 #define	STACK_MASK	(MAX_STACK-1)
 
+#ifdef IOQ3_VM
+intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... ) {
+	intptr_t r;
+#else
 long	QDECL VM_Call( vm_t *vm, long callnum, ... ) {
-	vm_t	*oldVM;
 	int		r;
+#endif
+	vm_t	*oldVM;
 	int i;
 
 	if ( !vm ) {
@@ -698,11 +958,20 @@ long	QDECL VM_Call( vm_t *vm, long callnum, ... ) {
 	// if we have a dll loaded, call it directly
 	if ( vm->entryPoint ) {
 		//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
+#ifdef IOQ3_VM
+		int args[MAX_VMMAIN_ARGS-1];
+#else
 		long args[16];
+#endif
 		va_list ap;
 		va_start(ap, callnum);
+#ifdef IOQ3_VM
+		for (i = 0; i < ARRAY_LEN(args); i++) {
+			args[i] = va_arg(ap, int);
+#else
 		for (i = 0; i < sizeof (args) / sizeof (args[i]); i++) {
 			args[i] = va_arg(ap, long);
+#endif
 		}
 		va_end(ap);
 
@@ -725,7 +994,11 @@ long	QDECL VM_Call( vm_t *vm, long callnum, ... ) {
 		a.callnum = callnum;
 		va_start(ap, callnum);
 		for (i = 0; i < sizeof (a.args) / sizeof (a.args[0]); i++) {
+#ifdef IOQ3_VM
+			a.args[i] = va_arg(ap, int);
+#else
 			a.args[i] = va_arg(ap, long);
+#endif
 		}
 		va_end(ap);
 		r = VM_CallInterpreted( vm, &a.callnum );
@@ -827,7 +1100,11 @@ void VM_VmInfo_f( void ) {
 			Com_Printf( "interpreted\n" );
 		}
 		Com_Printf( "    code length : %7i\n", vm->codeLength );
+#ifdef IOQ3_VM
+		Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
+#else
 		Com_Printf( "    table length: %7i\n", vm->instructionPointersLength );
+#endif
 		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
 	}
 }
@@ -851,6 +1128,28 @@ void VM_LogSyscalls( int *args ) {
 		args[0], args[1], args[2], args[3], args[4] );
 }
 
+
+/*
+=================
+VM_BlockCopy
+Executes a block copy operation within currentVM data space
+=================
+*/
+
+void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
+{
+	unsigned int dataMask = currentVM->dataMask;
+
+	if ((dest & dataMask) != dest
+	|| (src & dataMask) != src
+	|| ((dest + n) & dataMask) != dest + n
+	|| ((src + n) & dataMask) != src + n)
+	{
+		Com_Error(ERR_DROP, "OP_BLOCK_COPY out of range!");
+	}
+
+	Com_Memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
+}
 
 
 #ifdef DLL_ONLY // bk010215 - for DLL_ONLY dedicated servers/builds w/o VM

@@ -218,13 +218,13 @@ typedef Byte    *voidp;
 
 #define Z_NO_COMPRESSION         0
 #define Z_BEST_SPEED             1
-#define Z_BEST_COMPRESSION       9
-#define Z_DEFAULT_COMPRESSION  (-1)
+//#define Z_BEST_COMPRESSION       9
+//#define Z_DEFAULT_COMPRESSION  (-1)
 /* compression levels */
 
 #define Z_FILTERED            1
 #define Z_HUFFMAN_ONLY        2
-#define Z_DEFAULT_STRATEGY    0
+//#define Z_DEFAULT_STRATEGY    0
 /* compression strategy; see deflateInit2() below for details */
 
 #define Z_BINARY   0
@@ -4296,4 +4296,24 @@ void  zcfree (voidp opaque, voidp ptr)
     if (opaque) return; /* make compiler happy */
 }
 
+
+extern int unzSetOffset (file, pos)
+        unzFile file;
+        uLong pos;
+{
+    unz_s* s;
+    int err;
+
+    if (file==NULL)
+        return UNZ_PARAMERROR;
+    s=(unz_s*)file;
+
+    s->pos_in_central_dir = pos;
+    s->num_file = s->gi.number_entry;      /* hack */
+    err = unzlocal_GetCurrentFileInfoInternal(file,&s->cur_file_info,
+                                              &s->cur_file_info_internal,
+                                              NULL,0,NULL,0,NULL,0);
+    s->current_file_ok = (err == UNZ_OK);
+    return err;
+}
 

@@ -20,6 +20,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#define Z_BEST_COMPRESSION       9
+#define Z_DEFAULT_COMPRESSION  (-1)
+
+#define Z_DEFAULT_STRATEGY    0
+
 #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
 /* like the STRICT of WIN32, we define a pointer that cannot be converted
     from (void*) without cast */
@@ -334,3 +339,6 @@ extern int unzGetLocalExtrafield (unzFile file, void* buf, unsigned len);
   the return value is the number of unsigned chars copied in buf, or (if <0) 
 	the error code
 */
+
+/* Set the current file offset */
+extern int unzSetOffset (unzFile file, unsigned long pos);
