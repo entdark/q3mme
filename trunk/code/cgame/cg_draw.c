@@ -1160,7 +1160,9 @@ void CG_AddLagometerSnapshotInfo( snapshot_t *snap ) {
 		lagometer.snapshotCount++;
 		return;
 	}
-
+	if (cg.demoPlayback) {
+		snap->ping = (snap->serverTime - snap->ps.commandTime) - cg.frametime;
+	}
 	// add this snapshot's info
 	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->ping;
 	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->snapFlags;
@@ -1222,7 +1224,7 @@ static void CG_DrawLagometer( void ) {
 	int		color;
 	float	vscale;
 
-	if ( !cg_lagometer.integer || cgs.localServer ) {
+	if ( !cg_lagometer.integer || cgs.localServer || !cg.playerPredicted ) {
 		CG_DrawDisconnect();
 		return;
 	}
@@ -1310,8 +1312,8 @@ static void CG_DrawLagometer( void ) {
 
 	trap_R_SetColor( NULL );
 
-	if ( cg_nopredict.integer || cg_synchronousClients.integer ) {
-		CG_DrawBigString( ax, ay, "snc", 1.0 );
+	if ( !cg.demoPlayback && (cg_nopredict.integer || cg_synchronousClients.integer) ) {
+		CG_DrawBigString( x, y, "snc", 1.0 );
 	}
 
 	CG_DrawDisconnect();
