@@ -1,0 +1,219 @@
+
+cg_centerPrint [0,1]
+Show/hide centered screen messages such as "Player joined the spectators".
+Does not affect frag messages, they will always appear.
+
+cg_centerScale #
+Size of centered screen messages including frag message. Default is 1.
+
+cg_drawDamageBlob [0,1]
+Show/hide bloodblob in your view when you are hit.
+
+cg_drawFollow [0,1]
+Display the player who you were following/who was following you.
+
+cg_drawPickupItem [0,1]
+Enable/disable display of the items you pick up.
+
+cg_drawPowerups [0,1]
+Show/hide powerups you are holding.
+
+cg_drawScores [0,1]
+Show/hide the scores in the lower right corner of the hud.
+
+cg_drawVote [0,1]
+Show/hide map or kick votes in the upper left corner of the screen.
+
+cg_drawWeaponSelect [0,1]
+Enable/disable display of the list of weapons in the hud when you are switching to another one.
+
+fx_Debug [0,1]
+Show/hide debug information about the fx system on screen and during startup.
+
+fx_Megs #
+Amount of megabytes the fx scripting system is allocated to use.
+
+fx_Override [directory]
+Select a directory filled with .fx files to override the current ones loaded.
+
+fx_Vibrate [0,1]
+Enable/disable vibration effect when there is an explosion close to the camera.
+
+mme_blurFrames #
+Defines how many frames are blended into one while capturing (motion blur).
+
+mme_blurOverlap #
+Defines how many previous frames are blended again for a new frame.
+
+mme_blurJitter #
+When blurring frames together for the final result blurjitter controls screen shaking between frames.
+With each frame mme can slightly shift the screen to give anti-aliasing.
+You can use values like 0.5 or 1.5 for sub pixel shifting too.
+
+mme_blurGamma [0,1]
+Gamma correct screenshots before they are blurred, not recommended.
+
+mme_blurType [median, gaussian, triangle]
+Try the different blur types to find out how they look.
+
+mme_demoConvert [0,1]
+Defines if demos are converted to the mme demo format when playing them, should always stay on.
+
+mme_demoSmoothen [0,1]
+Defines if demos are smoothened out a bit when being converted to the mme demo format.
+
+mme_demoListQuit [0,1]
+Defines if mme quits after it finishes capturing a demolist.
+
+mme_demoStartProject
+Internally used by mme to load a project on demo startup.
+
+mme_depthFocus #
+Distance from the camera which will appear as colour 0.5/127 in the final black/white output image.
+
+mme_depthRange #
+Defines in which distance the focus will fade. Focus set to 8000 and range to 2000 will result in the focus
+being at 8000, fading to black/white to 6000 and 10000.
+
+mme_gameOverride [modname] 
+You can use this cvar to override the mod a demo appears to be from.
+Not used when playing with the mme mod but you might want to use it to play demos from a non-osp game in osp.
+
+mme_jpegQuality [0-100]
+Defines quality of the screenshots if capturing in jpg format. Even 100 is still much smaller than png and tga screenshots.
+
+mme_pngCompression [0-9]
+Set the compression strength of the png files.
+Files will get smaller and it will take longer but there will be no loss in quality.
+
+mme_tgaCompression [0,1]
+Enable tga compression for slightly smaller files.
+
+mme_aviFormat [0,1]
+0 is uncompressed rgb, 1 is mjpeg.
+
+mme_renderHeight [height]
+mme_renderWidth [width]
+These 2 values when both set allow mme to run in offscreen capture mode with a pbuffer.
+You cannot see what is going on on the screen this way, you can only play a demolist and wait for it to finish.
+Better use r_fbo if your card supports it.
+
+mme_saveDepth [0,1]
+Save the zbuffer values, used together with mme_depthRange and mme_depthFocus.
+
+mme_saveShot [0,1]
+Enable/disable capturing of video footage to screenshots. Disable if you want to capture ingame sound only.
+
+mme_saveStencil [0,1]
+Save the stencil buffer to a screenshot, can be used with mov_stencilMask to create black/white masks of certain entities.
+
+mme_saveWav [0,1]
+Save the ingame sound to a wave file which will be located in the folder with the captured screenshots.
+
+mme_screenshotFormat [jpg, png, tga, avi]
+Your desired file format of the captured footage.
+
+mme_screenShotAlpha [0,1]
+If you select png or tga output and have zbuffer or stencil enabled
+then the black and white output will be saved as the alpha channel in a 32bit output shot.
+
+mme_screenShotGamma [0,1]
+When enabled the screenshots will be gamma corrected.
+
+mme_screenShotOverride [0,1]
+When enabled screenshots will override the old ones
+
+mme_skyKey [0-9, a-z]
+Fills the skybox with a solid color.
+Use it in combination with r_drawWorld disabled to create greenscreen, bluescreen and so on.
+
+mme_workSize [size]
+Amount of megabytes mme allocates for storing the motion blur buffers.
+If the buffer is too small mme will crash and ask you to increase it.
+
+mme_worldShader [shadername]
+This command will replace all the shaders making up the level into this one.
+Try console, mme/blue, mme/green or something for interesting results.
+
+mov_captureCamera [0,1]
+Write the position and angles of the camera to a log file for each frame.
+
+mov_captureCvars
+Defines which cvars are stored in project files when saving.
+example: "mov_captureName mov_musicFile mov_musicStart mov_filterMask mov_stencilMask"
+
+mov_captureFPS #
+Defines how many screenshots per second are captured.
+
+mov_captureName
+Defines the name prefix the captured screenshots will have.
+
+mov_chaseRange #
+Distance in chase mode before the camera switches to first person view.
+
+mov_chatBeep [0,1]
+Enables/disables the ingame chatbeep for both public and team messages.
+
+mov_Debug [bitmask]
+Can show some debug information, not documented for the peons.
+
+mov_filterMask [bitmask]
+Add multiple values to filter certain entities from appearing.
+1  > 1st person player who recorded the demo
+2  > other players
+4  > missiles, grenades
+8  > items, weapons
+16 > smoke (doesn't work anymore, edit the fx scripts)
+32 > blood (for as far as it's not controlled by fx scripts)
+
+mov_fontName "font.ttf"
+If you place truetype fonts in your mme dir and select the name here
+they will be used for the center print text.
+
+mov_fontSize #
+Quality of the bitmaps of the fonts, increase this to make them look smoother.
+
+mov_fragFormat
+Defines in which format the frag message is written.
+%a > attacker
+%n > new line
+%p > position
+%s > score
+%t > target
+example: "You fragged %t%n%p place with %s points"
+
+mov_musicFile [filename]
+Plays a musicfile located in the mme directory as background music.
+
+mov_musicStart #
+Defines the starting time of the file set in mov_musicFile.
+
+mov_Obituaries [0,1]
+Show/hide frag messages in the console.
+
+mov_ospRail [0,1]
+Enable/disable osp style rail.
+
+mov_seekInterval #
+Defines how many seconds you jump forward/backward by using shift+a/shift+d.
+
+mov_stencilMask [bitmask]
+Same values as mov_filterMask, selected entities will show up in the stencil output as white.
+
+mov_teamSkins [0,1]
+If turned off players will have no red/blue model skins in team games.
+
+r_fbo [0,1]
+Render the screen to an offscreen buffer so you can capture in the background.
+
+r_fboBlur [0,1]
+Use together with r_fbo to do blend frames using your video hardware.
+Will only work with an opengl 2.0 capable videocard.
+
+r_railringsAlign [0,1]
+1 will make the rings in a railgun align to the screen instead of along the beam.
+Can look nicer with certain rail ring replacements.
+
+s_timeScale [0,1]
+Defines if ingame sound is pitched up/down relatively to current timeline speed.
+

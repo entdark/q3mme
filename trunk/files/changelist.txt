@@ -1,0 +1,67 @@
+CaNaBiS' big list of changes
+
+Beta 33
+
+Fix bouncing FX scripts
+Fix marks on the walls not being rendered after a while
+Try to use the cpma arena time
+Try some extra resolutions and modes if opengl won't start
+Also add demos from the pk3's to the demolist
+Default hmodel to regular model if it's not specifically overridden
+
+beta 32
+
+Fix railtrail origin
+Add cg_damageKick to remove damage screen shaking
+Fix mme quitting on empty sound filename
+
+beta 31
+
+Fix clientoverride team/enemey/friend/whatever loading from project file
+
+beta 30
+
+mov_hudoverlay "shadername" to add fullscreen overlay on your hud wile editing
+mov_gridstep/range/width to have grid displayed in your level
+
+
+beta 29
+
+Hud debugging thing still active, hud showing all the time
+fbo init maybe improved
+
+
+beta 28
+
+r_fboBlur now supports mme_blurType 
+r_fboBlur 2 will try to use a 32bit floating point buffer
+mme_cpuSSE2 cvar to enable SSe2 blurring, will crash if your cpu doesn't support this
+Some fixes when selecting different fbo width/height than the regular video resolution
+
+
+beta 27
+
+Few more tests in the fx parser to check for illegal access of values
+Setting fx_debug 1 will running fx scripts will check for undefined values
+Fix unaligned resolutions from giving bad screenshots on nvidia ( ati sucks )
+
+
+
+
+beta26
+
+Enabled minimize button
+Run q3mme hidden in the background by starting with "+hidden" on the command line
+Add support for grappling fun, override your base_weapons.fx for better graphics
+
+
+beta25
+
+Fix the lighting gun aiming
+Add multisampling with fbo with r_fboMultiSample 0-8
+
+
+beta24 and older
+
+Lot's of changes i guess
+Most importantly, mme_pip mode just for sprks and bunny <= They love that shit!

@@ -1,0 +1,135 @@
+Short Guide on FX Scripting
+CaNaBiS Version 0.001
+
+The FX system is built around a set of variables and commands to modify them or use them to start an effect. Scripts get started by the engine with certain variables already set and then the script is given control.
+Different events have different startup variables set so keep that in mind.
+
+The different variable type that make up the fx system are:
+
+float variable:
+Floating point variables that can store a single number
+
+Valid float variable names are:
+size, width, angle -> Used by certain commands
+t0, t1, t2, t3 -> temporary values you can use for complex calculations
+
+Vectors:
+3 floats grouped together under 1 name used for vector math
+You can also access specific float by adding 0, 1, 3 to the vector name
+
+origin, velocity, dir, angles: Used by render commands to output stuff
+v0, v1, v2, v3 : Temporarary vectors you can use for calculation and storage
+
+So origin0 will behave like a regular float
+Using vectors names in math will result in the length of the vector being used
+
+Special variables:
+These can only be modified by special commands
+color -> red, green, blue, alpha color
+shader -> shader used by some commands
+model -> model used by some commands
+
+
+
+FX Commands:
+There's a whole bunch of command to generate effects, modify variables and spawn entities and do vector math
+
+Float math commands:
+Using any float variable name a command starts a float math command
+examples:
+size 5*size -> Size is now 5*original size
+angle 360*rand + size -> angle is now a random value * 360 + size
+
+Vector Math Commands:
+Most math command take several inputs and a final storage vector name
+Sometimes also followed by additional math value
+
+scale <src> <dst> <math> -> <scr> * <math>
+add <src1> <src2> <dst> -> add <src2> to <src2>
+addScale <src1> <src2> <dst> <math>-> add <src2> * <math> to <src1>
+sub <src1> <src2> <dst> -> substract <src2> from <src>
+subScale <src1> <src2> <dst> <math>-> substract <src2> * <math> from <src1>
+copy <src> <dst> -> Copy <src>
+clear <dst> -> set to 0,0,0
+wobble <src> <dst> <math> Randomly move src around within cone of <math> degrees
+random <dst> Create a random vector with length 1 in any direction
+normalize <src> <dst> Normalize a vector so make it length 1
+perpendicular <src> <dst> Create a perpendicular vector to <src>
+cross <src1> <src2> <dst> Create the cross product of src1xsrc2
+
+
+Render Commands:
+These will render something on the screen using the current state of the variables
+sprite <options> -> view aligned image -> origin, shader, color, size, angle
+spark <options> -> view aligned spark -> origin, velocity, shader, color, size, width
+quad -> fixed aligned sprite -> origin, dir, shader, color, size, angle
+beam -> image stretched between 2 points, origin, shader
+
+
+
+
+
+FX Math:
+Fx scripts can use a fair collection of math functions
+They are constructed from a number of options
+
+Math operators:
++, -, *, / -> The regular math operans
+
+Math test operators:
+Special group of operators  that return 0 or 1 depending on a test
+< -> ( 0 < 2 ) returns 1 -> 2 smaller than 0
+> -> ( 2 > 0 ) returns 1 -> 2 bigger than 0
+! -> ( 2 ! 0 ) returns 1 -> 2 unequeal to 0
+= -> ( 2 = 2 ) returns 1 -> 2 equal to 2
+& -> ( 2 & 2 ) returns 1 -> 2 && 2
+| -> ( 2 | 0 ) return  1 -> 2 || 0 
+
+The boolean operations only check for not equal to zero, no boolean algebra
+
+Math numbers:
+Just regular numbers like 0.112 22 12412
+
+Math Floats:
+floats variables like size, width, origin0
+
+Math Vectors:
+Vector variables like origin, velocity which will return the vector length
+
+Math Constants:
+These are readonly constants to be used in math routines
+
+time -> Time in seconds since the beginning of a map
+loop -> Goes from 0 -> 1 during any kind of repeating action in a script
+red, green, blue, alpha -> specific color components value in 0,1
+pi -> 3.1414155 something
+rand -> random value between 0, 1
+crand -> random value between -1, 1 
+lerp -> Goes from 0 -> 1 during the life of an emitter
+life -> Amount of life in seconds that an entity got when it was emitted
+
+Math Functions:
+These functions can be nested in a math expression with their own expression
+so sin( sin ( 3*pi ) ) would be a valid math expression
+
+sqrt( value ) -> Square root
+ceil( value ) -> Round values up to next integer 0.3 -> 1
+floor( value ) -> Round values down to next integer 0.3 -> 0
+sin( value ) -> regular sinus using degrees
+cos( value ) -> regular cosinus using degrees
+wave( value ) -> sinus type wave but takes 0-1 to complete compared to 0 - 2pi
+clip( value ) -> returns value clipped between 0,1 so <0 becomes 0 and > 1 becomes 1
+
+Math Cvars:
+This is a special group, if the fx math parser can't find the variable name
+It'll try to see if there's a regular q3 cvar with that name and then it'll use that value
+So you can use cg_* values or whatever cvar you want
+
+
+
+
+
+
+
+
+
