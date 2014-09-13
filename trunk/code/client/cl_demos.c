@@ -220,7 +220,7 @@ static void demoFrameInterpolate( demoFrame_t frames[], int frameCount, int inde
 	demoFrame_t *workFrame;
 
 	workFrame = &frames[index % frameCount];
-	return;
+//	return;
 
 	for (i=0; i<MAX_CLIENTS; i++) {
 		entityState_t *workEntity;
