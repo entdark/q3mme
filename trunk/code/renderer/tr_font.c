@@ -73,7 +73,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "../qcommon/qcommon.h"
 
-//#define BUILD_FREETYPE
+#define BUILD_FREETYPE
 
 #ifdef BUILD_FREETYPE
 #include <ft2build.h>
@@ -88,7 +88,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define _TRUNC(x)  ((x) >> 6)
 
 FT_Library ftLibrary = NULL; 
-#pragma comment (lib, "freetype.lib")
+#pragma comment (lib, "freetype2410.lib")
 #endif
 
 #define MAX_FONTS 6
