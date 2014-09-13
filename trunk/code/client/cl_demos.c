@@ -430,8 +430,8 @@ void demoConvert( const char *oldName, const char *newBaseName, qboolean smoothe
 				levelCount++;
 				newHandle = FS_FOpenFileWrite( newName );
 				if (!newHandle) {
-					FS_FCloseFile( oldHandle );
 					Com_Printf("Failed to open %s for target conversion target.\n", newName);
+					goto conversionerror;
 					return;
 				} else {
 					FS_Write ( demoHeader, strlen( demoHeader ), newHandle );
