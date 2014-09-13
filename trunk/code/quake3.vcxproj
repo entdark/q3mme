@@ -539,6 +539,7 @@
     <ClCompile Include="renderer\tr_mme_avi.c">
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
+    <ClCompile Include="renderer\tr_mme_common.cpp" />
     <ClCompile Include="renderer\tr_mme_sse2.c" />
     <ClCompile Include="renderer\tr_model.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
