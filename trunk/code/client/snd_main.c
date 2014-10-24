@@ -583,6 +583,7 @@ S_StartBackgroundTrack
 ======================
 */
 void S_StartBackgroundTrack( const char *intro, const char *loop ){
+	qboolean soundExists;
 	if ( !intro || !intro[0] || s_background.override )
 		return;
 
@@ -591,14 +592,15 @@ void S_StartBackgroundTrack( const char *intro, const char *loop ){
 
 	Com_DPrintf( "S_StartBackgroundTrack( %s, %s )\n", intro, loop );
 
-	s_background.playing = qtrue;
-	s_background.reload = qtrue;
-
 	Q_strncpyz( s_background.startName, intro, sizeof( s_background.startName ));
-	COM_DefaultExtension( s_background.startName, sizeof( s_background.startName ), ".wav" );
-
 	Q_strncpyz( s_background.loopName, loop, sizeof( s_background.loopName ));
-	COM_DefaultExtension( s_background.loopName, sizeof( s_background.loopName ), ".wav" );
+	/* S_FileExists sets correct extension */
+	soundExists = S_FileExists(s_background.startName);
+	soundExists = (qboolean)(S_FileExists(s_background.loopName) || soundExists);
+	if (soundExists) {
+		s_background.playing = qtrue;
+		s_background.reload = qtrue;
+	}
 }
 
 void S_UpdateScale(float scale) {
