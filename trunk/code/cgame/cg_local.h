@@ -936,6 +936,11 @@ typedef struct {
 
 //New MME 
 	qhandle_t	df_unavailableItemShader;
+	
+	sfxHandle_t cpmaHitSound25;
+	sfxHandle_t cpmaHitSound50;
+	sfxHandle_t cpmaHitSound75;
+	sfxHandle_t cpmaHitSound100;
 } cgMedia_t;
 
 
@@ -1188,6 +1193,8 @@ extern	vmCvar_t		mov_deltaRoll;
 extern	vmCvar_t		mov_ratioFix;
 extern	vmCvar_t		mov_rewardCount;
 extern	vmCvar_t		mov_wallhack;
+
+extern	vmCvar_t		mov_hitSounds;
 
 extern	vmCvar_t		mme_demoFileName;
 

@@ -238,6 +238,8 @@ vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_rewardCount;
 vmCvar_t	mov_wallhack;
 
+vmCvar_t	mov_hitSounds;
+
 vmCvar_t	mme_demoFileName;
 
 typedef struct {
@@ -367,6 +369,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &mov_ratioFix,		"mov_ratioFix",			"1",   CG_Set2DRatio,	CVAR_ARCHIVE	},
 	{ &mov_rewardCount,		"mov_rewardCount",		"10",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
+	
+	{ &mov_hitSounds,		"mov_hitSounds",		"1",			NULL,	CVAR_ARCHIVE	},
 
 	/* Copy over some cvar's from the renderer */
 //	{ &mme_blurFrames,		"mme_blurFrames",		"",				NULL,	0				},
@@ -734,6 +738,11 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.n_healthSound = trap_S_RegisterSound("sound/items/n_health.wav", qfalse );
 	cgs.media.hgrenb1aSound = trap_S_RegisterSound("sound/weapons/grenade/hgrenb1a.wav", qfalse);
 	cgs.media.hgrenb2aSound = trap_S_RegisterSound("sound/weapons/grenade/hgrenb2a.wav", qfalse);
+	
+	cgs.media.cpmaHitSound25 = trap_S_RegisterSound( "sound/feedback/hit25.wav", qfalse );
+	cgs.media.cpmaHitSound50 = trap_S_RegisterSound( "sound/feedback/hit50.wav", qfalse );
+	cgs.media.cpmaHitSound75 = trap_S_RegisterSound( "sound/feedback/hit75.wav", qfalse );
+	cgs.media.cpmaHitSound100 = trap_S_RegisterSound( "sound/feedback/hit100.wav", qfalse );
 
 }
 
