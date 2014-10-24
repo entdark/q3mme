@@ -1545,8 +1545,8 @@ void FX_Init( void ) {
 	fx.allocSize = fx_Megs->integer;
 	if ( fx.allocSize < 1)
 		fx.allocSize = 1;
-	else if (fx.allocSize > 8) {
-		fx.allocSize = 8;
+	else if (fx.allocSize > 128) {
+		fx.allocSize = 128;
 	}
 	fx.allocSize *= 1024*1024;
 	fx.allocStart = Hunk_Alloc( fx.allocSize, h_low );
