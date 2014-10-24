@@ -630,13 +630,26 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			//Load the temporary matrix to show the model
 			qglLoadMatrixf( backEnd.or.modelMatrix );
 
-			depthRange = backEnd.currentModel->renderfx & RF_DEPTHHACK;
+			depthRange = 0;
+			//figure this stuff out now and store it
+			if ( backEnd.currentModel->renderfx & RF_NODEPTH ) {
+				depthRange = 2;
+			} else if ( backEnd.currentModel->renderfx & RF_DEPTHHACK ) {
+				depthRange = 1;
+			}
 			if ( oldDepthRange != depthRange ) {
 				oldDepthRange = depthRange;
-				if ( depthRange ) {
-					qglDepthRange (0, 0.3);
-				} else {
-					qglDepthRange (0, 1);
+				switch ( depthRange ) {
+				default:
+				case 0:
+					qglDepthRange (0, 1);	
+					break;
+				case 1:
+					qglDepthRange (0, .3);	
+					break;
+				case 2:
+					qglDepthRange (0, 0);
+					break;
 				}
 			}
 			shader = R_SortToShader( oldSort );

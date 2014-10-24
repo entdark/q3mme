@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	RF_STENCIL			4096	// Stencil whatever is outputted from this model
 #define	RF_CULLRADIUS		4096*2	// Cull a sprite when it's radius is within view distance
+#define RF_NODEPTH			4096*4	// No depth at all (seeing through walls)
 
 // refdef flags
 #define RDF_NOWORLDMODEL	1		// used for player configuration screen

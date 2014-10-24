@@ -397,6 +397,8 @@ static qboolean fxParseRenderFX( fxParse_t *parse, int *renderFX ) {
 			*renderFX |= RF_DEPTHHACK;
 		}  else if (!Q_stricmp(token, "stencil")) {
 			*renderFX |= RF_STENCIL;
+		}  else if (!Q_stricmp(token, "wallhack")) {
+			*renderFX |= RF_NODEPTH;
 		} else {
 			return fxParseError( parse, "Illegal render keyword %s", token );	
 		}
