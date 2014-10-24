@@ -1083,14 +1083,16 @@ static void CG_DrawReward( void ) {
 	count = cg.rewardCount[0] - count*10;		// number of small rewards to draw
 	*/
 
-	if ( cg.rewardCount[0] >= 10 ) {
+	if ( cg.rewardCount[0] >= /*10*/ mov_rewardCount.integer ) {
 		y = 56;
 		x = 320 - (ICON_SIZE/2)*cgs.widthRatioCoef;
 		CG_DrawPic( x, y, (ICON_SIZE-4)*cgs.widthRatioCoef, ICON_SIZE-4, cg.rewardShader[0] );
-		Com_sprintf(buf, sizeof(buf), "%d", cg.rewardCount[0]);
-		x = ( SCREEN_WIDTH - SMALLCHAR_WIDTH * CG_DrawStrlen( buf )*cgs.widthRatioCoef ) / 2;
-		CG_DrawStringExt( x, y+ICON_SIZE, buf, color, qfalse, qtrue,
-								SMALLCHAR_WIDTH*cgs.widthRatioCoef, SMALLCHAR_HEIGHT, 0 );
+		if (cg.rewardCount[0] > 1) {
+			Com_sprintf(buf, sizeof(buf), "%d", cg.rewardCount[0]);
+			x = ( SCREEN_WIDTH - SMALLCHAR_WIDTH * CG_DrawStrlen( buf )*cgs.widthRatioCoef ) / 2;
+			CG_DrawStringExt( x, y+ICON_SIZE, buf, color, qfalse, qtrue,
+									SMALLCHAR_WIDTH*cgs.widthRatioCoef, SMALLCHAR_HEIGHT, 0 );
+		}
 	}
 	else {
 
