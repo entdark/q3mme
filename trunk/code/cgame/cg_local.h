@@ -1187,6 +1187,7 @@ extern	vmCvar_t		mov_deltaRoll;
 
 extern	vmCvar_t		mov_ratioFix;
 extern	vmCvar_t		mov_rewardCount;
+extern	vmCvar_t		mov_wallhack;
 
 extern	vmCvar_t		mme_demoFileName;
 

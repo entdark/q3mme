@@ -236,6 +236,7 @@ vmCvar_t	mov_deltaRoll;
 
 vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_rewardCount;
+vmCvar_t	mov_wallhack;
 
 vmCvar_t	mme_demoFileName;
 
@@ -365,6 +366,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	
 	{ &mov_ratioFix,		"mov_ratioFix",			"1",   CG_Set2DRatio,	CVAR_ARCHIVE	},
 	{ &mov_rewardCount,		"mov_rewardCount",		"10",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
 
 	/* Copy over some cvar's from the renderer */
 //	{ &mme_blurFrames,		"mme_blurFrames",		"",				NULL,	0				},

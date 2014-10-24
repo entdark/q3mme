@@ -266,6 +266,8 @@ static void CG_Item( centity_t *cent ) {
 		ent.shaderRGBA[3] = 255;
 		if ( mov_stencilMask.integer & movMaskItems)
 			ent.renderfx |= RF_STENCIL;
+		if ( mov_wallhack.integer & movMaskItems && cg.demoPlayback)
+			ent.renderfx |= RF_NODEPTH;
 		trap_R_AddRefEntityToScene(&ent);
 		return;
 	}
@@ -348,6 +350,8 @@ static void CG_Item( centity_t *cent ) {
 
 	if ( mov_stencilMask.integer & movMaskItems)
 		ent.renderfx |= RF_STENCIL;
+	if ( mov_wallhack.integer & movMaskItems && cg.demoPlayback)
+		ent.renderfx |= RF_NODEPTH;
 
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);

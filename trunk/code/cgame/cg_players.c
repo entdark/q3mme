@@ -1615,6 +1615,8 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 
 	if ( mov_stencilMask.integer & movMaskFlags )
 		ent.renderfx |= RF_STENCIL;
+	if ( mov_wallhack.integer & movMaskFlags && cg.demoPlayback )
+		ent.renderfx |= RF_NODEPTH;
 
 	ent.hModel = hModel;
 	trap_R_AddRefEntityToScene( &ent );
@@ -1648,6 +1650,8 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *torso 
 	pole.renderfx = torso->renderfx;
 	if ( mov_stencilMask.integer & movMaskFlags )
 		pole.renderfx |= RF_STENCIL;
+	if ( mov_wallhack.integer & movMaskFlags && cg.demoPlayback )
+		pole.renderfx |= RF_NODEPTH;
 	CG_PositionEntityOnTag( &pole, torso, torso->hModel, "tag_flag" );
 	trap_R_AddRefEntityToScene( &pole );
 
@@ -1660,6 +1664,8 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *torso 
 	flag.renderfx = torso->renderfx;
 	if ( mov_stencilMask.integer & movMaskFlags )
 		flag.renderfx |= RF_STENCIL;
+	if ( mov_wallhack.integer & movMaskFlags && cg.demoPlayback )
+		flag.renderfx |= RF_NODEPTH;
 
 
 	VectorClear(angles);
@@ -2211,6 +2217,9 @@ void CG_Player( centity_t *cent ) {
 		if ( mov_stencilMask.integer & movMaskClient) {
 			renderfx |= RF_STENCIL;
 		}
+		if (mov_wallhack.integer & movMaskClient && cg.demoPlayback) {
+			renderfx |= RF_NODEPTH;
+		}
 		if (!cg.renderingThirdPerson) {
 			renderfx |= RF_THIRD_PERSON;			// only draw in mirrors
 		} else {
@@ -2224,6 +2233,9 @@ void CG_Player( centity_t *cent ) {
 		}
 		if ( mov_stencilMask.integer & movMaskPlayers) {
 			renderfx |= RF_STENCIL;
+		}
+		if (mov_wallhack.integer & movMaskPlayers && cg.demoPlayback) {
+			renderfx |= RF_NODEPTH;
 		}
 	}
 
