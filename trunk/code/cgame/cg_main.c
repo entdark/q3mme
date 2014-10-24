@@ -236,6 +236,7 @@ vmCvar_t	mov_deltaRoll;
 
 vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_rewardCount;
+vmCvar_t	mov_bobScale;
 vmCvar_t	mov_wallhack;
 
 vmCvar_t	mov_hitSounds;
@@ -368,6 +369,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	
 	{ &mov_ratioFix,		"mov_ratioFix",			"1",   CG_Set2DRatio,	CVAR_ARCHIVE	},
 	{ &mov_rewardCount,		"mov_rewardCount",		"10",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_bobScale,		"mov_bobScale",			"1.0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
 	
 	{ &mov_hitSounds,		"mov_hitSounds",		"1",			NULL,	CVAR_ARCHIVE	},

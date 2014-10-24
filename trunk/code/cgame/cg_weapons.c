@@ -668,6 +668,9 @@ static void CG_CalculateWeaponPosition(  vec3_t origin, vec3_t angles ) {
 	VectorCopy( cg.refdef.vieworg, origin );
 	VectorCopy( cg.refdefViewAngles, angles );
 
+	if (mov_bobScale.value <= 0.0f)
+		return;
+
 	// on odd legs, invert some angles
 	if ( cg.bobcycle & 1 ) {
 		scale = -cg.xyspeed;
@@ -675,22 +678,25 @@ static void CG_CalculateWeaponPosition(  vec3_t origin, vec3_t angles ) {
 		scale = cg.xyspeed;
 	}
 
+	scale *= mov_bobScale.value;
+
 	// gun angles from bobbing
 	angles[ROLL] += scale * cg.bobfracsin * 0.005;
 	angles[YAW] += scale * cg.bobfracsin * 0.01;
-	angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
+	angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005 * mov_bobScale.value;
 
 	// drop the weapon when landing
 	delta = (cg.time - pe->landTime) + cg.timeFraction;
 	if ( delta < LAND_DEFLECT_TIME ) {
-		origin[2] += pe->landChange*0.25 * delta / LAND_DEFLECT_TIME;
+		origin[2] += (pe->landChange*0.25 * delta / LAND_DEFLECT_TIME) * mov_bobScale.value;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
-		origin[2] += pe->landChange*0.25 * 
-			(LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta) / LAND_RETURN_TIME;
+		origin[2] += (pe->landChange*0.25 * 
+			(LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta) / LAND_RETURN_TIME) * mov_bobScale.value;
 	}
 
 	// idle drift
 	scale = cg.xyspeed + 40;
+
 	fracsin = sin( cg.time * 0.001 + cg.timeFraction * 0.001 );
 	angles[ROLL] += scale * fracsin * 0.01;
 	angles[YAW] += scale * fracsin * 0.01;
@@ -1089,9 +1095,13 @@ void CG_AddViewWeaponDirect( centity_t *cent ) {
 
 	// get clientinfo for animation map
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
-	hand.frame = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.frame );
-	hand.oldframe = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.oldFrame );
-	hand.backlerp = cent->pe.torso.backlerp;
+	if (mov_bobScale.value < 0.0f) {
+		hand.frame = hand.oldframe = hand.backlerp = 0;
+	} else {
+		hand.frame = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.frame );
+		hand.oldframe = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.oldFrame );
+		hand.backlerp = cent->pe.torso.backlerp;
+	}
 
 	hand.hModel = weapon->handsModel;
 	hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
