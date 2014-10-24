@@ -93,7 +93,7 @@ static void R_MME_CheckCvars( void ) {
 		blurControl->overlapIndex = 0;
 
 		R_MME_MakeBlurBlock( &blurData.shot, pixelCount * 3, blurControl );
-//		R_MME_MakeBlurBlock( &blurData.stencil, pixelCount * 1, blurControl );
+		R_MME_MakeBlurBlock( &blurData.stencil, pixelCount * 1, blurControl );
 		R_MME_MakeBlurBlock( &blurData.depth, pixelCount * 1, blurControl );
 
 		R_MME_JitterTable( blurData.jitter[0], blurTotal );
