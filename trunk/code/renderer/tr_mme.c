@@ -618,7 +618,7 @@ void R_MME_Init(void) {
 			workSize = 64;
 		if (workSize > 512)
 			workSize = 512;
-		workSize *= 1024 * 1024;
+		workSize *= 1024 * 1024 / 2;
 		workAlloc = calloc( workSize + 16, 1 );
 		if (!workAlloc) {
 			ri.Printf(PRINT_ALL, "Failed to allocate %d bytes for mme work buffer\n", workSize );
