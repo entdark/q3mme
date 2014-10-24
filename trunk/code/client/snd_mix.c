@@ -479,7 +479,7 @@ void S_MixBackground( mixBackground_t *background, int speed, int count, int *ou
 	int		volumeMul;
 	short	buf[2048][2];
 
-	speed = (MIX_SPEED << MIX_SHIFT) << 8;
+	speed = (MIX_SPEED << MIX_SHIFT) / dma.speed;
 	if ( s_background.playing ) {
 		/* Do we need a reload */
 		if ( s_background.reload ) {
