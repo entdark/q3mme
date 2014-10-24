@@ -41,8 +41,8 @@
 //			- Image Blur when the player is hit
 //			- Depth of field blur
 
-#if !NEW_FBO
 #include "tr_local.h"
+#ifdef HIDDEN_FBO
 #include "tr_glslprogs.h"
 #include "qgl.h"
 
@@ -855,7 +855,7 @@ void R_FrameBuffer_Init( void ) {
 	int screenbuff_flags, status;
 
 	needBlur = 0;
-
+	
 	r_framebuffer = ri.Cvar_Get( "r_framebuffer", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_framebuffer_bloom = ri.Cvar_Get( "r_framebuffer_bloom", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_framebuffer_blur_size = ri.Cvar_Get( "r_framebuffer_blur_size", "256", CVAR_ARCHIVE | CVAR_LATCH);
@@ -953,7 +953,7 @@ void R_FrameBuffer_Init( void ) {
 	//we don't need an if here, if any effects before need a blur then this 
 	//auto detects that its needed
 	R_FrameBuffer_BlurInit();
-
+	
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, *screenBuffer.front);
 
 }

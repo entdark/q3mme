@@ -44,7 +44,7 @@
 //Sjoerd
 //Butchered this up a bit for MME needs and only really has been tested for my ATI videocard
 #include "tr_local.h"
-#if NEW_FBO
+#ifndef HIDDEN_FBO
 #include "tr_glslprogs.h"
 #include "qgl.h"
 
@@ -489,9 +489,10 @@ void R_FrameBuffer_StartFrame( void ) {
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
 	usedFloat = qfalse;
 }
+
 #endif
 qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
-#if NEW_FBO
+#ifndef HIDDEN_FBO
 	float c;
 	if ( !fbo.blur )
 		return qfalse;
@@ -517,9 +518,12 @@ qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 		R_DrawQuad(	fbo.blur->color, glConfig.vidWidth, glConfig.vidHeight );
 	}
 	return qtrue;
+#else
+	return qfalse;
 #endif
 }
-#if NEW_FBO
+#ifndef HIDDEN_FBO
+
 
 void R_FrameBuffer_EndFrame( void ) {
 	if ( !fbo.main ) {
