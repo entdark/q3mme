@@ -198,6 +198,11 @@ vmCvar_t	cg_centerPrint;
 vmCvar_t	cg_gibDirectional;
 vmCvar_t	cg_muzzleFlash;
 
+vmCvar_t	cg_drawSpeedometer;
+vmCvar_t	cg_drawSpeedometerScale;
+vmCvar_t	cg_drawSpeedometerX;
+vmCvar_t	cg_drawSpeedometerY;
+
 vmCvar_t	mov_Obituaries;
 vmCvar_t	mov_chatBeep;
 vmCvar_t	mov_fragFormat;
@@ -339,7 +344,12 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_centerPrint,		"cg_centerPrint",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_gibDirectional,	"cg_gibDirectional",	"1",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_muzzleFlash,		"cg_muzzleFlash",		"1",			NULL,	CVAR_ARCHIVE	},
-
+	
+	{ &cg_drawSpeedometer,	"cg_drawSpeedometer",	"0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerX,	"cg_drawSpeedometerX",	"320.0",		NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerY,	"cg_drawSpeedometerY",	"7.0",			NULL,	CVAR_ARCHIVE	},
+	
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragFormat, "mov_fragFormat", "You fragged %t%n%p place with %s", NULL,	CVAR_ARCHIVE},

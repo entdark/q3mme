@@ -1154,6 +1154,11 @@ extern	vmCvar_t		cg_centerPrint;
 extern	vmCvar_t		cg_gibDirectional;
 extern	vmCvar_t		cg_muzzleFlash;
 
+extern	vmCvar_t		cg_drawSpeedometer;
+extern	vmCvar_t		cg_drawSpeedometerScale;
+extern	vmCvar_t		cg_drawSpeedometerX;
+extern	vmCvar_t		cg_drawSpeedometerY;
+
 extern	vmCvar_t		mov_Obituaries;
 extern	vmCvar_t		mov_fragFormat;
 extern	vmCvar_t		mov_chatBeep;

@@ -1426,6 +1426,44 @@ static void CG_DrawCenterString( void ) {
 
 
 
+static void CG_DrawSpeedometer(void) {
+	float	x, y, w;
+	vec4_t	color = {1.0f, 1.0f, 1.0f, 1.0f};
+	float	scale;
+	float	charW;
+	float	speed;
+	vec3_t	velocity;
+	char	speedText[20];
+	
+	if (!cg_drawSpeedometer.integer || !cg.snap)
+		return;
+	
+	charW = BIGCHAR_WIDTH;
+	trap_R_SetColor( color );
+	scale = cg_drawSpeedometerScale.value;
+	y = cg_drawSpeedometerY.value + BIGCHAR_HEIGHT;
+	if ( cgs.textFontValid ) {
+		scale *= 0.5;
+		y += scale * BIGCHAR_HEIGHT;
+	}
+	if (cg.playerPredicted) {
+		VectorCopy(cg.predictedPlayerState.velocity, velocity);
+	} else {
+		VectorCopy(cg.playerCent->currentState.pos.trDelta, velocity);
+	}
+	speed = sqrtf(velocity[0] * velocity[0] + velocity[1] * velocity[1]);
+	Com_sprintf(speedText, sizeof(speedText), "Speed:%4dups", ((int)speed));
+	if ( cgs.textFontValid ) {
+		w = CG_Text_Width( "Speed: 125ups", scale, 0 );
+		x = cg_drawSpeedometerX.value - w / 2.0f;
+		CG_Text_Paint( x, y, scale, color, speedText, qtrue );
+	} else {
+		w = cg_drawSpeedometerScale.value * charW * CG_DrawStrlen( "Speed: 125ups" );
+		x = cg_drawSpeedometerX.value - (w / 2.0f)*cgs.widthRatioCoef;
+		CG_DrawStringExt( x, y, speedText, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
+	}
+}
+
 /*
 ================================================================================
 
@@ -1655,11 +1693,14 @@ void CG_Draw2D( void ) {
 			CG_DrawCrosshair();
 			CG_DrawCrosshairNames();
 		}
+		CG_DrawSpeedometer();
 	}
 	CG_DrawLagometer();
 	CG_DrawUpperRight();
 	CG_DrawLowerRight();
 	CG_DrawLowerLeft();
+
+	CG_DrawSpeedometer();
 
 	// don't draw center string if scoreboard is up
 	cg.scoreBoardShowing = CG_DrawScoreboard();
