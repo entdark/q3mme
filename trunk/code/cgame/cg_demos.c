@@ -499,6 +499,11 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		cg.headEndTime = 0;
 		cg.headStartTime = 0;
 		cg.v_dmg_time = 0;
+
+		cg.rewardCount[0] = 0;
+		cg.rewardStack = 0;
+		cg.rewardTime = 0;
+
 		trap_S_ClearLoopingSounds(qtrue);
 	} else if (cg.frametime > 100) {
 		hadSkip = qtrue;
