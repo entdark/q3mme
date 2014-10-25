@@ -1433,8 +1433,16 @@ static void CG_DrawSpeedometer(void) {
 	float	charW;
 	float	speed;
 	vec3_t	velocity;
-	char	speedText[20];
+	char	*speedText;//, *speedFormat;
 	
+	const	char *format;
+	qboolean haveTag = qfalse;
+	char	outBuf[512];
+	int		outIndex = 0;
+	int		outLeft = sizeof(outBuf) - 1;
+	char	lastColor[16];
+	int		testColor, colorLen = 0;
+
 	if (!cg_drawSpeedometer.integer || !cg.snap)
 		return;
 	
@@ -1452,13 +1460,71 @@ static void CG_DrawSpeedometer(void) {
 		VectorCopy(cg.playerCent->currentState.pos.trDelta, velocity);
 	}
 	speed = sqrtf(velocity[0] * velocity[0] + velocity[1] * velocity[1]);
-	Com_sprintf(speedText, sizeof(speedText), "Speed:%4dups", ((int)speed));
+
+	//speed formatting begin
+	format = cg_drawSpeedometerFormat.string;
+	if (!format || !format[0]) 
+		format = "Speed: %tups";
+
+	while (*format && outLeft  > 0) {
+		if (haveTag) {
+			char ch = *format++;
+			haveTag = qfalse;
+			switch (ch) {
+			case 's':		//Speed
+				Com_sprintf( outBuf + outIndex, outLeft, "%4", ((int)speed));
+				outIndex += strlen( outBuf + outIndex );
+				break;
+			case 't':		//Speed tabulated
+				Com_sprintf( outBuf + outIndex, outLeft, "%4d", ((int)speed));
+				outIndex += 4;//strlen( outBuf + outIndex );
+				break;
+			case '%':
+				outBuf[outIndex++] = '%';
+				break;
+			default:
+				continue;
+			}
+			outLeft = sizeof(outBuf) - outIndex - 1;
+			if (colorLen && (outLeft > colorLen)) {
+				memcpy( outBuf + outIndex, lastColor, colorLen ); 
+				outLeft -= colorLen;
+				outIndex += colorLen;
+			}
+			continue;
+		}
+		testColor = Q_parseColorString( format, 0 );
+		if (testColor ) {
+			if (testColor < sizeof( lastColor)) {
+                colorLen = testColor;
+				memcpy( lastColor, format, colorLen );
+			}
+			if (testColor < outLeft) {
+				memcpy( outBuf + outIndex, format, testColor );
+				outIndex += testColor;
+				outLeft -= testColor;
+			}
+			format += testColor;
+			continue;
+		}
+		if (*format == '%') {
+			haveTag = qtrue;
+			format++;
+			continue;
+		}
+		outBuf[outIndex++] = *format++;
+		outLeft = sizeof(outBuf) - outIndex - 1;
+	}
+	outBuf[ outIndex ] = 0;
+	speedText = outBuf;
+	//speed formatting end
+
 	if ( cgs.textFontValid ) {
-		w = CG_Text_Width( "Speed: 125ups", scale, 0 );
+		w = CG_Text_Width( speedText, scale, 0 );
 		x = cg_drawSpeedometerX.value - w / 2.0f;
 		CG_Text_Paint( x, y, scale, color, speedText, qtrue );
 	} else {
-		w = cg_drawSpeedometerScale.value * charW * CG_DrawStrlen( "Speed: 125ups" );
+		w = cg_drawSpeedometerScale.value * charW * CG_DrawStrlen( speedText );
 		x = cg_drawSpeedometerX.value - (w / 2.0f)*cgs.widthRatioCoef;
 		CG_DrawStringExt( x, y, speedText, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
 	}

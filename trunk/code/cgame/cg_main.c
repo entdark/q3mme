@@ -202,6 +202,7 @@ vmCvar_t	cg_drawSpeedometer;
 vmCvar_t	cg_drawSpeedometerScale;
 vmCvar_t	cg_drawSpeedometerX;
 vmCvar_t	cg_drawSpeedometerY;
+vmCvar_t	cg_drawSpeedometerFormat;
 
 vmCvar_t	mov_Obituaries;
 vmCvar_t	mov_chatBeep;
@@ -353,10 +354,11 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerX,	"cg_drawSpeedometerX",	"320.0",		NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerY,	"cg_drawSpeedometerY",	"7.0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
 	
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
-	{ &mov_fragFormat, "mov_fragFormat", "You fragged %t%n%p place with %s", NULL,	CVAR_ARCHIVE},
+	{ &mov_fragFormat, "mov_fragFormat", "You fragged %t%n%p place with %s", NULL, CVAR_ARCHIVE},
 	{ &mov_fragOnly,		"mov_fragOnly",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_gameType,		"mov_gameType",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_debug,			"mov_debug",			"0",			NULL,	CVAR_ARCHIVE	},
