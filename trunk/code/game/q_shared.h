@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define Q3_VERSION_NUMBER "1.6.11"
+#define Q3_VERSION_NUMBER "1.7"
 #if defined(_DEBUG)
 	#define Q3_VERSION_CONSOLE "(debug)Q3MME " Q3_VERSION_NUMBER
 #else
