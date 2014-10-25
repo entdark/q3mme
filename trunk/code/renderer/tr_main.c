@@ -459,7 +459,7 @@ static void R_SetupProjection( void ) {
 	zNear	= r_znear->value;
 	zProj	= r_zproj->value;
 	zFar	= tr.viewParms.zFar;
-	stereoSep = r_stereoSeparation->value;
+	stereoSep = r_stereoSeparation->value / 100.0f;
 
 	ymax = zNear * tan( trScene.refdef->fov_y * M_PI / 360.0f );
 	ymin = -ymax;
@@ -530,7 +530,7 @@ void R_SetupFrustum (void) {
 	float	stereoSep;
 	vec3_t	origin;
 
-	stereoSep = r_stereoSeparation->value;
+	stereoSep = r_stereoSeparation->value / 100.0f;
 	
 	if(stereoSep == 0) {
 		VectorCopy(tr.viewParms.or.origin, origin);

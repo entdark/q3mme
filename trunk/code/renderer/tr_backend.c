@@ -414,7 +414,7 @@ static void SetFinalProjection( void ) {
 	zFar	= backEnd.viewParms.zFar;
 	
 	zProj	= r_zproj->value;
-	stereoSep = r_stereoSeparation->value;
+	stereoSep = r_stereoSeparation->value / 100.0f;
 
 	ymax = zNear * tan( backEnd.viewParms.fovY * M_PI / 360.0f );
 	ymin = -ymax;
