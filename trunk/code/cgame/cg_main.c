@@ -241,6 +241,8 @@ vmCvar_t	mov_bobScale;
 vmCvar_t	mov_wallhack;
 
 vmCvar_t	mov_hitSounds;
+vmCvar_t	mov_chatBox;
+vmCvar_t	mov_chatBoxHeight;
 
 vmCvar_t	mme_demoFileName;
 
@@ -375,6 +377,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
 	
 	{ &mov_hitSounds,		"mov_hitSounds",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_chatBox,			"mov_chatBox",			"10000",		NULL,	CVAR_ARCHIVE	},
+	{ &mov_chatBoxHeight,	"mov_chatBoxHeight",	"350",			NULL,	CVAR_ARCHIVE	},
 
 	/* Copy over some cvar's from the renderer */
 //	{ &mme_blurFrames,		"mme_blurFrames",		"",				NULL,	0				},

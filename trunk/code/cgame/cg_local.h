@@ -441,6 +441,15 @@ typedef struct {
 
 #define MAX_PREDICTED_EVENTS	16
  
+
+#define	MAX_CHATBOX_ITEMS		5
+typedef struct chatBoxItem_s
+{
+	char	string[MAX_SAY_TEXT];
+	int		time;
+	int		lines;
+} chatBoxItem_t;
+
 typedef struct {
 	int			clientFrame;		// incremented each frame
 
@@ -622,7 +631,10 @@ typedef struct {
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
-
+	
+	chatBoxItem_t	chatItems[MAX_CHATBOX_ITEMS];
+	int				chatItemActive;
+	
 	// development tool
 	refEntity_t		testModelEntity;
 	char			testModelName[MAX_QPATH];
@@ -1197,6 +1209,8 @@ extern	vmCvar_t		mov_bobScale;
 extern	vmCvar_t		mov_wallhack;
 
 extern	vmCvar_t		mov_hitSounds;
+extern	vmCvar_t		mov_chatBox;
+extern	vmCvar_t		mov_chatBoxHeight;
 
 extern	vmCvar_t		mme_demoFileName;
 

@@ -921,6 +921,9 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
+static char chatBoxHack[MAX_SAY_TEXT] = "";			//not only 1.02?
+static qboolean chatBoxTryHack = qfalse;	//not only 1.02?
+extern void CG_ChatBox_AddString(char *chatStr); //cg_draw.c
 static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
@@ -930,6 +933,11 @@ static void CG_ServerCommand( void ) {
 	if ( !cmd[0] ) {
 		// server claimed the command
 		return;
+	}
+	
+	if (!(!strcmp(cmd, "chat") || !strcmp(cmd, "tchat")) && chatBoxTryHack) {
+		CG_Printf("%s", chatBoxHack);
+		chatBoxTryHack = qfalse;
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
@@ -945,7 +953,12 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "print" ) ) {
-		CG_Printf( "%s", CG_Argv(1) );
+		if (!mov_chatBox.integer) {
+			CG_Printf( "%s", CG_Argv(1) );
+		} else {
+			Q_strncpyz(chatBoxHack, CG_Argv(1), sizeof(chatBoxHack));
+			chatBoxTryHack = qtrue;
+		}
 #ifdef MISSIONPACK
 		cmd = CG_Argv(1);			// yes, this is obviously a hack, but so is the way we hear about
 									// votes passing or failing
@@ -964,7 +977,15 @@ static void CG_ServerCommand( void ) {
 				trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
 			Q_strncpyz( text, CG_Argv(1), MAX_SAY_TEXT );
 			CG_RemoveChatEscapeChar( text );
-			CG_Printf( "%s\n", text );
+			if (chatBoxTryHack && !strcmp( text, "" )) {
+				Q_strncpyz( text, chatBoxHack, MAX_SAY_TEXT );
+				chatBoxTryHack = qfalse;
+			}
+			CG_ChatBox_AddString(text);
+			if (!mov_chatBox.integer)
+				CG_Printf( "%s\n", text );
+			else
+				CG_Printf( "*%s\n", text );
 		}
 		return;
 	}
@@ -974,8 +995,16 @@ static void CG_ServerCommand( void ) {
 			trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
 		Q_strncpyz( text, CG_Argv(1), MAX_SAY_TEXT );
 		CG_RemoveChatEscapeChar( text );
+		if (chatBoxTryHack && !strcmp( text, "" )) {
+			Q_strncpyz( text, chatBoxHack, MAX_SAY_TEXT );
+			chatBoxTryHack = qfalse;
+		}
+		CG_ChatBox_AddString(text);
 		CG_AddToTeamChat( text );
-		CG_Printf( "%s\n", text );
+		if (!mov_chatBox.integer)
+			CG_Printf( "%s\n", text );
+		else
+			CG_Printf( "*%s\n", text );
 		return;
 	}
 	if ( !strcmp( cmd, "vchat" ) ) {

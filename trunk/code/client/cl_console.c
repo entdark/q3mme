@@ -371,6 +371,11 @@ void CL_ConsolePrint( char *txt ) {
 	int		color;
 	qboolean skipnotify = qfalse;		// NERVE - SMF
 	int prev;							// NERVE - SMF
+	
+	if ( txt[0] == '*' ) {
+		skipnotify = qtrue;
+		txt += 1;
+	}
 
 	// TTimo - prefix for text that shows up in console but not in notify
 	// backported from RTCW

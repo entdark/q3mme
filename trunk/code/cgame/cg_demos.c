@@ -475,6 +475,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 
 	cg.frametime = (cg.time - cg.oldTime) + (cg.timeFraction - cg.oldTimeFraction);
 	if (cg.frametime < 0) {
+		int i;
 		cg.frametime = 0;
 		hadSkip = qtrue;
 		cg.oldTime = cg.time;
@@ -505,6 +506,9 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		cg.rewardTime = 0;
 
 		trap_S_ClearLoopingSounds(qtrue);
+		
+		for (i = 0; i < MAX_CHATBOX_ITEMS; i++)
+			cg.chatItems[i].time = 0;
 	} else if (cg.frametime > 100) {
 		hadSkip = qtrue;
 	} else {

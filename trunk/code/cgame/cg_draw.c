@@ -1450,10 +1450,7 @@ static void CG_DrawSpeedometer(void) {
 	trap_R_SetColor( color );
 	scale = cg_drawSpeedometerScale.value;
 	y = cg_drawSpeedometerY.value + BIGCHAR_HEIGHT;
-	if ( cgs.textFontValid ) {
-		scale *= 0.5;
-		y += scale * BIGCHAR_HEIGHT;
-	}
+	
 	if (cg.playerPredicted) {
 		VectorCopy(cg.predictedPlayerState.velocity, velocity);
 	} else {
@@ -1520,6 +1517,8 @@ static void CG_DrawSpeedometer(void) {
 	//speed formatting end
 
 	if ( cgs.textFontValid ) {
+		scale *= 0.5;
+		y += scale * BIGCHAR_HEIGHT;
 		w = CG_Text_Width( speedText, scale, 0 );
 		x = cg_drawSpeedometerX.value - w / 2.0f;
 		CG_Text_Paint( x, y, scale, color, speedText, qtrue );
@@ -1714,6 +1713,172 @@ static void CG_DrawAmmoWarning( void ) {
 	CG_DrawBigString(320 - w / 2, 64, s, 1.0F);
 }
 
+/*====================================
+chatbox functionality -rww
+====================================*/
+#define	CHATBOX_CUTOFF_LEN	550
+#define	CHATBOX_FONT_HEIGHT	20
+
+//utility func, insert a string into a string at the specified
+//place (assuming this will not overflow the buffer)
+static void CG_ChatBox_StrInsert(char *buffer, int place, char *str) {
+	int insLen = strlen(str);
+	int i = strlen(buffer);
+	int k = 0;
+
+	buffer[i+insLen+1] = 0; //terminate the string at its new length
+	while (i >= place) {
+		buffer[i+insLen] = buffer[i];
+		i--;
+	}
+
+	i++;
+	while (k < insLen) {
+		buffer[i] = str[k];
+		i++;
+		k++;
+	}
+}
+
+//add chatbox string
+void CG_ChatBox_AddString(char *chatStr) {
+	chatBoxItem_t *chat = &cg.chatItems[cg.chatItemActive];
+	float chatLen;
+
+	if (mov_chatBox.integer<=0) {
+	//don't bother then.
+		return;
+	}
+
+	memset(chat, 0, sizeof(chatBoxItem_t));
+
+	if (strlen(chatStr) > sizeof(chat->string)) {
+	//too long, terminate at proper len.
+		chatStr[sizeof(chat->string)-1] = 0;
+	}
+
+	strcpy(chat->string, chatStr);
+	chat->time = cg.time + mov_chatBox.integer;
+
+	chat->lines = 1;
+
+	chatLen = CG_Text_Width(chat->string, 1.0f, 0);
+	if (chatLen > CHATBOX_CUTOFF_LEN) {
+	//we have to break it into segments...
+        int i = 0;
+		int lastLinePt = 0;
+		char s[2];
+
+		chatLen = 0;
+		while (chat->string[i]) {
+			s[0] = chat->string[i];
+			s[1] = 0;
+			chatLen += CG_Text_Width(s, 0.65f, 0);
+
+			if (chatLen >= CHATBOX_CUTOFF_LEN) {
+				int j = i;
+				while (j > 0 && j > lastLinePt) {
+					if (chat->string[j] == ' ') {
+						break;
+					}
+					j--;
+				}
+				if (chat->string[j] == ' ') {
+					i = j;
+				}
+
+                chat->lines++;
+				CG_ChatBox_StrInsert(chat->string, i, "\n");
+				i++;
+				chatLen = 0;
+				lastLinePt = i+1;
+			}
+			i++;
+		}
+	}
+
+	cg.chatItemActive++;
+	if (cg.chatItemActive >= MAX_CHATBOX_ITEMS) {
+		cg.chatItemActive = 0;
+	}
+}
+
+//insert item into array (rearranging the array if necessary)
+void CG_ChatBox_ArrayInsert(chatBoxItem_t **array, int insPoint, int maxNum, chatBoxItem_t *item) {
+    if (array[insPoint]) { //recursively call, to move everything up to the top
+		if (insPoint+1 >= maxNum) {
+			CG_Error("CG_ChatBox_ArrayInsert: Exceeded array size");
+		}
+		CG_ChatBox_ArrayInsert(array, insPoint+1, maxNum, array[insPoint]);
+	}
+	//now that we have moved anything that would be in this slot up, insert what we want into the slot
+	array[insPoint] = item;
+}
+
+//go through all the chat strings and draw them if they are not yet expired
+static ID_INLINE void CG_ChatBox_DrawStrings(void) {
+	chatBoxItem_t *drawThese[MAX_CHATBOX_ITEMS];
+	int numToDraw = 0;
+	int linesToDraw = 0;
+	int i = 0;
+	float x = 44.0f*cgs.widthRatioCoef;
+	float y = cg.scoreBoardShowing ? 475 : mov_chatBoxHeight.integer;
+	float fontScale = 0.65f;
+
+	if (!mov_chatBox.integer) {
+		return;
+	}
+//	if (cg.chatItems->time > mov_chatBox.integer + cg.time) {
+//		cg.chatItems->time = cg.time;
+//		return;
+//	}
+	memset(drawThese, 0, sizeof(drawThese));
+
+	while (i < MAX_CHATBOX_ITEMS) {
+		if (cg.chatItems[i].time >= cg.time) {
+			int check = numToDraw;
+			int insertionPoint = numToDraw;
+			while (check >= 0) {
+				if (drawThese[check] && cg.chatItems[i].time < drawThese[check]->time) {
+				//insert here
+					insertionPoint = check;
+				}
+				check--;
+			}
+			CG_ChatBox_ArrayInsert(drawThese, insertionPoint, MAX_CHATBOX_ITEMS, &cg.chatItems[i]);
+			numToDraw++;
+			linesToDraw += cg.chatItems[i].lines;
+		}
+		i++;
+	}
+
+	if (!numToDraw) { //nothing, then, just get out of here now.
+		return;
+	}
+
+	//move initial point up so we draw bottom-up (visually)
+	y -= (CHATBOX_FONT_HEIGHT*fontScale)*linesToDraw;
+
+	//we have the items we want to draw, just quickly loop through them now
+	i = 0;
+	if ( cgs.textFontValid ) {
+		fontScale *= 0.5;
+		y += fontScale * BIGCHAR_HEIGHT;
+	}
+	while (i < numToDraw) {
+		if ( cgs.textFontValid ) {
+			CG_Text_Paint(x, y, fontScale, colorWhite, drawThese[i]->string, qtrue);
+			y += ((CHATBOX_FONT_HEIGHT*fontScale)*drawThese[i]->lines);
+			y += CG_Text_Height( drawThese[i]->string, fontScale, 0 );
+		} else {
+			CG_DrawStringExt( x, y, drawThese[i]->string, colorWhite, qfalse, qtrue, fontScale * BIGCHAR_WIDTH*cgs.widthRatioCoef, fontScale * BIGCHAR_WIDTH, 0 );
+			y += ((CHATBOX_FONT_HEIGHT*fontScale)*drawThese[i]->lines);
+		}
+		i++;
+	}
+	trap_R_SetColor( NULL );
+}
+
 /*
 =================
 CG_Draw2D
@@ -1731,6 +1896,7 @@ void CG_Draw2D( void ) {
 
 	if ( cg.snap->ps.pm_type == PM_INTERMISSION ) {
 		CG_DrawIntermission();
+		CG_ChatBox_DrawStrings();
 		return;
 	}
 
@@ -1760,6 +1926,7 @@ void CG_Draw2D( void ) {
 			CG_DrawCrosshairNames();
 		}
 		CG_DrawSpeedometer();
+		CG_ChatBox_DrawStrings();
 	}
 	CG_DrawLagometer();
 	CG_DrawUpperRight();
@@ -1773,6 +1940,9 @@ void CG_Draw2D( void ) {
 	if ( !cg.scoreBoardShowing) {
 		CG_DrawCenterString();
 	}
+	
+	// always draw chat
+	CG_ChatBox_DrawStrings();
 }
 
 
