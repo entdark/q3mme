@@ -1211,6 +1211,7 @@ extern	vmCvar_t		mov_wallhack;
 extern	vmCvar_t		mov_hitSounds;
 extern	vmCvar_t		mov_chatBox;
 extern	vmCvar_t		mov_chatBoxHeight;
+extern	vmCvar_t		mov_chatBoxScale;
 
 extern	vmCvar_t		mme_demoFileName;
 

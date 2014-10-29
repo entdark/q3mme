@@ -1822,8 +1822,8 @@ static ID_INLINE void CG_ChatBox_DrawStrings(void) {
 	int linesToDraw = 0;
 	int i = 0;
 	float x = 44.0f*cgs.widthRatioCoef;
-	float y = cg.scoreBoardShowing ? 475 : mov_chatBoxHeight.integer;
-	float fontScale = 0.65f;
+	float y = cg.scoreBoardShowing ? 475.0 : mov_chatBoxHeight.value;
+	float fontScale = 0.65f * mov_chatBoxScale.value;
 
 	if (!mov_chatBox.integer) {
 		return;
