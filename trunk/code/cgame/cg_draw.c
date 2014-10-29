@@ -1087,7 +1087,7 @@ static void CG_DrawReward( void ) {
 		y = 56;
 		x = 320 - (ICON_SIZE/2)*cgs.widthRatioCoef;
 		CG_DrawPic( x, y, (ICON_SIZE-4)*cgs.widthRatioCoef, ICON_SIZE-4, cg.rewardShader[0] );
-		if (cg.rewardCount[0] > 1) {
+		if (cg.rewardCount[0] > 1 && mov_rewardCount.integer) {
 			Com_sprintf(buf, sizeof(buf), "%d", cg.rewardCount[0]);
 			x = ( SCREEN_WIDTH - SMALLCHAR_WIDTH * CG_DrawStrlen( buf )*cgs.widthRatioCoef ) / 2;
 			CG_DrawStringExt( x, y+ICON_SIZE, buf, color, qfalse, qtrue,
