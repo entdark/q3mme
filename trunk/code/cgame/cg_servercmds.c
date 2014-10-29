@@ -921,8 +921,8 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-static char chatBoxHack[MAX_SAY_TEXT] = "";			//not only 1.02?
-static qboolean chatBoxTryHack = qfalse;	//not only 1.02?
+static char chatBoxHack[MAX_SAY_TEXT] = "";
+static qboolean chatBoxTryHack = qfalse;
 extern void CG_ChatBox_AddString(char *chatStr); //cg_draw.c
 static void CG_ServerCommand( void ) {
 	const char	*cmd;
