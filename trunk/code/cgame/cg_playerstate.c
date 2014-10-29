@@ -289,42 +289,19 @@ static void pushReward(sfxHandle_t sfx, qhandle_t shader, int rewardCount) {
 	}
 }
 
-//sfxHandle_t CG_SelectCPMAHitSounds(weapon_t weapon) {
-//	if (!mov_hitSounds.integer)
-//		return 0;
-//	if (!cg.cpma.detected && mov_hitSounds.integer != 2)
-//		return cgs.media.hitSound;
-//	switch(weapon) {
-//	case WP_GAUNTLET:
-//		return cgs.media.cpmaHitSound50;
-//	default:
-//	case WP_MACHINEGUN:
-//	case WP_LIGHTNING:
-//	case WP_PLASMAGUN:
-//		return cgs.media.cpmaHitSound25;
-//	case WP_SHOTGUN:
-//		return cgs.media.cpmaHitSound75;
-//	case WP_GRENADE_LAUNCHER:
-//	case WP_ROCKET_LAUNCHER:
-//	case WP_RAILGUN:
-//	case WP_BFG:
-//		return cgs.media.cpmaHitSound100;
-//	}
-//}
-
 sfxHandle_t CG_SelectCPMAHitSounds(int dmg) {
 	if (!mov_hitSounds.integer)
 		return 0;
-//	if (!cg.cpma.detected && mov_hitSounds.integer != 2)
+	if (!cg.cpma.detected && mov_hitSounds.integer != 2)
 		return cgs.media.hitSound;
-/*	if (dmg <= 25)
+	if (dmg <= 25)
 		return cgs.media.cpmaHitSound25;
 	else if (dmg <= 50)
 		return cgs.media.cpmaHitSound50;
 	else if (dmg <= 75)
 		return cgs.media.cpmaHitSound75;
 	else
-		return cgs.media.cpmaHitSound100;*/
+		return cgs.media.cpmaHitSound100;
 }
 
 /*
@@ -343,12 +320,12 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 	if ( ps->persistant[PERS_TEAM] != ops->persistant[PERS_TEAM] ) {
 		return;
 	}
-
+	
 	// hit changes
 	if ( ps->persistant[PERS_HITS] > ops->persistant[PERS_HITS] ) {
 		armor  = ps->persistant[PERS_ATTACKEE_ARMOR] & 0xff;
 		health = ps->persistant[PERS_ATTACKEE_ARMOR] >> 8;
-		trap_S_StartLocalSound( CG_SelectCPMAHitSounds((ps->persistant[PERS_ATTACKEE_ARMOR] >> 16)), CHAN_LOCAL_SOUND );
+		trap_S_StartLocalSound( CG_SelectCPMAHitSounds(ps->persistant[PERS_HITS] - ops->persistant[PERS_HITS]), CHAN_LOCAL_SOUND );
 	} else if ( ps->persistant[PERS_HITS] < ops->persistant[PERS_HITS] ) {
 		trap_S_StartLocalSound( cgs.media.hitTeamSound, CHAN_LOCAL_SOUND );
 	}
