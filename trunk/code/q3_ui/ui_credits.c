@@ -131,11 +131,15 @@ static void creditsRender( float x, float y, float w, float h ) {
 	VectorSet( origin, 300, 0, 50 );
 	renderFallLine( "Programming", origin, axis, deltaTime, 1.0f, s_credits.fontShader );
 	origin[2] -= LINE_SIZE;
-	renderFallLine( "^1C^7a^1N^7a^1B^7i^1S", origin, axis, deltaTime - 1000, 1.0f, s_credits.fontShader );
-	origin[2] -= LINE_SIZE * 3;
-	renderFallLine( "Testing", origin, axis, deltaTime - 2000, 1.0f, s_credits.fontShader );
+	renderFallLine( S_COLOR_WHITE"HMage", origin, axis, deltaTime - 1000, 1.0f, s_credits.fontShader );
 	origin[2] -= LINE_SIZE;
-	renderFallLine( S_COLOR_YELLOW"Auri", origin, axis, deltaTime - 3000, 1.0f, s_credits.fontShader );
+	renderFallLine( "^1C^7a^1N^7a^1B^7i^1S", origin, axis, deltaTime - 2000, 1.0f, s_credits.fontShader );
+	origin[2] -= LINE_SIZE;
+	renderFallLine( S_COLOR_GREEN"ent", origin, axis, deltaTime - 3000, 1.0f, s_credits.fontShader );
+	origin[2] -= LINE_SIZE * 3;
+	renderFallLine( "Testing", origin, axis, deltaTime - 4000, 1.0f, s_credits.fontShader );
+	origin[2] -= LINE_SIZE;
+	renderFallLine( S_COLOR_YELLOW"Auri", origin, axis, deltaTime - 5000, 1.0f, s_credits.fontShader );
 
 	/* Finalize the refdef */
 	UI_AdjustFrom640( &x, &y, &w, &h );
