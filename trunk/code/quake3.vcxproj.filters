@@ -556,17 +556,17 @@
     <ClCompile Include="client\fx_parse.c">
       <Filter>mme fx</Filter>
     </ClCompile>
-    <ClCompile Include="renderer\tr_mme_common.cpp">
-      <Filter>Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="renderer\tr_mme_stereo.cpp">
-      <Filter>Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_effects.cpp">
-      <Filter>Sound</Filter>
-    </ClCompile>
     <ClCompile Include="renderer\tr_mme_fbo.c">
       <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\tr_mme_common.c">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\tr_mme_stereo.c">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_effects.c">
+      <Filter>Sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

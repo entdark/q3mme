@@ -370,7 +370,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="client\snd_effects.cpp" />
+    <ClCompile Include="client\snd_effects.c" />
     <ClCompile Include="qcommon\vm_x86_ioq3.c" />
     <ClCompile Include="renderer\libpng\png.c" />
     <ClCompile Include="renderer\libpng\pngerror.c" />
@@ -539,10 +539,10 @@
     <ClCompile Include="renderer\tr_mme_avi.c">
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
-    <ClCompile Include="renderer\tr_mme_common.cpp" />
+    <ClCompile Include="renderer\tr_mme_common.c" />
     <ClCompile Include="renderer\tr_mme_fbo.c" />
     <ClCompile Include="renderer\tr_mme_sse2.c" />
-    <ClCompile Include="renderer\tr_mme_stereo.cpp" />
+    <ClCompile Include="renderer\tr_mme_stereo.c" />
     <ClCompile Include="renderer\tr_model.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
