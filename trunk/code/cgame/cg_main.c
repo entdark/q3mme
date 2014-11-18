@@ -376,7 +376,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
 	
 	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},
-	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320 240",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
+	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320 140",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
 	{ &cg_drawMovementKeysScale, "cg_drawMovementKeysScale", "1.0",	NULL,	CVAR_ARCHIVE	},
 
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
