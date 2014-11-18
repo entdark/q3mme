@@ -1541,7 +1541,7 @@ static void CG_DrawSpeedometer(void) {
 	charW = BIGCHAR_WIDTH;
 	trap_R_SetColor( color );
 	scale = cg_drawSpeedometerScale.value;
-	y = cg_drawSpeedometerY.value + BIGCHAR_HEIGHT;
+	y = cg.speedPos[1] + BIGCHAR_HEIGHT;
 	
 	if (cg.playerPredicted) {
 		VectorCopy(cg.predictedPlayerState.velocity, velocity);
@@ -1612,11 +1612,11 @@ static void CG_DrawSpeedometer(void) {
 		scale *= 0.5;
 		y += scale * BIGCHAR_HEIGHT;
 		w = CG_Text_Width( speedText, scale, 0 );
-		x = cg_drawSpeedometerX.value - w / 2.0f;
+		x = cg.speedPos[0] - w / 2.0f;
 		CG_Text_Paint( x, y, scale, color, speedText, qtrue );
 	} else {
 		w = cg_drawSpeedometerScale.value * charW * CG_DrawStrlen( speedText );
-		x = cg_drawSpeedometerX.value - (w / 2.0f)*cgs.widthRatioCoef;
+		x = cg.speedPos[0] - (w / 2.0f)*cgs.widthRatioCoef;
 		CG_DrawStringExt( x, y, speedText, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
 	}
 }

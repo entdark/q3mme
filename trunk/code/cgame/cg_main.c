@@ -91,6 +91,13 @@ static void CG_SetMovementKeysPos( void ) {
 	}
 }
 
+static void CG_SetSpedometerPos( void ) {
+	if ( sscanf( cg_drawSpeedometerPos.string, "%f %f", &cg.speedPos[0], &cg.speedPos[1] ) != 2 ) {
+		cg.speedPos[0] = (SCREEN_WIDTH / 2);
+		cg.speedPos[1] = (SCREEN_HEIGHT / 2);
+	}
+}
+
 static void CG_SetNewSkin(void) {
 	int i;
 	for ( i = 0; i < MAX_CLIENTS ; i++ )
@@ -207,8 +214,7 @@ vmCvar_t	cg_muzzleFlash;
 
 vmCvar_t	cg_drawSpeedometer;
 vmCvar_t	cg_drawSpeedometerScale;
-vmCvar_t	cg_drawSpeedometerX;
-vmCvar_t	cg_drawSpeedometerY;
+vmCvar_t	cg_drawSpeedometerPos;
 vmCvar_t	cg_drawSpeedometerFormat;
 
 vmCvar_t	cg_drawMovementKeys;
@@ -366,8 +372,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	
 	{ &cg_drawSpeedometer,	"cg_drawSpeedometer",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
-	{ &cg_drawSpeedometerX,	"cg_drawSpeedometerX",	"320.0",		NULL,	CVAR_ARCHIVE	},
-	{ &cg_drawSpeedometerY,	"cg_drawSpeedometerY",	"7.0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerPos, "cg_drawSpeedometerPos", "320.0 7.0",	CG_SetSpedometerPos, CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
 	
 	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},

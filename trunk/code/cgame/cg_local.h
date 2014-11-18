@@ -654,6 +654,7 @@ typedef struct {
 	} arena;
 
 	vec2_t			moveKeysPos;
+	vec2_t			speedPos;
 } cg_t;
 
 
@@ -1175,8 +1176,7 @@ extern	vmCvar_t		cg_muzzleFlash;
 
 extern	vmCvar_t		cg_drawSpeedometer;
 extern	vmCvar_t		cg_drawSpeedometerScale;
-extern	vmCvar_t		cg_drawSpeedometerX;
-extern	vmCvar_t		cg_drawSpeedometerY;
+extern	vmCvar_t		cg_drawSpeedometerPos;
 extern	vmCvar_t		cg_drawSpeedometerFormat;
 
 extern	vmCvar_t		cg_drawMovementKeys;
