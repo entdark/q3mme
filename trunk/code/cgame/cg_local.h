@@ -652,6 +652,8 @@ typedef struct {
 	struct			{
 		qboolean	detected;
 	} arena;
+
+	vec2_t			moveKeysPos;
 } cg_t;
 
 
@@ -1176,6 +1178,10 @@ extern	vmCvar_t		cg_drawSpeedometerScale;
 extern	vmCvar_t		cg_drawSpeedometerX;
 extern	vmCvar_t		cg_drawSpeedometerY;
 extern	vmCvar_t		cg_drawSpeedometerFormat;
+
+extern	vmCvar_t		cg_drawMovementKeys;
+extern	vmCvar_t		cg_drawMovementKeysPos;
+extern	vmCvar_t		cg_drawMovementKeysScale;
 
 extern	vmCvar_t		mov_Obituaries;
 extern	vmCvar_t		mov_fragFormat;

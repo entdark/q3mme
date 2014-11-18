@@ -84,6 +84,13 @@ static void CG_Set2DRatio(void) {
 		cgs.widthRatioCoef = 1.0f;
 }
 
+static void CG_SetMovementKeysPos( void ) {
+	if ( sscanf( cg_drawMovementKeysPos.string, "%f %f", &cg.moveKeysPos[0], &cg.moveKeysPos[1] ) != 2 ) {
+		cg.moveKeysPos[0] = (SCREEN_WIDTH / 2);
+		cg.moveKeysPos[1] = (SCREEN_HEIGHT / 2);
+	}
+}
+
 static void CG_SetNewSkin(void) {
 	int i;
 	for ( i = 0; i < MAX_CLIENTS ; i++ )
@@ -203,6 +210,10 @@ vmCvar_t	cg_drawSpeedometerScale;
 vmCvar_t	cg_drawSpeedometerX;
 vmCvar_t	cg_drawSpeedometerY;
 vmCvar_t	cg_drawSpeedometerFormat;
+
+vmCvar_t	cg_drawMovementKeys;
+vmCvar_t	cg_drawMovementKeysPos;
+vmCvar_t	cg_drawMovementKeysScale;
 
 vmCvar_t	mov_Obituaries;
 vmCvar_t	mov_chatBeep;
@@ -359,6 +370,10 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_drawSpeedometerY,	"cg_drawSpeedometerY",	"7.0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
 	
+	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320 240",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
+	{ &cg_drawMovementKeysScale, "cg_drawMovementKeysScale", "1.0",	NULL,	CVAR_ARCHIVE	},
+
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragFormat, "mov_fragFormat", "You fragged %t%n%p place with %s", NULL, CVAR_ARCHIVE},

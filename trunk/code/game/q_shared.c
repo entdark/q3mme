@@ -913,7 +913,7 @@ int Q_parseColorString( const char *p, float *color) {
 	if (!p )
 		return 0;
 	c = *p;
-	if (!c || c!= Q_COLOR_ESCAPE)
+	if (!c || c!= Q_COLOR_ESCAPE || (c== Q_COLOR_ESCAPE && !p[1]))
 		return 0;
 	return 1 + Q_parseColor( p+1, defaultColors, color );
 }

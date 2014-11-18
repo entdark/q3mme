@@ -1000,6 +1000,98 @@ static int CG_DrawPickupItem( int y ) {
 }
 #endif // MISSIONPACK
 
+static void CG_DrawMovementKeys( void ) {
+	usercmd_t cmd = { 0 };
+	char str1[32] = { 0 }, str2[32] = { 0 };
+	float w1 = 0.0f, w2 = 0.0f, height = 0.0f;
+	float x, y;
+	float scale = cg_drawMovementKeysScale.value;
+
+	if ( !cg_drawMovementKeys.integer || !cg.snap ) //RAZTODO: works with demo playback??
+		return;
+
+	if ( cg.clientNum == cg.predictedPlayerState.clientNum && !cg.demoPlayback )
+		trap_GetUserCmd( trap_GetCurrentCmdNumber(), &cmd );
+	else {
+		int moveDir = cg.snap->ps.movementDir;
+		float xyspeed = sqrtf( cg.snap->ps.velocity[0]*cg.snap->ps.velocity[0] + cg.snap->ps.velocity[1]*cg.snap->ps.velocity[1] );
+
+		if ( (cg.snap->ps.pm_flags & PMF_JUMP_HELD) )//zspeed > lastZSpeed || zspeed > 10 )
+			cmd.upmove = 1;
+		else if ( (cg.snap->ps.pm_flags & PMF_DUCKED) )
+			cmd.upmove = -1;
+
+		if ( xyspeed < 10 )
+			moveDir = -1;
+
+		switch ( moveDir ) {
+		case 0: // W
+			cmd.forwardmove = 1;
+			break;
+		case 1: // WA
+			cmd.forwardmove = 1;
+			cmd.rightmove = -1;
+			break;
+		case 2: // A
+			cmd.rightmove = -1;
+			break;
+		case 3: // AS
+			cmd.rightmove = -1;
+			cmd.forwardmove = -1;
+			break;
+		case 4: // S
+			cmd.forwardmove = -1;
+			break;
+		case 5: // SD
+			cmd.forwardmove = -1;
+			cmd.rightmove = 1;
+			break;
+		case 6: // D
+			cmd.rightmove = 1;
+			break;
+		case 7: // DW
+			cmd.rightmove = 1;
+			cmd.forwardmove = 1;
+			break;
+		default:
+			break;
+		}
+	}
+	
+	Com_sprintf( str1, sizeof(str1), va( "^%cv ^%cW ^%c^", (cmd.upmove < 0) ? COLOR_RED : COLOR_WHITE,
+		(cmd.forwardmove > 0) ? COLOR_RED : COLOR_WHITE, (cmd.upmove > 0) ? COLOR_RED : COLOR_WHITE ) );
+	Com_sprintf( str2, sizeof(str2), va( "^%cA ^%cS ^%cD", (cmd.rightmove < 0) ? COLOR_RED : COLOR_WHITE,
+		(cmd.forwardmove < 0) ? COLOR_RED : COLOR_WHITE, (cmd.rightmove > 0) ? COLOR_RED : COLOR_WHITE ) );
+
+	if ( cgs.textFontValid ) {
+		scale *= 0.5;
+		w1 = CG_Text_Width( "v W ^", scale, 0 );
+		w2 = CG_Text_Width( "A S D", scale, 0 );
+		height = CG_Text_Height( "A S D v W ^", scale, 0 ) + scale * BIGCHAR_HEIGHT;;
+		x = cg.moveKeysPos[0] - max( w1, w2 ) / 2.0f;
+		y = cg.moveKeysPos[1] + scale * BIGCHAR_HEIGHT;
+		CG_Text_Paint( x, y, scale, colorWhite, str1, qtrue );
+		CG_Text_Paint( x, y + height, scale, colorWhite, str2, qtrue );
+	} else {
+		w1 = scale * BIGCHAR_WIDTH * CG_DrawStrlen( "v W ^" );
+		w2 = scale * BIGCHAR_WIDTH * CG_DrawStrlen( "A S D" );
+		height = scale * BIGCHAR_HEIGHT;
+		x = cg.moveKeysPos[0] - max( w1*cgs.widthRatioCoef, w2*cgs.widthRatioCoef ) / 2.0f;
+		y = cg.moveKeysPos[1];
+		CG_DrawStringExt( x, y, str1, colorWhite, qfalse, qtrue, scale * BIGCHAR_WIDTH*cgs.widthRatioCoef, scale * BIGCHAR_WIDTH, 0 );
+		CG_DrawStringExt( x, y + height, str2, colorWhite, qfalse, qtrue, scale * BIGCHAR_WIDTH*cgs.widthRatioCoef, scale * BIGCHAR_WIDTH, 0 );
+	}
+/*
+	w1 = CG_Text_Width( "v W ^", scale, fontIndex );
+	w2 = CG_Text_Width( "A S D", scale, fontIndex );
+	height = CG_Text_Height( "A S D v W ^", scale, fontIndex );
+
+	CG_Text_Paint( cg.moveKeysPos[0] - max( w1, w2 ) / 2.0f, cg.moveKeysPos[1], scale, colorWhite,
+		str1, 0.0f, 0, ITEM_TEXTSTYLE_OUTLINED, fontIndex );
+	CG_Text_Paint( cg.moveKeysPos[0] - max( w1, w2 ) / 2.0f, cg.moveKeysPos[1] + height, scale,
+		colorWhite, str2, 0.0f, 0, ITEM_TEXTSTYLE_OUTLINED, fontIndex );*/
+}
+
 /*
 =====================
 CG_DrawLowerLeft
@@ -1934,7 +2026,8 @@ void CG_Draw2D( void ) {
 	CG_DrawLowerLeft();
 
 	CG_DrawSpeedometer();
-
+	CG_DrawMovementKeys();
+			
 	// don't draw center string if scoreboard is up
 	cg.scoreBoardShowing = CG_DrawScoreboard();
 	if ( !cg.scoreBoardShowing) {
