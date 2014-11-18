@@ -1007,6 +1007,9 @@ static void CG_DrawMovementKeys( void ) {
 	float x, y;
 	float scale = cg_drawMovementKeysScale.value;
 
+	if ( !cg.playerPredicted )
+		return;
+
 	if ( !cg_drawMovementKeys.integer || !cg.snap ) //RAZTODO: works with demo playback??
 		return;
 
@@ -1016,7 +1019,7 @@ static void CG_DrawMovementKeys( void ) {
 		int moveDir = cg.snap->ps.movementDir;
 		float xyspeed = sqrtf( cg.snap->ps.velocity[0]*cg.snap->ps.velocity[0] + cg.snap->ps.velocity[1]*cg.snap->ps.velocity[1] );
 
-		if ( (cg.snap->ps.pm_flags & PMF_JUMP_HELD) )//zspeed > lastZSpeed || zspeed > 10 )
+		if ( (cg.snap->ps.pm_flags & PMF_JUMP_HELD) )
 			cmd.upmove = 1;
 		else if ( (cg.snap->ps.pm_flags & PMF_DUCKED) )
 			cmd.upmove = -1;
@@ -1081,15 +1084,6 @@ static void CG_DrawMovementKeys( void ) {
 		CG_DrawStringExt( x, y, str1, colorWhite, qfalse, qtrue, scale * BIGCHAR_WIDTH*cgs.widthRatioCoef, scale * BIGCHAR_WIDTH, 0 );
 		CG_DrawStringExt( x, y + height, str2, colorWhite, qfalse, qtrue, scale * BIGCHAR_WIDTH*cgs.widthRatioCoef, scale * BIGCHAR_WIDTH, 0 );
 	}
-/*
-	w1 = CG_Text_Width( "v W ^", scale, fontIndex );
-	w2 = CG_Text_Width( "A S D", scale, fontIndex );
-	height = CG_Text_Height( "A S D v W ^", scale, fontIndex );
-
-	CG_Text_Paint( cg.moveKeysPos[0] - max( w1, w2 ) / 2.0f, cg.moveKeysPos[1], scale, colorWhite,
-		str1, 0.0f, 0, ITEM_TEXTSTYLE_OUTLINED, fontIndex );
-	CG_Text_Paint( cg.moveKeysPos[0] - max( w1, w2 ) / 2.0f, cg.moveKeysPos[1] + height, scale,
-		colorWhite, str2, 0.0f, 0, ITEM_TEXTSTYLE_OUTLINED, fontIndex );*/
 }
 
 /*
