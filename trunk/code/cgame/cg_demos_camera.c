@@ -539,7 +539,6 @@ void cameraUpdate( int time, float timeFraction ) {
 		cameraAnglesAt( time, timeFraction, demo.camera.angles );
 		if (!cameraFovAt( time, timeFraction, &demo.camera.fov ))
 			demo.camera.fov = 0;
-		targetCent = demoTargetEntity( demo.camera.target );
 	}
 	/* Optionally look at a target */
 	targetCent = demoTargetEntity( demo.camera.target );
