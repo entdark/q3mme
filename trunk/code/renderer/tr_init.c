@@ -158,6 +158,7 @@ cvar_t	*r_saveFontData;
 cvar_t	*r_GLlibCoolDownMsec;
 
 cvar_t	*r_backEndMegs;
+cvar_t	*r_fogMinOpaqueDistance; // myT: overrides the fog's clipping distance on map load
 
 cvar_t *r_framebuffer;
 cvar_t *r_framebuffer_bloom;
@@ -795,6 +796,8 @@ void R_Register( void )
 	r_smp = ri.Cvar_Get( "r_smp", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ignoreFastPath = ri.Cvar_Get( "r_ignoreFastPath", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_backEndMegs = ri.Cvar_Get ( "r_backEndMegs", "2", CVAR_ARCHIVE | CVAR_LATCH );
+	r_fogMinOpaqueDistance = ri.Cvar_Get("r_fogMinOpaqueDistance", "768", CVAR_ARCHIVE);
+
 	//
 	// temporary latched variables that can only change over a restart
 	//
