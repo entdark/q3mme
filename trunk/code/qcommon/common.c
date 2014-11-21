@@ -1663,7 +1663,6 @@ void *Hunk_AllocDebug( int size, ha_pref preference, char *label, char *file, in
 void *Hunk_Alloc( int size, ha_pref preference ) {
 #endif
 	void	*buf;
-	cvar_t	*com_hunkMegs;
 
 	if ( s_hunkData == NULL)
 	{
@@ -1689,12 +1688,12 @@ void *Hunk_Alloc( int size, ha_pref preference ) {
 	size = (size+31)&~31;
 
 	if ( hunk_low.temp + hunk_high.temp + size > s_hunkTotal ) {
+		// myT: Those use calloc directly: com_soundMegs, com_zoneMegs, mme_workMegs.
+		cvar_t *com_hunkMegs = Cvar_Get("com_hunkMegs", DEF_COMHUNKMEGS, CVAR_LATCH | CVAR_ARCHIVE);
 #ifdef HUNK_DEBUG
 		Hunk_Log();
 		Hunk_SmallLog();
 #endif
-		// myT: Those use calloc directly: com_soundMegs, com_zoneMegs, mme_workMegs.
-		com_hunkMegs = Cvar_Get("com_hunkMegs", DEF_COMHUNKMEGS, CVAR_LATCH | CVAR_ARCHIVE);
 		Com_Error( ERR_FATAL, "Hunk_Alloc failed on %i\nTry to augment com_hunkMegs (CVar: %d MB, real: %d MB) or to lower fx_Megs", 
 				   size, com_hunkMegs->integer, s_hunkTotal >> 20 );
 	}
