@@ -225,17 +225,6 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 		step += addStep;
 		VectorCopy( nextOrigin, origin );
 	}
-	i = 64;
-	while (i > 0 && fabs( distance) > 0.005f) {
-		i--;
-		if (distance > 0)
-			addStep /= 1.1f;
-		else 
-			addStep *= 1.2f;
-		posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
-		distance = VectorDistance( origin, nextOrigin);
-	}
-//	return step + addStep;
 	return qtrue;
 }
 
