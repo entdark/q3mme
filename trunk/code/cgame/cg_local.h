@@ -1213,6 +1213,7 @@ extern	vmCvar_t		mov_ratioFix;
 extern	vmCvar_t		mov_rewardCount;
 extern	vmCvar_t		mov_bobScale;
 extern	vmCvar_t		mov_wallhack;
+extern	vmCvar_t		mov_smoothCamPos;
 
 extern	vmCvar_t		mov_hitSounds;
 extern	vmCvar_t		mov_chatBox;

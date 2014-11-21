@@ -116,7 +116,7 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 	demoCameraPoint_t *match[4];
 	vec3_t control[4];
 	vec3_t lastOrigin, nextOrigin; 
-	float len = 0, step = 0, addStep, distance;
+	float len = 0, step = 0, addStep, distance, deltaDist = 0.01f;
 
 	if (point->len >= 0)
 		return point->len;
@@ -132,6 +132,8 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 		return point->len;
 	}
 	posGet( 0, demo.camera.smoothPos, control, lastOrigin );
+	if (mov_smoothCamPos.value >= 1)
+		deltaDist = 0.01f / mov_smoothCamPos.value;
 	while (step < 1) {
 		addStep = 1 - step;
 		if (addStep > 0.01f)
@@ -139,7 +141,7 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( lastOrigin, nextOrigin);
-			if ( distance <= 0.25f)
+			if ( distance <= deltaDist)
 				break;
 			addStep *= 0.7f;
 		}
@@ -159,7 +161,7 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 	vec3_t				dx, dy;
 	vec3_t				control[4];
 	vec3_t				nextOrigin; 
-	float				len = 0, step = 0, addStep, distance;
+	float				len = 0, step = 0, addStep, distance, deltaDist = 0.01f;
 	int					i;
 
 	cameraMatchAt( time, CAM_ORIGIN, match );
@@ -203,6 +205,8 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 		return qtrue;
 	} 
 	posGet( 0, demo.camera.smoothPos, control, origin );
+	if (mov_smoothCamPos.value >= 1)
+		deltaDist = 0.01f / mov_smoothCamPos.value;
 	while (step < 1) {
 		addStep = 1 - step;
 		if (addStep > 0.01f)
@@ -210,7 +214,7 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( origin, nextOrigin);
-			if ( distance <= 0.25f)
+			if ( distance <= deltaDist)
 				break;
 			addStep *= 0.7f;
 		}

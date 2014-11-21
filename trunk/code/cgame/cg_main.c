@@ -256,6 +256,7 @@ vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_rewardCount;
 vmCvar_t	mov_bobScale;
 vmCvar_t	mov_wallhack;
+vmCvar_t	mov_smoothCamPos;
 
 vmCvar_t	mov_hitSounds;
 vmCvar_t	mov_chatBox;
@@ -396,6 +397,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &mov_rewardCount,		"mov_rewardCount",		"10",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_bobScale,		"mov_bobScale",			"1.0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_smoothCamPos,	"mov_smoothCamPos",		"0",			NULL,	CVAR_ARCHIVE	},
 	
 	{ &mov_hitSounds,		"mov_hitSounds",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBox,			"mov_chatBox",			"10000",		NULL,	CVAR_ARCHIVE	},
