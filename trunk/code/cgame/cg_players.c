@@ -2205,7 +2205,7 @@ void CG_Player( centity_t *cent ) {
 
 	// it is possible to see corpses from disconnected players that may
 	// not have valid clientinfo
-	if ( !ci->infoValid ) {
+	if ( !ci->infoValid || ci->hide ) {
 		return;
 	}
 
