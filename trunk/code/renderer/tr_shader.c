@@ -38,6 +38,8 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
+extern cvar_t *r_fogMinOpaqueDistance;
+
 /*
 //I think I will leave that shit here because I'd probably need it one day...
 #define MAX_IGNORE_CONDITIONS 23
@@ -1666,7 +1668,7 @@ static qboolean ParseShader( char **text )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'fogParms' keyword in shader '%s'\n", shader.name );
 				continue;
 			}
-			shader.fogParms.depthForOpaque = atof( token );
+			shader.fogParms.depthForOpaque = max(r_fogMinOpaqueDistance->value, atof(token));
 
 			// skip any old gradient directions
 			SkipRestOfLine( text );
