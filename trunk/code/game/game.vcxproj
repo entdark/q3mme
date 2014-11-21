@@ -103,6 +103,7 @@
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
       <ImageHasSafeExceptionHandlers />
+      <Profile>false</Profile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(Q3DIR)\mme</Command>

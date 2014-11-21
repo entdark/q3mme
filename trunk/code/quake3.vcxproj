@@ -89,8 +89,9 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
@@ -102,6 +103,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <CompileAs>CompileAsC</CompileAs>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -118,12 +120,14 @@
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>libs/win32</AdditionalLibraryDirectories>
-      <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
-      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
+      <AdditionalOptions>/nodefaultlib:libcmtd.lib /nodefaultlib:msvcrt.lib /OPT:NOLBR /OPT:NOREF %(AdditionalOptions)</AdditionalOptions>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>$(OutDir)$(ProjectName).map</MapFileName>
-      <Profile>true</Profile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <Profile>false</Profile>
       <ImageHasSafeExceptionHandlers />
+      <OptimizeReferences>false</OptimizeReferences>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(Q3DIR)\quake3mmedb.exe</Command>
