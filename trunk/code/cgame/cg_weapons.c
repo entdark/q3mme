@@ -729,7 +729,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin, int viewHeight ) {
 	memset( &beam, 0, sizeof( beam ) );
 
 	// CPMA  "true" lightning
-	if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
+	if (cg.playerCent && (cent->currentState.number == cg.playerCent->currentState.number) && (cg_trueLightning.value != 0)) {
 		vec3_t angle;
 		int i;
 
