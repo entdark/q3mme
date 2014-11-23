@@ -98,6 +98,7 @@ void R_MME_ClampDof(float *focus, float *radius);
 extern cvar_t	*mme_aviFormat;
 
 extern cvar_t	*mme_blurJitter;
+extern cvar_t	*mme_blurStrength;
 extern cvar_t	*mme_dofFrames;
 extern cvar_t	*mme_dofRadius;
 

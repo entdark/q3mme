@@ -152,10 +152,11 @@ void blurCreate( mmeBlurControl_t* control, const char* type, int frames ) {
 	if (blurHalf <= 0)
 		return;
 
-	if ( !Q_stricmp( type, "gaussian")) {
+	if ( !Q_stricmp( type, "gaussian") || mme_blurStrength->value >= 1.0f) {
+		float strengthVal = (mme_blurStrength->value >= 1.0f) ? (mme_blurStrength->value / 10.0f) : 1.0f;
 		for (i = 0; i < frames ; i++) {
 			double xVal = ((i - blurHalf ) / blurHalf) * 3;
-			double expVal = exp( - (xVal * xVal) / 2);
+			double expVal = exp( - (xVal * xVal)*strengthVal / 2);
 			double sqrtVal = 1.0f / sqrt( 2 * M_PI);
 			blurFloat[i] = sqrtVal * expVal;
 		}

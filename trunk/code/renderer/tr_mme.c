@@ -72,6 +72,7 @@ cvar_t	*mme_blurType;
 cvar_t	*mme_blurOverlap;
 cvar_t	*mme_blurGamma;
 cvar_t	*mme_blurJitter;
+cvar_t	*mme_blurStrength;
 
 cvar_t	*mme_dofFrames;
 cvar_t	*mme_dofRadius;
@@ -593,6 +594,7 @@ void R_MME_Init(void) {
 	mme_blurType = ri.Cvar_Get ( "mme_blurType", "gaussian", CVAR_ARCHIVE );
 	mme_blurGamma = ri.Cvar_Get ( "mme_blurGamma", "0", CVAR_ARCHIVE );
 	mme_blurJitter = ri.Cvar_Get ( "mme_blurJitter", "1", CVAR_ARCHIVE );
+	mme_blurStrength = ri.Cvar_Get ( "mme_blurStrength", "0", CVAR_ARCHIVE );
 
 	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
