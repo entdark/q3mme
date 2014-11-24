@@ -1,0 +1,54 @@
+Q3MME 1.7
+
+Additions:
+- added blur strength (mme_blurStrength)
+- made true lightning work with non-predicted cleints' povs
+- added camera position smoother on low camera movement for non-linear ecamera interpolation methods (mov_smoothCamPos)
+- added demoSeek command to seek in demo with mm:ss.msec format
+- added movement keys (cg_drawMovementKeys*)
+- added chatbox support (mov_chatBox*)
+- added possibility to select on startup which cores to use for quake3mme.exe for multicore processors (com_affinity)
+- increased max limit of megabytes that are used for the mme fx system (fx_Megs)
+- added possibility to change scale of weapon bobbing or disable it fully (mov_bobScale)
+- added CPMA hit sounds support (mov_hitSounds)
+- added wallhack (mov_wallhack)
+- added speedometer (cg_drawSpeedometer*)
+- added possibility to choose when rewards start using counter (mov_rewardCount)
+- added hidden frame buffer object effects such as bloom and rotoscope with disabling frame buffer custom resolution, motion blur and anti-aliasing (r_framebuffer*)
+- added an opportunity to control delta time when comparing the same sounds to decide on mixing them on not (s_mixSameTime)
+- added alphabetical cvar sorting when saving them into a config
+- added an opportunity to toggle 0 and 1 values in cvars (cvar_exampleName !)
+- added an opportunity to control sound attenuation level (s_attenuate)
+- added pixel buffer object to speed up capturing (implemented by teh) (mme_pbo)
+- added an opportunity to start the game without window border (r_noborder)
+- added an opportunity to capture avi with audio (mme_saveWav 2)
+- added stereoscopic 3d capture (r_stereoSeparation, r_zproj)
+- added saving speed of demo playback into mme project files
+- added a condition to not draw status if followed client is dead
+- made lagometer draw ping graph in demo playback
+- added underwater sound effect (s_effects)
+- added scriptable depth of field feature (dof)
+- added some conditions for predicted and non-predicted clients to show or not show certain stuff + it fixes rare crashes
+- added smooth animation for shaders, hud elements and some missed world objects like local ents or marks
+
+Deletions:
+- FBO in quake3mme.exe (left in quake3mme_fbo.exe)
+
+Fixes:
+- fixed true lightning feature that caused wrong direction of lightning for non-player pov when predicted client used lightning gun
+- fixed never working hide option in clientOverride feature
+- changed the hunk allocation error mode from DROP to FATAL and added some details to the error message
+- added the r_fogMinOpaqueDistance cvar to override the fog's clipping distance on map load
+- fixed using same shader as power-up has for weapon in third person or free view
+- fixed endless loop when reading mp3 file has variable bitrate
+- fixed rare dividing by zero bug on counting left sound index
+- fixed sounds interruption when sound volume is low
+- fixed crash when the game is trying to load wrong written shaders
+- fixed resetting everything on fast frame update
+- fixed possible crash when the game sent to play custom background music in mme mode
+- made announcer sounds hearable everywhere, not just when pov is in predicted client
+- fixed incorrect capturing with cl_avidemo and added an opportunity to capture with motion blur with cl_avidemo
+- fixed incorrectly finishing demo convertion that could cause memory leak if it failed to open a new mme demo for writing
+- unlocked demo smoother
+- added ratio fix for 2d elements for non-4:3 screens (mov_ratioFix)
+- fixed sometimes drawing first person weapon when pov was set to non-predicted client and it was the intermission

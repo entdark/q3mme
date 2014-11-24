@@ -1,0 +1,178 @@
+Console variables (cvars):
+
+Example mask:
+cvarName               [value] Explanation (requirement/limitation):
+                       value = explanation
+? - integer(1337), ?.? - float(13.37), text - path/name/filename("mme/shader", "captureName"),
+?..? - range(0..2), xHEXCOL - colour in hexadecimal representation (x00d52f)(0..f)
+
+Q3MME CLIENT GAME
+
+mov_chatBeep            [0, 1] Turn off/on chat beep sound
+mov_seekInterval        [0..?.?] Set time interval in seconds that will be used in demo seeking
+mov_deltaYaw            [-?.?..?.?] Add additional angle in degrees around horizontal left-to-right axis
+mov_deltaPitch          [-?.?..?.?] Add additional angle in degrees around vertical
+mov_deltaRoll           [-?.?..?.?] Add additional angle in degrees around horizontal back-to-forward axis
+mov_chaseRange          [0..?.?] Range of chase camera distance when chase camera switches to entity pov
+mov_captureCamera       [0, 1] Capture camera postion, angles and fov to a data file
+mov_captureCvars        [text] Save cvars and their values into current project in format mov_captureCvars "cvar cvar cvar"
+mov_captureName         [text] Set a name for outputs
+mov_captureFPS          [1..?] Set desired frame rate in frames per second for future video
+mov_wallhack            [0, bit-field: 1..8] See selected entities through walls:
+                        0 = disabled, 1 = see the predicted client, 2 = see everyone except the predicted client,
+                        4 = see all projectiles (rockets, granades, plsma balls etc), 8 = see pickable items, 16 = see flags
+mov_filterMask          [0, bit-field: 1..8] Hide selected entities:
+                        0 = everything is visible, 1 = hide the predicted client, 2 = hide everyone except the predicted client,
+                        4 = hide all projectiles (rockets, granades, blaster shots etc), 8 = hide pickable items, 16 = hide flags
+mov_musicFile           [text] Play MP3 or WAV file from either "mme" or "baseq3" folder, or from a subfolder in format:
+                        filename or subfolder/subfolder/filename
+mov_musicStart          [-?..?] Offset music start time in seconds
+mov_ratioFix            [0, 1] Use ratio fix for non-4:3 resolutions; disable if it makes custom HUD look wrong
+
+mov_fontName            [text] Uses font in TTF format in centre printing messages, speedometer and movememnt keys from either "mme" or "baseq3" folder, or from a subfolder in format:
+                        filename or subfolder/subfolder/filename
+mov_fontSize            [0..?] Quality of custom TTF font (mov_fontName)
+mov_teamSkins           [0, 1] Disable/enable team skins in team game modes
+
+mov_hudOverlay          [text] Set custom shader to draw on screen behind the demo hud
+
+mov_Obituaries          [0, 1] Display obituaries message in the console
+mov_fragFormat          [text, %format] Draw frag message in certain colours (^ and the colour key) with certain formatting:
+                        %t = target, %p = place, %n = new line, %a = attacker, %s = score, %% = %
+mov_gameType            [0, 1..8] Force demos to emulate certain gametype:
+                        0 = use current gametype, 1 = FFA, 2 = duel, 3 = single player FFA (just FFA eh?), 4 = TDM, 5 = CTF
+mov_debug               [0, bit-field: 1..2] Disaply debug information of client game:
+                        0 = hidden, 1 = disaply regular info, 2 = display additional info
+
+mov_rewardCount         [0..?] Set the number that reward counter start displaying a single reward from with counter number
+mov_bobScale            [-1, 0.0..?.?] Weapon bobbing facotr:
+                        -1 = fully disabled, 0 = only shooting animation is enabled, >0 = custom bobbing factor
+
+mov_hitSounds           [0, 1, 2] Select hit sounds type:
+                        0 = disabled, 1 = default hit sounds (CPMA hit sounds if CPMA demo detected (fs_extraGames "CPMA")), 2 = CPMA hit sounds (forced) (fs_extraGames "CPMA")
+mov_smoothCamPos        [0, 1.0..?.?] Smoothing camera position movement factor for slowly moving camera:
+                        0 = no smoothing, >=1 = x times smoothing factor
+mov_chatBox             [0..?] Set time of chat box displaying on screen in milliseconds
+mov_chatBoxHeight       [0.0..?.?] Vertical position of chat box
+mov_chatBoxScale        [0.0..?.?] Set scale of chat box messages
+
+cg_drawSpeedometer      [0, 1] Draw speedometer in ups on screen
+cg_drawSpeedometerScale [0.0..?.?] Set scale of speedometer (cg_drawSpeedometer 1)
+cg_drawSpeedometerPos   [0.0..?.? 0.0..?.?] Set on screen position of speedometer with two arguements (cg_drawSpeedometer 1)
+cg_drawSpeedometerFormat[text, %format] Draw speedometer in certain colours (^ and the colour key) and certain tabulation (cg_drawSpeedometer 1):
+                        %s = draw speed number directly, %t = draw speed number tabulated by 4 letters, %% = %
+
+cg_drawMovementKeys     [0, 1] Draw movement keys such as W A S D v ^
+cg_drawMovementKeysPos  [0..?.? 0..?.?] Set on screen position of movement keys with two arguements (cg_drawMovementKeys 1)
+cg_drawMovementKeysScale[0.0..?.?] Set scale of movement keys (cg_drawMovementKeys 1)
+
+
+
+Q3MME CLIENT (ENGINE)
+
+mme_saveWav             [0, 1, 2] Record audio:
+                        0 = disabled, 1 = record to wav, 2 = record to avi file (mme_screenShotFormat "avi")
+mme_gameoverride        [text] Fool the game that we are loading certain mod
+mme_demoFileName        [text] Resets when loading demo, uses demo name from current demo; use for saving pathes:
+                        project/[mme_demoFileName]/, capture/[mme_demoFileName]/
+mme_demoConvert         [0, 1] Convert demos to new .mme format for fast access to demo time; should be always ON for work with jamme
+mme_demoSmoothen        [0, 1] Smooth demos that have been recorded with low cl_maxpackets and similar limiters
+mme_demoFileName        [text] Resets when loading demo, uses demo name from current demo to convert to .mme file and to save demo stuff; use for needed saving pathes:
+                        project/[mme_demoFileName]/, capture/[mme_demoFileName]/
+mme_demoStartProject    [text] Set project that demoList feature will use in current demo; used by the game and usually not touched
+mme_demoListQuit        [0, 1] Quit the game after completing capturing all demos from demoList feature
+
+mme_anykeystopsdemo     [0, 1] Any pressed key can stop demo playback
+
+com_affinity            [bit-field: 1..32 in HEX] Set cores that the game will use (the game works very smoothly with 1 core)
+
+fs_extraGames           [text text] Tell the game which mod folders it can load files from:
+                        fs_extraGames "japlus" will load files from japlus folder like custom models and maps or
+                        fs_extraGames "makermod japp" will load files from japp and makermod folders
+
+s_dopplerSpeed          [-?.?..?.?] Adjust speed of full doppler effect (s_doppler 2)
+s_dopplerFactor         [-?.?..?.?] Adjust speed coefficient of full doppler effect (s_doppler 2)
+s_timescale             [0, 1] Disable/enable sound speed scaling
+s_mixSame               [0..?] How many same sounds can come from the same entity at the same time
+s_mixSameTime           [0.0..?.?] Set range of "the same time" of "s_mixSame" cvar in seconds
+s_attenuate             [0.0..?.?] Set sound attenuation range:
+                        0.0 = all sounds are hearable everywhere, 1.0 = regular attenuation, >1.0 is lower hearing range.
+                        Between 1.0 and 2.5 is probably the best choice.
+s_effects               [0..6] Use the underwater sound effect:
+                        0 = disabled, 1 = basic, 2 = circular, 3 = shuffle, 4 = split, 5 = double z, 6 = double h
+                        Values over 0 are different instructions, but they produce almost the same effect.
+com_soundMegs           [0..?] Set how many megabytes are allocated for sounds.
+
+MME FX
+fx_Megs                 [0..?] Set how many megabytes are allocated for mme fx system.
+fx_Vibrate              [0..?.?] Set power of camera shake: 0 = no shake, >0 = mme style shake
+fx_Override             [text] Set custom folder where to load effect files (.fx) from
+fx_Debug                [0, 1, 2] Display debug information of mme fx system:
+                        0 = hidden, 1 = display regular info, >1 = display enhanced info
+
+
+
+Q3MME RENDERER
+
+mme_aviFormat           [0, 1] Compress AVI output with mpeg
+mme_screenShotFormat    [jpg, png, tga, avi] Set output format
+mme_screenShotGamma     [0, 1] Correct gamma in output
+mme_screenShotAlpha     [0, 1] Capture alpha channel for PNG or TGA outputs
+
+mme_jpegQuality         [0..100] Set quality for JPEG output
+mme_jpegDownsampleChroma[0, 1] Currently does nothing
+mme_jpegOptimizeHuffman [0, 1] Currently does nothing
+mme_tgaCompression      [0, 1] Use lossless compression for TGA output
+mme_pngCompression      [0..9] Lossless compression level for PNG output
+
+mme_skykey              [0, 1..9, a..t, xHEXCOL] Set a colour for skybox; could be used as chroma key
+mme_worldShader         [text] Replace environment textures with yours
+
+mme_pip                 [0, 1] Replaces textures on the map to old couple having fun
+
+mme_blurFrames          [0..256] Number of frames that will be merged into one
+mme_blurType            [gaussian, triangle, median] Set different type of merging frames
+mme_blurOverlap         [0..256] Set number of frames that will be additively merged in current one
+mme_blurGamma           [0, 1] Correct gamma in every frame that will be merged
+mme_blurJitter          [0..?.?] Jitter effect (random offset) power for blur frames
+mme_blurStrength        [0, 1.0..?.?] Strength of blur frames blending (r_fbo 0)
+
+mme_dofFrames           [0..256] Number of frames that will be captured at the same time with view offset each and merged into one to emulate realistic DOF (r_fbo 0)
+mme_dofRadius           [0.0..?.?] Set view offset for every dof frame (power of dof blur) (r_fbo 0)
+
+mme_renderWidth         [0, 1..?] Width of resolution that game will capture frames with in demoList feature
+mme_renderHeight        [0, 1..?] Height of resolution that game will capture frames with in demoList feature
+mme_workMegs            [1..512] Set megabytes that will be allocated for capturing output
+mme_depthFocus          [0..?] Focus position from your current camera postion to given focus number (mme_saveDepth 1)
+mme_depthRange          [0..?] Range from focus position to your camera direction and reversely from your camera direction (mme_saveDepth 1)
+
+mme_saveOverwrite       [0, 1] Overwrite outputs with existing ones if their names match each other
+mme_saveShot            [0, 1, 2] Save output:
+                        0 = don't save regular output, 1 = merge blur frames (if have) and save, 2 = save every blur frame (if have) as a single frame
+mme_saveDepth           [0, 1, 2] Save depth of field mask outputs:
+                        0 = don't save dof output, 1 = merge dof blur frames (if have) and save, 2 = save every dof blur frame (if have) as a single frame
+mme_saveStencil         [0, 1, 2] Save stencil mask outputs:
+                        0 = don't save stencil output, 1 = merge stencil blur frames (if have) and save, 2 = save every stencil blur frame (if have) as a single frame
+
+mme_cpuSSE2             [0, 1] Use SSE2 instruction to make motion blur (faster way, may crash on old CPUs)
+mme_pbo                 [0, 1] Use PBO instruction to increase capture speed in times (r_stereoSeparation 0.0)
+
+r_zproj                 [0..?.?] Stereo focus position
+r_stereoSeparation      [-?.?..?.?] Camera stereo offset by horizontal left-to-right axis by stereo focus position;
+                        use not-null value to let the game capture stereo frames
+
+r_multiSample           [0, 2, 4, 8] Anti-aliasing factor; use together with mme_renderWidth and mme_renderHeight in demoList feature
+r_multiSampleNvidia     [0, 1] Let the game use Nvidia cards for anti-aliasing (r_multiSample > 0)
+r_anisotropy            [0, 2, 4, 8, 16] Anisotropic filter factor
+
+r_fogMinOpaqueDistance  [-?.?..?.?] Minimal distance that fog starts clipping from
+
+FRAME BUFFER OBJECT
+r_fbo                   [0, 1] Use framebuffer object feature (r_fboWidth > 0 and r_fboHeight > 0)
+r_fboMultiSample        [0, 2, 4, 8] Anti-aliasing in FBO mode (r_fbo 1; r_DynamicGlow 0; cg_shadows != 2);
+                        the feature doesn't work together with volumetric shadows, dynamic glow,
+                        disables distortion effect in force push/pull, boon, sphere shield, repeater orb
+r_fboBlur               [0, 1, 2] Motion blur capture in FBO mode (very fast) (mme_blurFrames > 0; gpu or cpu with opengl 2.0 or higher support):
+                        0 = disabled, 1 = 16 bit colour buffer, 2 = 32 bit colour buffer
+r_fboWidth              [0..?] Width of resolution in FBO mode, not depended on current game resolution and will be fit in it
+r_fboHeight             [0..?] Height of resolution in FBO mode, not depended on current game resolution and will be fit in it

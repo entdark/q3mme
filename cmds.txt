@@ -1,0 +1,273 @@
+Console commands:
+
+Example mask:
+command
+    command subcommand/value ..., explanation              (default)
+        command example, explanation
+            result
+
+Q3MME CLIENT GAME
+
+camera                  
+    camera add/del, add/del a camera point at current viewpoint and time
+    camera clear, clear all camera points. (Use with caution...)
+    camera lock, lock the view to camera point or free moving
+    camera shift time, move time indexes of camera points by certain amount
+    camera next/prev, go to time index of next or previous point
+    camera start/end, current time with be set as start/end of selection
+    camera pos/angles (a)0 (a)0 (a)0, directly control position/angles, optional "a" before number to add to current value
+    camera fov (a)0, directly control fov, optional "a" before number to add to current value
+    camera target, clear/set the target currently being aimed at
+    camera targetNext/Prev, go the next or previous player
+    camera smoothPos 0-2, linear, catmullrom, bezier interpolation
+    camera smoothAngles 0-1, linear, quaternion interpolation
+    camera toggle value, xor the flags with this value
+    camera smooth, smooth out the speed between select start/end
+    camera move here/x y z, move the camera track to view position or directly move it around
+    camera rotate pitch yaw roll, Rotate entire camera track around current view position
+
+edit
+    edit camera, switch to camera edit mode                (bound to 1)
+    edit chase, switch to chase edit mode                  (bound to 2)
+    edit line, switch to timeline edit mode                (bound to 3)
+    edit effects, switch to effects edit mode              (bound to 4)
+    edit script, switch to script edit mode                (bound to 5)
+    edit dof, switch to dof edit mode                      (bound to 6)
+    edit none, hide demo hud and don't let edit anything   (bound to 7)
+    (if selected either camera, or chase, or line):
+    edit prev, edit previous keypoint                      (bound to Q)
+    edit next, edit next keypoint                          (bound to E)
+    edit lock, lock camera/chase/timeline                  (bound to R)
+    edit add, add keypoint                                 (bound to V)
+    edit del, delete current keypoint                      (bound to B)
+    edit start, set selection start                        (bound to T)
+    edit end, set selection end                            (bound to G)
+    edit target, with +attack down choose a target for camera/chase;
+	             without +attack you will sync the edit coordinates to current view (bound to F)
+
+view
+    view camera, change to camera view
+    view chase, change to chase view
+    view effect, change to effect view
+    view next/prev, change to next or previous view        (bound to X/Z)
+
+chase
+    chase add/del, add/del a chase point at current viewpoint and time
+    chase clear, clear all chase points. (Use with caution...)
+    chase lock, lock the view to chase track or free moving
+    chase target, clear/set the target currently being aimed at
+    chase targetNext/Prev, go the next or previous player
+    chase shift time, move time indexes of chase points by certain amount
+    chase next/prev, go to time index of next or previous point
+    chase start/end, current time with be set as start/end of selection
+    chase pos/angles (a)0 (a)0 (a)0, directly control position/angles, optional a before number to add to current value
+
+speed
+    speed 0.0..?.?, set speed of demo playback             (1.0)
+
+seek
+    seek 0.000..?.???, go to given time in seconds.milliseconds
+        seek 20, will go to 0:20.000
+        seek 133.7, will go to 2:13.700
+    seek +?.???, go forward in time to given time in seconds.milliseconds
+        seek +290, being at 2:13.700 it will go to 7:03.700; 290 = 4*60+50 -> 2+4:13+50.700 -> 6:63.700 -> 7:03.700
+    seek -?.???, go backward in time to given time in seconds.milliseconds
+        seek -290, being at 7:03.700 it will go to 2:13.700
+        seek -1337, being at 7:03.700 it will go to 0:00.000; 7:03.700 -> 7*60+3.7 -> (423.7 - 1337) < 0 -> time cannot be negative
+
+demoSeek
+    demoSeek 0:00.000..?:??.???, go to given time in minutes:seconds.milliseconds
+        demoSeek 13:33.37, will go to 13:33.370
+        demoSeek 13, will go to 13:00.000
+        demoSeek 13:82, will go to 14:22.000
+
+pause
+    pause, no value or subcommand, pauses/unpauses demo playback
+
+capture
+    capture jpg/tga/png/avi fps filename, start capturing to a specific file, demo has to be not paused
+        capture avi 30 niceshot, will start capturing AVI file with 30 frames per second framerate
+                                 into capture/[mme_demoFileName]/niceshot.000.avi (+001 after reaching 2GB filesize)
+        capture png 30 episode8, will start capturing PNG screenshots into capture/[mme_demoFileName]/episode8.000000000.png
+                                 (+000000001 each new screenshot) and each screenshot will be a frame of future video
+    capture lock, lock capturing to the selected range
+    capture start/end, set start/end parts of capture range
+    capture stop, stop capturing
+
+hudInit
+    hudInit, no value or subcommand, initialize demo hud,
+             called on demo startup and does not require reinitialize, thus never used
+
+hudToggle
+    hudToggle, no value or subcommand, switch between normal hud mode and editable hud
+
+line
+    line lock, lock timeline to use the keypoints
+    line add, add timeline point for this demo/line time como
+    line del, delete timeline keypoint
+    line clear, clear all keypoints
+    line speed value, demo speed when timeline unlocked
+    line offset seconds, shift the demotime along the main time
+    line start/end, set start/end parts of capture range
+
+save
+    save project demolist, saves a project file and an optional list file
+        save niceshot, will save niceshot.cfg into project/[mme_demoFileName]/
+        save niceshot list.txt, will save niceshot.cfg into project/[mme_demoFileName]/
+                                and list.txt into current folder (mme)
+
+load
+    load project, loads saved project
+        load niceshot, will try to load niceshot.cfg from project/[mme_demoFileName]/,
+                       so given name to mme_demoFileName cvar has to match given name in loading path
+
++seek
+    +seek, no value or subcommand, enable moving in time by using mouse, arrows or strafe keys (bound to SHIFT, hold it)
+
+-seek
+    -seek, no value or subcommand, disable moving in time by using mouse, arrows or strafe keys (bound to SHIFT, unhold it)
+
+clientOverride
+    <subcommands>:
+    list, view current settings, red tag means an override
+    startNumber[-endNumber], select client or range of client
+    player, override player who we recorded demo on
+    red, override all player on red team
+    blue, override all player on red team
+    friendly, override all player on your team
+    enemy, override all players who are on enemy team or everyone except our player if it's not team gametype
+    all, override all players
+    <subsubcommands, use them after subcommands above>:
+    model "modelname/skin", change model
+    hmodel "modelname/skin", change headmodel
+    skin "skin", change model skin
+    hskin "skin", change headmodel skin;
+    n "name", change name
+    t "0-3", change team number
+    c1 "0-9,a-w,xhexcode", change color1, can also do osp/cpm style shirt/head/pants colors
+    c2 "0-9,a-w,xhexcode", change color2
+    cmodel "0-9,a-w,xhexcode", same as color1 without the first color for the rail
+    hide "0,1", hide player yes or no
+    shader "shadername", shader override to be use on the whole player and weapon
+    torsoFX "script", FX Script to run from the torso position
+    headFX "script", FX Script to run from the head position
+        clientOverride list, result:
+            client 0  n CaNaBiS t 0 model doom/default c1 2 c2 2
+            client 1  n ent t 0 model crash/red c1 2 c2 2
+            client 2  n HMage t 0 model slash/blue c1 6 c2 6
+
+            player
+            red
+            blue
+            friendly
+            enemy
+            all
+        clientOverride 0-1 n q3mme, result:
+            client 0  n CaNaBiS t 0 model doom/default c1 2 c2 2
+            Override: \n\q3mme
+            client 1  n ent t 0 model crash/red c1 2 c2 2
+            Override: \n\q3mme
+            client 2  n HMage t 0 model slash/blue c1 6 c2 6
+
+            player
+            red
+            blue
+            friendly
+            enemy
+            all
+        clientOverride all model xaero, result:
+            client 0  n CaNaBiS t 0 model doom/default c1 2 c2 2
+            Override: \n\q3mme
+            client 1  n ent t 0 model crash/red c1 2 c2 2
+            Override: \n\q3mme
+            client 2  n HMage t 0 model slash/blue c1 6 c2 6
+
+            player
+            red
+            blue
+            friendly
+            enemy
+            all
+            Override: \model\xaero
+        clientOverride 2 c1 xFF2700, result:
+            client 0  n CaNaBiS t 0 model doom/default c1 2 c2 2
+            Override: \n\q3mme
+            client 1  n ent t 0 model crash/red c1 2 c2 2
+            Override: \n\q3mme
+            client 2  n HMage t 0 model slash/blue c1 6 c2 6
+            Override: \c1\xFF2700
+
+            player
+            red
+            blue
+            friendly
+            enemy
+            all
+            Override: \model\xaero
+
+musicPlay
+    musicPlay length, will play selected audio file in mov_musicFile for some seconds to find synchronization point
+        musicPlay, will play 2 seconds music
+        musicPlay 10, will play 10 seconds music
+
+find
+    find death, will fast forward a demo until a moment when someone dies
+
+dof
+    dof add/del, add/del a dof point at current viewpoint and time
+    dof clear, clear all dof points. (Use with caution...)
+    dof lock, lock dof to use the keypoints
+    dof shift time, move time indexes of dof points by certain amount
+    dof next/prev, go to time index of next or previous point
+    dof start/end, current time with be set as start/end of selection
+    dof focus (a)0, Directly control focus, optional a before number to add to current value
+    dof radius (a)0, Directly control radius, optional a before number to add to current value
+    dof target, Clear/Set the target currently being focused at
+
+
+
+Q3MME CLIENT (ENGINE)
+
+fxStats
+    fxStats, print statistics of fx usage
+
+fxList
+    fxList, list all loaded fx
+
+fxReset
+    fxReset, clean fx in the scene
+
+fxReload
+    fxReload, reset and reload all the fx, useful if new fx were added
+
+fxRemap
+    fxRemap oldScript newScript, will replace oldscript with new one
+        fxRemap old.fx new.fx, will replace old.fx with new.fx from "scripts" or "[fx_Override]" folder
+    fxRemap oldScript, will reset the remap
+
+fxMath
+    fxMath operation, will compute the result with given operation
+        fxMath 1+1, will compute "result 2.0000000"
+
+csList
+    csList, no value or subcommand, display in the console current configstrings
+
+mmeDemo
+    mmeDemo filename, load a demo in .mme format (has to be converted at first) from "mmedemos" folder
+        mmeDemo aaaa/mysuperdemo, will load mysuperdemo.mme from mmedemos/aaaa/
+                                  or will convert demo mysuperdemo.dm_26 from demos/aaaa/ and load
+demoList
+    demoList filename, load bunch of demos together with their projects to capture them all on background,
+                       that file should have lines with "demoname" "projectname", these will be played after each other
+
+demoListNext
+    demoListNext, play next demo from the list of demos, usually called by the game after finish capturing a demo from the list
+
+
+
+Q3MME RENDERER
+
+screenshotPNG
+    screenshotPNG levelshot, will capture a screenshot in PNG format in "levelshot" folder for using it as a levelshot for a map
+    screenshotPNG name, will capture a screenshot in PNG format in "screenshots" with given name
+        screenshotPNG testname, will capture a screenshot testname.png in "screenshots" folder
