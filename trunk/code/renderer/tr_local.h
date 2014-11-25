@@ -314,7 +314,15 @@ typedef struct {
 	} data;
 } texModInfo_t;
 
-#define	MAX_IMAGE_ANIMATIONS	8
+#define	MAX_DRAWIMAGES			2048
+#define	MAX_LIGHTMAPS			256
+#define	MAX_SKINS				1024
+
+#define	MAX_DRAWSURFS			0x20000
+#define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
+
+//ninja ent stole new max from wolfcamql
+#define	MAX_IMAGE_ANIMATIONS	MAX_DRAWIMAGES  // credit to Cyberstorm, suggested by KittenIgnition and mccormic
 
 typedef struct {
 	image_t			*image[MAX_IMAGE_ANIMATIONS];
@@ -877,13 +885,6 @@ void		R_Modellist_f (void);
 
 //====================================================
 extern	refimport_t		ri;
-
-#define	MAX_DRAWIMAGES			2048
-#define	MAX_LIGHTMAPS			256
-#define	MAX_SKINS				1024
-
-#define	MAX_DRAWSURFS			0x20000
-#define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
 
 extern	int			gl_filter_min, gl_filter_max;
 
