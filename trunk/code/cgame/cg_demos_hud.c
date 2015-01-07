@@ -41,7 +41,8 @@ typedef enum {
 	hudTypeButton,
 	hudTypeCvar,
 	hudTypeText,
-	hudTypeCheck
+	hudTypeCheck,
+	hudTypeTime
 } hudType_t;
 
 typedef struct {
@@ -220,6 +221,36 @@ const char *demoTimeString( int time ) {
 	return retBuf;
 }
 
+int parseDemoTime( const char* string, int* time ) {
+	int mins, secs, msec;
+	if(time == NULL)
+	{
+		return 0;
+	}
+	
+	if (sscanf( string, "%d:%d.%d", &mins, &secs, &msec ) == 3) {
+		*time = mins * 60000 + secs * 1000 + msec;
+		return 1;
+	}
+
+	if (sscanf( string, "%d:%d", &mins, &secs ) == 2) {
+		*time = mins * 60000 + secs * 1000;
+		return 1;
+	}
+
+	if (sscanf( string, "%d.%d", &secs, &msec ) == 2) {
+		*time = secs * 1000 + msec;
+		return 1;
+	}
+
+	if (sscanf( string, "%d", &mins ) == 1) {
+		*time = mins * 60000;
+		return 1;
+	}
+	
+	return 0;
+}
+
 static int hudGetChecked( hudItem_t *item, vec4_t color ) {
 	Vector4Copy( colorWhite, color );
 	switch ( item->handler ) {
@@ -305,6 +336,19 @@ static void hudToggleChecked( hudItem_t *item ) {
 	}
 }
 
+static void hudHandlerClicked(hudItem_t *item) {
+	switch ( item->handler ) {
+	case hudViewName:
+		// Loop through all values.
+		demo.viewType = ((demo.viewType + 1) % viewLast);
+		break;
+	case hudEditName:
+		// 0 is editNone, so we avoid index 0 and loop through the rest.
+		demo.editType = 1 + (demo.editType % (editLast - 1));
+		break;
+	}
+}
+
 static float *hudGetFloat( hudItem_t *item ) {
 	switch ( item->handler ) {
 	case hudCamFov:
@@ -347,6 +391,10 @@ static float *hudGetFloat( hudItem_t *item ) {
 	return 0;
 }
 
+static void hudGetTime( hudItem_t *item, char *buf, int bufSize ) {
+	Com_sprintf( buf, bufSize, "%s", demoTimeString( demo.play.time ) );
+}
+
 static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 	int effectCount;
 	demoEffectParent_t *effectParent;
@@ -360,9 +408,6 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		return;
     }
 	switch ( item->handler ) {
-	case hudPlayTime:
-		Com_sprintf( buf, bufSize, "%s", demoTimeString(demo.play.time ));
-		return;
 	case hudEditName:
 		switch (demo.editType) {
 		case editCamera:
@@ -610,11 +655,15 @@ static float hudItemWidth( hudItem_t *item  ) {
 	switch (item->type ) {
 	case hudTypeHandler:
 	case hudTypeButton:
-		hudGetHandler( item, buf, sizeof(buf) );
+		hudGetHandler( item, buf, sizeof( buf ) );
+		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		break;
+	case hudTypeTime:
+		hudGetTime( item, buf, sizeof( buf ) );
 		w += strlen( buf ) * HUD_TEXT_WIDTH;
 		break;
 	case hudTypeText:
-		hudGetText( item, buf, sizeof(buf), qfalse );
+		hudGetText( item, buf, sizeof( buf ), qfalse );
 		w += strlen( buf ) * HUD_TEXT_WIDTH;
 		break;
 	case hudTypeValue:
@@ -672,6 +721,7 @@ static void hudDrawItem( hudItem_t *item ) {
 			case hudTypeValue:
 			case hudTypeCvar:
 			case hudTypeText:
+			case hudTypeTime:
 				color = colorYellow;
 				break;
 			case hudTypeCheck:
@@ -687,6 +737,10 @@ static void hudDrawItem( hudItem_t *item ) {
 	case hudTypeButton:
 	case hudTypeHandler:
 		hudGetHandler( item, buf, sizeof( buf ));
+		hudDrawText( x, y, buf, colorWhite );
+		break;
+	case hudTypeTime:
+		hudGetTime( item, buf, sizeof(buf) );
 		hudDrawText( x, y, buf, colorWhite );
 		break;
 	case hudTypeText:
@@ -901,6 +955,13 @@ static void hudAddHandler( float x, float y, int showMask, const char *text, int
 	item->type = hudTypeHandler;
 }
 
+static void hudAddTime(float x, float y, int showMask, const char *text, int handler)
+{
+	hudItem_t *item = hudAddItem(x, y, showMask, text);
+	item->handler = handler;
+	item->type = hudTypeTime;
+}
+
 static void hudAddValue( float x, float y, int showMask, const char *text, float *value) {
 	hudItem_t *item = hudAddItem( x, y, showMask, text );
 	item->value = value;
@@ -949,7 +1010,7 @@ void hudInitTables(void) {
 	hudItemsUsed = 0;
 
 	/* Setup the hudItems */
-	hudAddHandler(   0,  0,  0, "Time:", hudPlayTime );
+	hudAddTime(      0,  0,  0, "Time:", hudPlayTime );
 	hudAddValue(     0,  1,  0, "Speed:", &demo.play.speed );
 	hudAddHandler(   0,  2,  0, "View:", hudViewName );
 	hudAddHandler(   0,  3,  0, "Edit:", hudEditName );
@@ -1053,7 +1114,14 @@ static hudItem_t *hudItemAt( float x, float y ) {
 
 static void hudEditItem( hudItem_t *item, const char *buf ) {
 	float *f;
+	int time;
 	switch ( item->type ) {
+	case hudTypeTime:
+		if (!parseDemoTime( buf, &time ))
+			return;
+		demo.play.time = time;
+		demo.play.fraction = 0.0f;
+		break;
 	case hudTypeFloat:
 		f = hudGetFloat( item );
 		if (!f)
@@ -1122,6 +1190,15 @@ qboolean CG_KeyEvent(int key, qboolean down) {
 				break;
 			case hudTypeCheck:
 				hudToggleChecked( item );
+				break;
+			case hudTypeHandler:
+				hudHandlerClicked( item );
+				break;
+			case hudTypeTime:
+				hudGetTime( item, hud.edit.line, sizeof( hud.edit.line ) );
+				hud.edit.cursor = strlen( hud.edit.line );
+				hud.edit.item = item;
+				trap_Key_SetCatcher(KEYCATCH_CGAME | (catchMask &~KEYCATCH_CGAMEEXEC));
 				break;
 			}
 		}
