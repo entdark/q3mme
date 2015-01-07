@@ -30,6 +30,8 @@ Additions:
 - added scriptable depth of field feature (dof)
 - added some conditions for predicted and non-predicted clients to show or not show certain stuff + it fixes rare crashes
 - added smooth animation for shaders, hud elements and some missed world objects like local ents or marks
+- added the possibility to loop through edit and view modes in the HUD
+- added the possibility to edit the time field in the HUD
 
 Deletions:
 - FBO in quake3mme.exe (left in quake3mme_fbo.exe)
