@@ -1878,7 +1878,7 @@ void R_BloomInit( void );
 void R_BloomScreen( void );
 
 //Framebuffer stuff
-#define HIDDEN_FBO
+//#define HIDDEN_FBO
 
 extern cvar_t *r_fbo;
 extern cvar_t *r_fboBlur;
