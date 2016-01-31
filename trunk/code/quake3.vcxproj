@@ -257,6 +257,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="botlib\aasfile.h" />
+    <ClInclude Include="client\cl_demos.h" />
     <ClInclude Include="client\fx_local.h" />
     <ClInclude Include="client\fx_public.h" />
     <ClInclude Include="client\fx_types.h" />
@@ -374,6 +375,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="client\cl_demos_cut.c" />
     <ClCompile Include="client\snd_effects.c" />
     <ClCompile Include="qcommon\vm_x86_ioq3.c" />
     <ClCompile Include="renderer\libpng\png.c" />

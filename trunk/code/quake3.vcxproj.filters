@@ -568,6 +568,9 @@
     <ClCompile Include="client\snd_effects.c">
       <Filter>Sound</Filter>
     </ClCompile>
+    <ClCompile Include="client\cl_demos_cut.c">
+      <Filter>Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer\libpng\png.h">
@@ -860,6 +863,9 @@
     </ClInclude>
     <ClInclude Include="renderer\tr_mme.h">
       <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="client\cl_demos.h">
+      <Filter>Client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

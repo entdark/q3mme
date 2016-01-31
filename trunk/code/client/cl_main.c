@@ -237,23 +237,23 @@ void CL_ReadDemoMessage( void ) {
 CL_WalkDemoExt
 ====================
 */
-static void CL_WalkDemoExt(const char *arg, char *name, int *demofile)
-{
+static char *CL_WalkDemoExt(const char *arg, char *name, int *demofile) {
+	static char demoExt[8];
 	int i = 0;
 	*demofile = 0;
-	while(demo_protocols[i])
-	{
+	while(demo_protocols[i]) {
 		Com_sprintf (name, MAX_OSPATH, "demos/%s.dm_%d", arg, demo_protocols[i]);
 		FS_FOpenFileRead( name, demofile, qtrue );
-		if (*demofile)
-		{
+		if (*demofile) {
 			Com_Printf("Demo file: %s\n", name);
-			break;
+			Com_sprintf(demoExt, sizeof(demoExt), ".dm_%d", demo_protocols[i]);
+			return demoExt;
 		}
 		else
 			Com_Printf("Not found: %s\n", name);
 		i++;
 	}
+	return "";
 }
 
 /*
@@ -289,9 +289,11 @@ void CL_PlayDemo_f( void ) {
 	Q_strncpyz( testName, Cmd_Argv(1), sizeof( testName ) );
 	// check for an extension .dm_?? (?? is protocol)
 	ext = testName + strlen(testName) - 6;
-	if ((strlen(name) > 6) && (ext[0] == '.') && ((ext[1] == 'd') || (ext[1] == 'D')) && ((ext[2] == 'm') || (ext[2] == 'M')) && (ext[3] == '_'))
-	{
+	if ((strlen(name) > 6) && (ext[0] == '.') && ((ext[1] == 'd') || (ext[1] == 'D')) && ((ext[2] == 'm') || (ext[2] == 'M')) && (ext[3] == '_')) {
+		Cvar_Set( "mme_demoExt", ext );
 		ext[0] = 0;	
+	} else {
+		Cvar_Set( "mme_demoExt", "" );
 	}
 
 	Cvar_Set( "mme_demoFileName", testName );
@@ -305,7 +307,7 @@ void CL_PlayDemo_f( void ) {
 		}
 	}
 
-	CL_WalkDemoExt( testName, name, &clc.demofile );
+	Cvar_Set( "mme_demoExt", CL_WalkDemoExt( testName, name, &clc.demofile ) );
 	if (!clc.demofile) {
 		Com_Error( ERR_DROP, "couldn't open %s", name);
 		return;
@@ -2424,6 +2426,8 @@ void CL_Init( void ) {
 	mme_demoSmoothen = Cvar_Get ("mme_demoSmoothen", "1", CVAR_ARCHIVE );
 	mme_demoFileName = Cvar_Get ("mme_demoFileName", "", CVAR_TEMP | CVAR_NORESTART );
 	mme_demoStartProject = Cvar_Get ("mme_demoStartProject", "", CVAR_TEMP );
+	mme_demoAutoNext = Cvar_Get ("mme_demoAutoNext", "1", CVAR_ARCHIVE );
+	Cvar_Get ("mme_demoExt", "", 0 );
 
 	//
 	// register our commands
@@ -2456,6 +2460,7 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("mmeDemo", CL_MMEDemo_f);
 	Cmd_AddCommand ("demoList", CL_DemoList_f);
 	Cmd_AddCommand ("demoListNext", CL_DemoListNext_f );
+	Cmd_AddCommand("demoCut", CL_DemoCut_f);
 
 	CL_InitRef();
 

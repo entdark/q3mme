@@ -935,6 +935,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("-seek");
 	trap_AddCommand("-seek");
 	trap_AddCommand("musicPlay");
+	trap_AddCommand("cut");
 
 	trap_SendConsoleCommand("exec mme.cfg\n");
 	trap_SendConsoleCommand("exec mmedemos.cfg\n");
@@ -1025,6 +1026,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		CG_ClientOverride_f();
 	} else if (!Q_stricmp(cmd, "musicPlay")) {
 		musicPlayCommand_f();
+	} else if (!Q_stricmp(cmd, "cut")) {
+		demoCutCommand_f();
 	} else {
 		return CG_ConsoleCommand();
 	}

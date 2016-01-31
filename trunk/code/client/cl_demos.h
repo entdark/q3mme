@@ -72,7 +72,7 @@ typedef struct {
 	int					fileSize, filePos;
 	int					totalFrames;
 	int					startTime, endTime;			//serverTime from first snapshot 
-
+	int					seekTime;
 	qboolean			lastFrame;
 
 	int					frameNumber;
@@ -91,8 +91,16 @@ typedef struct {
 	int					fileIndexCount;
 } demoPlay_t;
 
+#define DEMOLISTSIZE 1024
 typedef struct {
+	char demoName[MAX_OSPATH];
+	char projectName[MAX_OSPATH];
+} demoListEntry_t;
+
+typedef struct {
+	byte					buffer[128*1024];
 	qboolean				commandSmoothing;
+	int						nextNum, currentNum;
 	struct {
 		demoPlay_t			*handle;
 		int					snapCount;
@@ -102,5 +110,14 @@ typedef struct {
 		int					oldFrameNumber;
 		int					serverTime;
 	} play;
+	struct {
+		demoListEntry_t		entry[DEMOLISTSIZE];
+		int					index, count;
+	} list;
+	struct {
+		clientConnection_t	Clc;
+		clientActive_t		Cl;
+	} cut;
 } demo_t;
 
+extern demo_t demo;

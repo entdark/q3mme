@@ -211,6 +211,9 @@ typedef struct demoMain_s {
 	struct {
 		float speed, acceleration, friction;
 	} move;
+	struct {
+		int			start, end;
+	} cut;
 	vec3_t			viewOrigin, viewAngles;
 	demoViewType_t	viewType;
 	vec_t			viewFov;
@@ -325,6 +328,8 @@ void hudInitTables(void);
 void hudToggleInput(void);
 void hudDraw(void);
 const char *demoTimeString( int time );
+
+void demoCutCommand_f(void);
 
 void gridDraw(void);
 
