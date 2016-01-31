@@ -65,6 +65,7 @@ typedef struct {
 	int				messageNum, lastMessageNum;
 } demoConvert_t;
 
+#define FRAME_BUF_SIZE 20
 typedef struct {
 	fileHandle_t		fileHandle;
 	char				fileName[MAX_QPATH];
@@ -81,7 +82,7 @@ typedef struct {
 	int					commandStart[DEMO_PLAY_CMDS];
 	int					commandCount;
 	int					clientNum;
-	demoFrame_t			storageFrame[2];
+	demoFrame_t			storageFrame[FRAME_BUF_SIZE];
 	demoFrame_t			*frame, *nextFrame;
 	qboolean			nextValid;
 	struct	{
@@ -91,6 +92,7 @@ typedef struct {
 } demoPlay_t;
 
 typedef struct {
+	qboolean				commandSmoothing;
 	struct {
 		demoPlay_t			*handle;
 		int					snapCount;

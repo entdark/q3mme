@@ -163,6 +163,39 @@ typedef struct {
 
 //=================================================
 
+typedef struct cgLoopSound_s {
+	int entityNum;
+	vec3_t origin;
+	vec3_t velocity;
+	sfxHandle_t sfx;
+} cgLoopSound_t;
+
+typedef struct timedEntityState_s {
+	int time;
+	int serverTime;
+	qboolean isTeleport;
+	entityState_t es;
+} timedEntityState_t;
+
+typedef struct timedPlayerState_s {
+	int time;
+	int serverTime;
+	qboolean isTeleport;
+	playerState_t ps;
+} timedPlayerState_t;
+
+#define MAX_STATE_HISTORY 8
+typedef struct playerHistory_s {
+	int		nextSlot;
+	timedEntityState_t	states[MAX_STATE_HISTORY];
+} playerHistory_t;
+
+typedef struct psHistory_s {
+	int		nextSlot;
+	timedPlayerState_t	states[MAX_STATE_HISTORY];
+} psHistory_t;
+
+void demoTrajectory( const trajectory_t *tr, int time, float timeFraction, vec3_t result );
 void demoNowTrajectory( const trajectory_t *tr, vec3_t result );
 // centity_t have a direct corespondence with gentity_t in the game, but
 // only the entityState_t is directly communicated to the cgame
@@ -171,6 +204,9 @@ typedef struct centity_s {
 	entityState_t	nextState;		// from cg.nextFrame, if available
 	qboolean		interpolate;	// true if next is valid to interpolate to
 	qboolean		currentValid;	// true if cg.frame holds this entity
+	
+	int				currentStateHistory;
+	playerHistory_t stateHistory;
 
 	int				muzzleFlashTime;	// move to playerEntity?
 	int				previousEvent;
@@ -467,9 +503,11 @@ typedef struct {
 
 	snapshot_t	*snap;				// cg.snap->serverTime <= cg.time
 	snapshot_t	*nextSnap;			// cg.nextSnap->serverTime > cg.time, or NULL
-	snapshot_t	activeSnapshots[2];
+	snapshot_t	*nextNextSnap;		// cg.nextNextSnap->serverTime > cg.nextSnap->serverTime, or NULL
+//	snapshot_t	activeSnapshots[2];
 
 	float		frameInterpolation;	// (float)( cg.time - cg.frame->serverTime ) / (cg.nextFrame->serverTime - cg.frame->serverTime)
+	float		playerInterpolation;// (float)( cg.time - cg.frame->serverTime ) / (nexttps->time - tps-time)
 
 	qboolean	thisFrameTeleport;
 	qboolean	nextFrameTeleport;
@@ -655,6 +693,10 @@ typedef struct {
 
 	vec2_t			moveKeysPos;
 	vec2_t			speedPos;
+	
+	snapshot_t	activeSnapshots[3];
+	int				currentPsHistory;
+	psHistory_t		psHistory;
 } cg_t;
 
 
@@ -1174,6 +1216,8 @@ extern	vmCvar_t		cg_centerPrint;
 extern	vmCvar_t		cg_gibDirectional;
 extern	vmCvar_t		cg_muzzleFlash;
 
+extern	vmCvar_t		cg_commandSmooth;
+
 extern	vmCvar_t		cg_drawSpeedometer;
 extern	vmCvar_t		cg_drawSpeedometerScale;
 extern	vmCvar_t		cg_drawSpeedometerPos;
@@ -1391,6 +1435,7 @@ void CG_PreparePacketEntities( void );
 void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );
 void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out );
+void CG_AdjustInterpolatedPositionForMover( const vec3_t in, int moverNum, int fromTime, float fromTimeFraction, int toTime, float toTimeFraction, vec3_t out );
 
 void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent, 
 							qhandle_t parentModel, char *tagName );

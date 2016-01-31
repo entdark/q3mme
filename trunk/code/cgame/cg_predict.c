@@ -193,6 +193,40 @@ int		CG_PointContents( const vec3_t point, int passEntityNum ) {
 }
 
 
+void CG_ComputeCommandSmoothPlayerstates( timedPlayerState_t **currentState, timedPlayerState_t **nextState, qboolean *isTeleport ) {
+	psHistory_t *hist = &cg.psHistory;
+	timedPlayerState_t *tps = &hist->states[cg.currentPsHistory % MAX_STATE_HISTORY];
+	timedPlayerState_t *nexttps = &hist->states[( cg.currentPsHistory + 1 ) % MAX_STATE_HISTORY];
+	int nextTpsOffset = 1;
+	// advance as needed
+	while ( nexttps->time - cg.time <= cg.timeFraction && cg.currentPsHistory + 1 < hist->nextSlot ) {
+		cg.currentPsHistory++;
+		tps = &hist->states[cg.currentPsHistory % MAX_STATE_HISTORY];
+		nexttps = &hist->states[( cg.currentPsHistory + 1 ) % MAX_STATE_HISTORY];
+	}
+	// curEsh should now be right.  nextEsh may be, unless player went a whole frame with no userCmd
+	// in that case we probably want to skip it - note we still need to keep the thing around in case it has an event
+	// otherwise we will miss that event
+	*currentState = tps;
+	qboolean nextIsTeleport = nexttps->isTeleport;
+	while ( tps->time >= nexttps->time && cg.currentPsHistory + nextTpsOffset < hist->nextSlot ) {
+		nextTpsOffset++;
+		nexttps = &hist->states[( cg.currentPsHistory + nextTpsOffset ) % MAX_STATE_HISTORY];
+		nextIsTeleport |= nexttps->isTeleport;
+	}
+	*isTeleport = nextIsTeleport;
+	if ( cg.currentPsHistory + nextTpsOffset == hist->nextSlot ) {
+		// couldn't find a valid nexttps
+#ifdef _DEBUG
+		Com_Printf( "couldn't find valid nexttps\n" );
+#endif
+		*nextState = NULL;
+		return;
+	}
+	*nextState = nexttps;
+	return;
+}
+
 /*
 ========================
 CG_InterpolatePlayerState
@@ -206,12 +240,66 @@ void CG_InterpolatePlayerState( qboolean grabAngles ) {
 	int				i;
 	playerState_t	*out;
 	snapshot_t		*prev, *next;
+	playerState_t	*curps = NULL, *nextps = NULL;
+	qboolean		nextPsTeleport = qfalse;
+	int				currentTime = 0, nextTime = 0, currentServerTime = 0, nextServerTime = 0;
 
 	out = &cg.predictedPlayerState;
 	prev = cg.snap;
 	next = cg.nextSnap;
+	
+	if ( cg_commandSmooth.integer ) {
+		timedPlayerState_t *tps, *nexttps;
+		CG_ComputeCommandSmoothPlayerstates( &tps, &nexttps, &nextPsTeleport );
+		curps = &tps->ps;
+		currentTime = tps->time;
+		currentServerTime = tps->serverTime;
+		if ( nexttps ) {
+			nextps = &nexttps->ps;
+			nextTime = nexttps->time;
+			nextServerTime = nexttps->serverTime;
+		}
+	} else {
+		curps = &prev->ps;
+		currentTime = prev->serverTime;
+		currentServerTime = prev->serverTime;
+		if ( next ) {
+			nextps = &next->ps;
+			nextTime = next->serverTime;
+			nextServerTime = next->serverTime;
+		} else {
+			nextps = NULL;
+			nextTime = 0;
+			nextServerTime = 0;
+		}
+		nextPsTeleport = cg.nextFrameTeleport;
+	}
+	if ( !nextps ) {
+		return;
+	}
+#ifdef _DEBUG
+	if ( !( currentTime <= cg.time + (double) cg.timeFraction && nextTime >= cg.time + (double) cg.timeFraction ) ) {
+		Com_Printf( "WARNING: Couldn't locate slots with correct time\n" );
+	}
+	if ( nextTime - currentTime < 0 ) {
+		Com_Printf( "WARNING: nexttps->time - tps->time < 0 (%d, %d)\n", nextTime, currentTime );
+	}
+#endif
+	if ( currentTime != nextTime ) {
+		f = ( (double) cg.timeFraction + ( cg.time - currentTime ) ) / ( nextTime - currentTime );
+#ifdef _DEBUG
+		if ( f > 1 ) {
+			Com_Printf("EXTRAPOLATING (f=%f)\n", f );
+		} else if ( f < 0 ) {
+			Com_Printf("GOING BACKWARDS (f=%f)\n", f );
+		}
+#endif
+	} else {
+		f = 0;
+	}
 
-	*out = cg.snap->ps;
+	*out = *curps;
+	out->stats[STAT_HEALTH] = cg.snap->ps.stats[STAT_HEALTH];
 
 	// if we are still allowing local input, short circuit the view angles
 	if ( grabAngles ) {
@@ -225,32 +313,53 @@ void CG_InterpolatePlayerState( qboolean grabAngles ) {
 	}
 
 	// if the next frame is a teleport, we can't lerp to it
-	if ( cg.nextFrameTeleport ) {
+	if ( nextPsTeleport ) {
 		return;
 	}
 
-	if ( !next || next->serverTime <= prev->serverTime ) {
+	/*if ( !next || next->serverTime <= prev->serverTime ) {
 		return;
-	}
+	}*/
 
-	f = (cg.timeFraction + ( cg.time - prev->serverTime )) / ( next->serverTime - prev->serverTime );
-
-	i = next->ps.bobCycle;
-	if ( i < prev->ps.bobCycle ) {
+	i = nextps->bobCycle;
+	if ( i < curps->bobCycle ) {
 		i += 256;		// handle wraparound
 	}
-	out->bobCycle = prev->ps.bobCycle + f * ( i - prev->ps.bobCycle );
+	out->bobCycle = curps->bobCycle + f * ( i - curps->bobCycle );
 
 	for ( i = 0 ; i < 3 ; i++ ) {
-		out->origin[i] = prev->ps.origin[i] + f * (next->ps.origin[i] - prev->ps.origin[i] );
+		out->origin[i] = curps->origin[i] + f * ( nextps->origin[i] - curps->origin[i] );
 		if ( !grabAngles ) {
 			out->viewangles[i] = LerpAngle( 
-				prev->ps.viewangles[i], next->ps.viewangles[i], f );
+				curps->viewangles[i], nextps->viewangles[i], f );
 		}
-		out->velocity[i] = prev->ps.velocity[i] + 
-			f * (next->ps.velocity[i] - prev->ps.velocity[i] );
+		out->velocity[i] = curps->velocity[i] + 
+			f * (nextps->velocity[i] - curps->velocity[i] );
+	}
+	
+	// requires commandSmooth 2, since it needs entity state history of the mover
+	if ( cg_commandSmooth.integer > 1 ) {
+		// adjust for the movement of the groundentity
+		// step 1: remove the delta introduced by cur->next origin interpolation
+		int curTime = currentServerTime + (int) ( f * ( nextServerTime - currentServerTime ) );
+		float curTimeFraction = ( f * ( nextServerTime - currentServerTime ) );
+		curTimeFraction -= (long) curTimeFraction;
+		CG_AdjustInterpolatedPositionForMover( out->origin,
+			curps->groundEntityNum, curTime, curTimeFraction, currentServerTime, 0, out->origin );
+		// step 2: mover state should now be what it was at currentServerTime, now redo calculation of mover effect to cg.time
+		CG_AdjustInterpolatedPositionForMover( out->origin,
+			curps->groundEntityNum, currentServerTime, 0, cg.time, cg.timeFraction, out->origin );
 	}
 
+	curps->stats[STAT_HEALTH] = cg.snap->ps.stats[STAT_HEALTH];
+	BG_PlayerStateToEntityState( curps, &cg_entities[ curps->clientNum ].currentState, qfalse );
+	BG_PlayerStateToEntityState( nextps, &cg_entities[ nextps->clientNum ].nextState, qfalse );
+	cg.playerInterpolation = f;
+	if ( cg.timeFraction >= cg.nextSnap->serverTime - cg.time ) {
+		cg.physicsTime = cg.nextSnap->serverTime;
+	} else {
+		cg.physicsTime = cg.snap->serverTime;
+	}
 }
 
 /*

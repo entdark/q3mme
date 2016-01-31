@@ -264,6 +264,7 @@ demo <demoname>
 
 ====================
 */
+extern void demoCommandSmoothingEnable(qboolean enable);
 void CL_PlayDemo_f( void ) {
 	char		name[MAX_OSPATH], testName[MAX_OSPATH];
 	char		*ext;
@@ -278,6 +279,7 @@ void CL_PlayDemo_f( void ) {
 	fs_game = Cvar_FindVar ("fs_game" );
 	if (!fs_game)
 		return;
+	demoCommandSmoothingEnable(qfalse);
 	haveConvert = mme_demoConvert->integer && !Q_stricmp( fs_game->string, "mme" );
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
@@ -295,6 +297,7 @@ void CL_PlayDemo_f( void ) {
 	Cvar_Set( "mme_demoFileName", testName );
 
 	if ( haveConvert ) {
+		demoCommandSmoothingEnable(qtrue);
 		Com_sprintf (name, MAX_OSPATH, "mmedemos/%s.mme", testName );
 		if (FS_FileExists( name )) {
 			if (demoPlay( name ))
@@ -318,7 +321,7 @@ void CL_PlayDemo_f( void ) {
 		if (demoPlay( mmeName ))
 			return;
 		Com_Printf("Can't seem to play demo %s\n", testName );
-
+		demoCommandSmoothingEnable(qfalse);
 	}
 	Con_Close();
 

@@ -735,7 +735,7 @@ void demoDrawGrid( const vec3_t input, const vec4_t color, const vec3_t offset, 
 };
 
 
-void demoNowTrajectory( const trajectory_t *tr, vec3_t result ) {
+void demoTrajectory( const trajectory_t *tr, int time, float timeFraction, vec3_t result ) {
 	float		deltaTime;
 	float		phase;
 
@@ -745,20 +745,20 @@ void demoNowTrajectory( const trajectory_t *tr, vec3_t result ) {
 		VectorCopy( tr->trBase, result );
 		break;
 	case TR_LINEAR:
-		deltaTime = ( cg.time - tr->trTime ) * 0.001 + cg.timeFraction * 0.001;
+		deltaTime = ( time - tr->trTime ) * 0.001 + timeFraction * 0.001;
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 		break;
 	case TR_SINE:
-		deltaTime = ( cg.time - tr->trTime ) % tr->trDuration;
-		deltaTime = ( deltaTime + cg.timeFraction ) / (float) tr->trDuration;
+		deltaTime = ( time - tr->trTime ) % tr->trDuration;
+		deltaTime = ( deltaTime + timeFraction ) / (float) tr->trDuration;
 		phase = sin( deltaTime * M_PI * 2 );
 		VectorMA( tr->trBase, phase, tr->trDelta, result );
 		break;
 	case TR_LINEAR_STOP:
-		if ( cg.time > tr->trTime + tr->trDuration ) {
+		if ( time > tr->trTime + tr->trDuration ) {
 			deltaTime = tr->trDuration * 0.001;
 		} else {
-			deltaTime = ( cg.time - tr->trTime ) * 0.001 + cg.timeFraction * 0.001;
+			deltaTime = ( time - tr->trTime ) * 0.001 + timeFraction * 0.001;
 		}
 		if ( deltaTime < 0 ) {
 			deltaTime = 0;
@@ -766,7 +766,7 @@ void demoNowTrajectory( const trajectory_t *tr, vec3_t result ) {
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 		break;
 	case TR_GRAVITY:
-		deltaTime = ( cg.time - tr->trTime ) * 0.001 + cg.timeFraction * 0.001;
+		deltaTime = ( time - tr->trTime ) * 0.001 + timeFraction * 0.001;
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 		result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;		// FIXME: local gravity...
 		break;
@@ -774,6 +774,10 @@ void demoNowTrajectory( const trajectory_t *tr, vec3_t result ) {
 		Com_Error( ERR_DROP, "BG_EvaluateTrajectory: unknown trType: %i", tr->trType );
 		break;
 	}
+}
+
+void demoNowTrajectory( const trajectory_t *tr, vec3_t result ) {
+	demoTrajectory( tr, cg.time, cg.timeFraction, result );
 }
 
 void demoRotatePoint(vec3_t point, const vec3_t matrix[3]) { 
