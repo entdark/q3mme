@@ -1549,7 +1549,7 @@ void FX_Init( void ) {
 		fx.allocSize = 128;
 	}
 	fx.allocSize *= 1024*1024;
-	fx.allocStart = Hunk_Alloc( fx.allocSize, h_low );
+	fx.allocStart = malloc(fx.allocSize);//Hunk_Alloc( fx.allocSize, h_low );
 	FX_Reset( );
 	Cmd_AddCommand( "fxStats", fxStats );
 	Cmd_AddCommand( "fxList", fxList );
@@ -1566,4 +1566,7 @@ void FX_Shutdown( void ) {
 	Cmd_RemoveCommand( "fxReload" );
 	if ( fx.alloc.entries )
 		fxFreeMemory();
+	if (fx.allocStart)
+		free(fx.allocStart);
+	fx.allocStart = NULL;
 }
