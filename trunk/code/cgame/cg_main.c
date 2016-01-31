@@ -373,7 +373,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_gibDirectional,	"cg_gibDirectional",	"1",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_muzzleFlash,		"cg_muzzleFlash",		"1",			NULL,	CVAR_ARCHIVE	},
 	
-	{ &cg_commandSmooth,	"cg_commandSmooth",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_commandSmooth,	"cg_commandSmooth",		"2",			NULL,	CVAR_ARCHIVE	},
 	
 	{ &cg_drawSpeedometer,	"cg_drawSpeedometer",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
