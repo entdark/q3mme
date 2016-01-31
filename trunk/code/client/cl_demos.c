@@ -788,6 +788,26 @@ foundit:
 	}
 	return seekTime;
 }
+int demoLength(void) {
+	demoPlay_t *play = demo.play.handle;
+	if (!play)
+		return 0;
+	return play->endTime - play->startTime;
+}
+int demoTime(void) {
+	demoPlay_t *play = demo.play.handle;
+	if (!play)
+		return 0;
+	if (play->seekTime < 0)
+		play->seekTime = 0;
+	return play->seekTime;
+}
+float demoProgress(void) {
+	int pos = demoTime();
+	int length = demoLength();
+	length = length ? length : 1;
+	return (float)pos/length;
+}
 static int demoFindNext(const char *fileName) {
 	int i;
 	const int len = strlen(fileName);

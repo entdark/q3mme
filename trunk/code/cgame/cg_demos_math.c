@@ -645,6 +645,13 @@ void demoDrawCrosshair( void ) {
 		w*cgs.widthRatioCoef, h, 0, 0, 1, 1, hShader );
 }
 
+static const vec4_t progressColour = { 1.0f, 0.0f, 0.0f, 1.0f };
+void demoDrawProgress( float progress ) {
+	if (progress > 1.0f)
+		progress = 1.0f;
+	CG_FillRect( 0.0f, (float)SCREEN_HEIGHT-1.25f, 
+		SCREEN_WIDTH*progress, 1.25f, progressColour );
+}
 
 static void drawGridLine( const vec3_t start, const vec3_t end, float width, polyVert_t *verts, qhandle_t shader ) {
 	vec3_t up;

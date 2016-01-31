@@ -240,6 +240,7 @@ typedef struct demoMain_s {
 	qboolean	showHud;
 	qboolean	initDone;
 	qboolean	autoLoad;
+	int			length;
 	demoLog_t	log;
 } demoMain_t;
 
@@ -323,6 +324,7 @@ centity_t *demoTargetEntity( int num );
 void chaseUpdate( int time, float timeFraction );
 void chaseDraw( int time, float timeFraction );
 void demoDrawCrosshair( void );
+void demoDrawProgress( float progress );
 
 void hudInitTables(void);
 void hudToggleInput(void);

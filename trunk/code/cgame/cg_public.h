@@ -218,6 +218,9 @@ typedef enum {
 	CG_MME_MUSIC,
 	CG_MME_TIMEFRACTION,
 
+	CG_MME_PROGRESSTIME,
+	CG_MME_DEMOLENGTH,
+
 } cgameImport_t;
 
 

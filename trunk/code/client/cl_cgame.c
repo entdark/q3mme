@@ -35,6 +35,8 @@ extern qboolean demoGetSnapshot( int snapNumber, snapshot_t *snap );
 extern qboolean demoGetServerCommand( int cmdNumber );
 extern void demoRenderFrame( stereoFrame_t stereo );
 extern int demoSeek( int seekTime );
+extern int demoLength(void);
+extern float demoProgress(void);
 extern int demoInfo( mmeDemoInfo_t* info );
 /*
 ====================
@@ -814,6 +816,10 @@ long CL_CgameSystemCalls( long *args ) {
 	case CG_FX_VIBRATEVIEW:
 		FX_VibrateView( VMF(1), VMA(2), VMA(3) );
 		return 0;
+	case CG_MME_PROGRESSTIME:
+		return FloatAsInt(demoProgress());
+	case CG_MME_DEMOLENGTH:
+		return demoLength();
 	default:
 		assert(0); // bk010102
 		Com_Error( ERR_DROP, "Bad cgame system trap: %i", args[0] );

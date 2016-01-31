@@ -145,7 +145,7 @@ typedef enum {
 #define MASK_SCRIPT_POINT		( MASK_SCRIPT | MASK_POINT )
 
 static struct {
-	int cursorX, cursorY;
+	float cursorX, cursorY;
 	int showMask;
 	int keyCatcher;
 	struct {
@@ -1201,6 +1201,11 @@ qboolean CG_KeyEvent(int key, qboolean down) {
 				trap_Key_SetCatcher(KEYCATCH_CGAME | (catchMask &~KEYCATCH_CGAMEEXEC));
 				break;
 			}
+		} else if (hud.cursorY >= SCREEN_HEIGHT-5) {
+			float time = hud.cursorX / SCREEN_WIDTH;
+			time *= demo.length;
+			time /= 1000;
+			trap_SendConsoleCommand(va("seek %f\n", time));
 		}
 		return qtrue;
 	//Further keypresses only handled when waiting for input

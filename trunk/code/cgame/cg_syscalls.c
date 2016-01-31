@@ -518,3 +518,11 @@ void trap_FX_Run( fxHandle_t handle, const fxParent_t *parent, const void *key )
 void trap_FX_VibrateView( float scale, vec3_t origin, vec3_t angles ) {
 	syscall( CG_FX_VIBRATEVIEW, PASSFLOAT( scale ), origin, angles );
 }
+float trap_MME_ProgressTime( void ) {
+	floatint_t fi;
+	fi.i = syscall( CG_MME_PROGRESSTIME );
+	return fi.f;
+}
+int trap_MME_DemoLength( void ) {
+	return syscall( CG_MME_DEMOLENGTH );
+}
