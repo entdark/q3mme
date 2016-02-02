@@ -825,7 +825,7 @@ static void CG_InterpolateEntityPosition( centity_t *cent ) {
 		f = cg.frameInterpolation;
 	}
 
-	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg_entities[cg.snap->ps.clientNum] ) {
+	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg.predictedPlayerEntity ) {
 		CG_ComputeCommandSmoothStates( cent, &curEsh, &nextEsh );
 		currentState = &curEsh->es;
 		currentStateTime = curEsh->time;
@@ -878,7 +878,7 @@ static void CG_InterpolateEntityPosition( centity_t *cent ) {
 	cent->lerpAngles[1] = LerpAngle( current[1], next[1], f );
 	cent->lerpAngles[2] = LerpAngle( current[2], next[2], f );
 	
-	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg_entities[cg.snap->ps.clientNum] ) {
+	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg.predictedPlayerEntity ) {
 		// adjust for the movement of the groundentity
 		// step 1: remove the delta introduced by cur->next origin interpolation
 		int curTime = curEsh->serverTime + (int) ( f * ( nextEsh->serverTime - curEsh->serverTime ) );
@@ -901,7 +901,7 @@ CG_CalcEntityLerpPositions
 void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	entityState_t *currentState, *nextState;
 
-	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg_entities[cg.snap->ps.clientNum] ) {
+	if ( cg_commandSmooth.integer > 1 && cent->currentState.number < MAX_CLIENTS && cent != &cg.predictedPlayerEntity ) {
 		timedEntityState_t *curEsh, *nextEsh;
 		CG_ComputeCommandSmoothStates( cent, &curEsh, &nextEsh );
 		currentState = &curEsh->es;
