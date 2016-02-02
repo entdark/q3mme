@@ -1549,6 +1549,8 @@ void FX_Init( void ) {
 		fx.allocSize = 128;
 	}
 	fx.allocSize *= 1024*1024;
+	if (fx.allocStart)
+		free(fx.allocStart);
 	fx.allocStart = malloc(fx.allocSize);//Hunk_Alloc( fx.allocSize, h_low );
 	FX_Reset( );
 	Cmd_AddCommand( "fxStats", fxStats );
