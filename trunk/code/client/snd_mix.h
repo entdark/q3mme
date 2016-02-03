@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 typedef struct mixSound_s {
 	int			lastUsed;
 	int			speed;
-	int			samples;
+	int64_t		samples;
 	int			size;
 	sfxHandle_t	handle;
 	struct		mixSound_s *prev, *next;
@@ -39,7 +39,7 @@ typedef struct mixSound_s {
 
 typedef struct {
 	sfxHandle_t		handle;
-	int				index;
+	int64_t			index;
 	vec3_t			origin;
 	short			entNum;
 	char			entChan;

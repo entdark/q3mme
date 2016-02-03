@@ -106,8 +106,8 @@ static void lineInterpolate( int playTime, float playTimeFraction, int *demoTime
 	vec3_t dx, dy;
 	demoLinePoint_t *point = linePointSynch( playTime );
 	if (!point || !point->next) {
-		int calcTimeLow, calcTimeHigh;
-		int speed = (1 << SPEED_SHIFT) * demo.line.speed;
+		int64_t calcTimeLow, calcTimeHigh;
+		int64_t speed = (1 << SPEED_SHIFT) * demo.line.speed;
 		if (point) 
 			playTime -= point->time;
 		calcTimeHigh = (playTime >> 16) * speed;
@@ -146,8 +146,8 @@ static void lineInterpolate( int playTime, float playTimeFraction, int *demoTime
 
 void lineAt(int playTime, float playTimeFraction, int *demoTime, float *demoTimeFraction, float *demoSpeed ) {
 	if (!demo.line.locked) {
-		int calcTimeLow, calcTimeHigh;
-		int speed = (1 << SPEED_SHIFT) * demo.line.speed;
+		int64_t calcTimeLow, calcTimeHigh;
+		int64_t speed = (1 << SPEED_SHIFT) * demo.line.speed;
 
 		calcTimeHigh = (playTime >> 16) * speed;
 		calcTimeLow = (playTime & 0xffff) * speed;

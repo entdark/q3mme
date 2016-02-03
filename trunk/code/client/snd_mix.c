@@ -276,7 +276,7 @@ static int S_MixDopplerFull( int speed, const vec3_t origin, const vec3_t veloci
 static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
-	int index, indexAdd, indexLeft;
+	int64_t index, indexAdd, indexLeft;
 	float *origin;
 	const short *data;
 	float volume;
@@ -322,7 +322,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) 
 static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output ) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
-	int index, indexAdd, indexTotal;
+	int64_t index, indexAdd, indexTotal;
 	const short *data;
 	float volume;
 
