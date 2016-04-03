@@ -2,9 +2,9 @@
 #include "cl_demos.h"
 
 qboolean demoCutConfigstringModified(clientActive_t *clCut) {
-	char		*old, *s;
+	const char	*old, *s;
 	int			i, index;
-	char		*dup;
+	const char	*dup;
 	gameState_t	oldGs;
 	int			len;
 	index = atoi(Cmd_Argv(1));
@@ -409,12 +409,9 @@ qboolean demoCut(const char *oldName, int startTime, int endTime) {
 	char			newName[MAX_OSPATH];
 	int				buf;
 	int				readGamestate = 0;
-	int				i;
 	demoPlay_t		*play = demo.play.handle;
 	qboolean		ret = qfalse;
 	int				framesSaved = 0;
-	char			newGameDir[MAX_QPATH];
-	char			next;
 	char			*ext;
 	if (!play) {
 		Com_Printf("Demo cutting is allowed in mme mode only.\n");
@@ -525,8 +522,9 @@ cutcontinue:
 		// process any new server commands
 		for (;demo.cut.Clc.lastExecutedServerCommand < demo.cut.Clc.serverCommandSequence; demo.cut.Clc.lastExecutedServerCommand++) {
 			char *command = demo.cut.Clc.serverCommands[demo.cut.Clc.lastExecutedServerCommand & (MAX_RELIABLE_COMMANDS - 1)];
+			const char *cmd;
 			Cmd_TokenizeString(command);
-			char *cmd = Cmd_Argv(0);
+			cmd = Cmd_Argv(0);
 			if (cmd[0]) {
 				firstServerCommand = demo.cut.Clc.lastExecutedServerCommand;
 			}
