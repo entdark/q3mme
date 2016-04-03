@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define HUD_SCRIPT_LENGTH 50
 #define HUD_FLOAT "%.3f"
 
+#define HUD_TEXT_WIDTH_RATIO ((int)(HUD_TEXT_WIDTH*cgs.widthRatioCoef))
+
 typedef enum {
 	hudTypeNone,
 	hudTypeHandler,
@@ -180,7 +182,7 @@ static struct {
 static void hudDrawText( float x, float y, const char *buf, const vec4_t color) {
 	if (!buf)
 		return;
-	CG_DrawStringExt( x, y, buf, color, qtrue, qtrue, HUD_TEXT_WIDTH, HUD_TEXT_HEIGHT , -1 );
+	CG_DrawStringExt( x, y, buf, color, qtrue, qtrue, HUD_TEXT_WIDTH*cgs.widthRatioCoef, HUD_TEXT_HEIGHT , -1 );
 //	CG_Text_Paint( x, y, 0.3f, color, buf, 0,0,ITEM_TEXTSTYLE_SHADOWED );
 }
 
@@ -650,39 +652,40 @@ static void hudSetText( hudItem_t *item, const char *buf ) {
 static float hudItemWidth( hudItem_t *item  ) {
 	char buf[512];
 	float w, *f;
+	int textWidth;
 
 	w = item->textLen * HUD_TEXT_WIDTH;
 	switch (item->type ) {
 	case hudTypeHandler:
 	case hudTypeButton:
-		hudGetHandler( item, buf, sizeof( buf ) );
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		hudGetHandler( item, buf, sizeof(buf) );
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	case hudTypeTime:
 		hudGetTime( item, buf, sizeof( buf ) );
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	case hudTypeText:
-		hudGetText( item, buf, sizeof( buf ), qfalse );
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		hudGetText( item, buf, sizeof(buf), qfalse );
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	case hudTypeValue:
 		Com_sprintf( buf, sizeof( buf ), HUD_FLOAT, item->value[0]);
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	case hudTypeFloat:
 		f = hudGetFloat( item );
 		if (!f)
 			break;
 		Com_sprintf( buf, sizeof( buf ), HUD_FLOAT, f[0] );
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	case hudTypeCheck:
-		w += HUD_TEXT_WIDTH;
+		w += HUD_TEXT_SPACING*cgs.widthRatioCoef;
 		break;
 	case hudTypeCvar:
 		trap_Cvar_VariableStringBuffer( item->cvar, buf, sizeof( buf ));
-		w += strlen( buf ) * HUD_TEXT_WIDTH;
+		w += strlen( buf ) * HUD_TEXT_WIDTH_RATIO;
 		break;
 	}
 	return w;
@@ -693,22 +696,22 @@ static void hudDrawItem( hudItem_t *item ) {
 	int checked;
 	float x,y, *f;
 
-	x = item->x;
+	x = (item->x/HUD_TEXT_WIDTH)*(int)(HUD_TEXT_WIDTH*cgs.widthRatioCoef);
 	y = item->y;
 
 	if ( item == hud.edit.item ) {
 		if ( item->textLen ) {
 			hudDrawText( x, y, item->text, colorRed );
-			x += item->textLen * HUD_TEXT_WIDTH;
+			x += item->textLen * HUD_TEXT_WIDTH_RATIO;
 		}
 		hudDrawText( x, y, hud.edit.line, colorRed );
 		if ( demo.serverTime & 512 ) {
-			float x = item->x + (item->textLen + hud.edit.cursor) * HUD_TEXT_WIDTH;
+			float x = ((item->x/HUD_TEXT_WIDTH)*HUD_TEXT_WIDTH_RATIO + (item->textLen + hud.edit.cursor) * (int)(HUD_TEXT_WIDTH*cgs.widthRatioCoef));
 			float y = item->y;
 			if ( trap_Key_GetOverstrikeMode()) {
-				CG_FillRect( x, y + HUD_TEXT_SPACING - 3 , HUD_TEXT_WIDTH, 3, colorRed );
+				CG_FillRect( x, y + HUD_TEXT_SPACING - 3 , HUD_TEXT_WIDTH*cgs.widthRatioCoef, 3, colorRed );
 			} else {
-				CG_FillRect( x, y , HUD_TEXT_WIDTH, HUD_TEXT_SPACING, colorRed );
+				CG_FillRect( x, y , HUD_TEXT_WIDTH*cgs.widthRatioCoef, HUD_TEXT_SPACING, colorRed );
 			}
 		}
 		return;
@@ -730,8 +733,8 @@ static void hudDrawItem( hudItem_t *item ) {
 				break;
 			}
 		} 
-		hudDrawText( item->x, item->y, item->text, color );
-		x += item->textLen * HUD_TEXT_WIDTH;
+		hudDrawText( (item->x/HUD_TEXT_WIDTH)*HUD_TEXT_WIDTH_RATIO, item->y, item->text, color );
+		x += item->textLen * HUD_TEXT_WIDTH_RATIO;
 	}
 	switch (item->type ) {
 	case hudTypeButton:
@@ -764,7 +767,7 @@ static void hudDrawItem( hudItem_t *item ) {
 		break;
 	case hudTypeCheck:
 		checked = hudGetChecked( item, colorWhite );
-		CG_DrawPic( x, y, HUD_TEXT_SPACING*cgs.widthRatioCoef, HUD_TEXT_SPACING, checked ? 
+		CG_DrawPic( (x + (int)(5*cgs.widthRatioCoef)), y + 2, HUD_TEXT_SPACING*cgs.widthRatioCoef, HUD_TEXT_SPACING, checked ? 
 			demo.media.switchOn : demo.media.switchOff ); 
 		break;
 	}
@@ -1098,9 +1101,9 @@ static hudItem_t *hudItemAt( float x, float y ) {
 		hudItem_t *item = hudItems + i;
 		if ((hud.showMask & item->showMask) != item->showMask )
 			continue;
-		if ( item->x > x || item->y > y )
+		if ( (item->x/HUD_TEXT_WIDTH)*HUD_TEXT_WIDTH_RATIO > x || item->y > y )
 			continue;
-		w = x - item->x;
+		w = x - (item->x/HUD_TEXT_WIDTH)*HUD_TEXT_WIDTH_RATIO;
 		h = y - item->y;
 		if ( h > HUD_TEXT_HEIGHT )
 			continue;
@@ -1266,7 +1269,7 @@ qboolean CG_KeyEvent(int key, qboolean down) {
 
 void CG_MouseEvent(int dx, int dy) {
 	// update mouse screen position
-	hud.cursorX += dx;
+	hud.cursorX += dx*cgs.widthRatioCoef;
 	if (hud.cursorX < 0)
 		hud.cursorX = 0;
 	else if (hud.cursorX > SCREEN_WIDTH)
