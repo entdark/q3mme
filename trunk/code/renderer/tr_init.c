@@ -924,7 +924,9 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 	ri.Cmd_AddCommand( "vid_minimize", GLimp_Minimize );
 	ri.Cmd_AddCommand( "vid_restore", GLimp_Restore );
-
+	
+	ri.Cmd_AddCommand( "capturestop", R_MME_Shutdown );
+	ri.Cmd_AddCommand( "capturestopstereo", R_MME_ShutdownStereo );
 }
 
 GLuint pboIds[4];
@@ -1063,6 +1065,9 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	ri.Cmd_RemoveCommand( "remapShader" );
 	ri.Cmd_RemoveCommand( "traceShader" );
 	ri.Cmd_RemoveCommand( "skyShader" );
+	
+	ri.Cmd_RemoveCommand ("capturestop");
+	ri.Cmd_RemoveCommand ("capturestopstereo");
 
 	if ( tr.registered ) {
 		R_SyncRenderThread();

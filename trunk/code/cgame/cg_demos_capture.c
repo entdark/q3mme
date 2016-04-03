@@ -498,6 +498,8 @@ void demoCaptureCommand_f(void) {
 		else
 			CG_DemosAddLog( "Not capturing at the moment" );
 		demo.capture.active = qfalse;
+		trap_SendConsoleCommand("capturestop;");
+		trap_SendConsoleCommand("capturestopstereo;");
 		if ( demo.loop.total ) {
 			CG_DemosAddLog( "Capture looping stopped too" );
 			demo.loop.total = 0;
