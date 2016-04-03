@@ -585,6 +585,7 @@ int		FS_GetModList(  char *listbuf, int bufsize );
 
 fileHandle_t FS_FOpenFileWrite( const char *qpath );
 fileHandle_t FS_FOpenFileReadWrite( const char *filename );
+fileHandle_t FS_FDirectOpenFileWrite( const char *filename, const char *mode );
 // will properly create any needed paths and deal with seperater character issues
 fileHandle_t FS_FOpenFileAppend( const char *filename );
 int		FS_filelength( fileHandle_t f );
