@@ -955,6 +955,41 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	return f;
 }
 
+fileHandle_t FS_FDirectOpenFileWrite( const char *filename, const char *mode ) {
+	char			*ospath;
+	fileHandle_t	f;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
+	}
+
+	f = FS_HandleForFile();
+	fsh[f].zipFile = qfalse;
+
+	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
+
+	if ( fs_debug->integer ) {
+		Com_Printf( "FS_FDirectOpenFileWrite: %s\n", ospath );
+	}
+
+	if( FS_CreatePath( ospath ) ) {
+		return 0;
+	}
+
+	// enabling the following line causes a recursive function call loop
+	// when running with +set logfile 1 +set developer 1
+	//Com_DPrintf( "writing to: %s\n", ospath );
+	fsh[f].handleFiles.file.o = fopen( ospath, mode );
+
+	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
+
+	fsh[f].handleSync = qfalse;
+	if (!fsh[f].handleFiles.file.o) {
+		f = 0;
+	}
+	return f;
+}
+
 
 /*
 ===========
@@ -4174,3 +4209,83 @@ void	FS_Flush( fileHandle_t f ) {
 	fflush(fsh[f].handleFiles.file.o);
 }
 
+//pipes!!
+fileHandle_t FS_PipeOpen(const char *qcmd, const char *qpath, const char *mode) {
+    char			*ospath;
+    fileHandle_t	f;
+    char            temp[2048];
+    char            cmd[2048];
+	const char		*space;
+    
+    if (!fs_searchpaths) {
+        Com_Error(ERR_FATAL, "Filesystem call made without initialization\n");
+    }
+    
+    f = FS_HandleForFile();
+    fsh[f].zipFile = qfalse;
+    
+    ospath = FS_BuildOSPath(fs_homepath->string, fs_gamedir, qpath);
+    
+    if (fs_debug->integer) {
+        Com_Printf("FS_PipeOpen ospath: %s\n", ospath);
+    }
+    
+    if(FS_CreatePath(ospath)) {
+        return 0;
+    }
+    
+	Com_sprintf(temp, sizeof(temp), "/%s", qcmd);
+	FS_ReplaceSeparators(temp);
+	if (space = strchr(temp, ' ')) {
+		char quotedCmd[2048];
+		Q_strncpyz(quotedCmd, temp, sizeof(quotedCmd));
+		quotedCmd[(space-temp)] = '\0';
+		Com_sprintf(cmd, sizeof(cmd), "\"%s%s\"%s", fs_homepath->string, quotedCmd, space);
+	} else {
+		Com_sprintf(cmd, sizeof(cmd), "\"%s%s\"", fs_homepath->string, temp);
+	}
+
+    if (fs_debug->integer) {
+        Com_Printf("FS_PipeOpen cmd: %s\n", cmd);
+    }
+    
+#ifdef _WIN32
+    fsh[f].handleFiles.file.o = _popen(cmd, mode);
+#else
+    fsh[f].handleFiles.file.o = popen(cmd, mode);
+#endif
+    
+    Q_strncpyz(fsh[f].name, qpath, sizeof(fsh[f].name));
+    
+    fsh[f].handleSync = qfalse;
+#ifdef USE_AIO
+    fsh[f].handleAsync = qfalse;
+#endif
+    if (!fsh[f].handleFiles.file.o) {
+        f = 0;
+    }
+    return f;
+}
+
+int FS_PipeWrite(const void *buffer, int len, fileHandle_t h) {
+    return FS_Write(buffer, len, h);
+}
+
+void FS_PipeClose(fileHandle_t f) {
+    if (!fs_searchpaths) {
+        Com_Error(ERR_FATAL, "Filesystem call made without initialization\n");
+    }
+    
+    if (fsh[f].streamed) {
+        Sys_EndStreamedFile(f);
+    }
+    // we didn't find it as a pak, so close it as a unique file
+    if (fsh[f].handleFiles.file.o) {
+#ifdef _WIN32
+        _pclose(fsh[f].handleFiles.file.o);
+#else
+        pclose(fsh[f].handleFiles.file.o);
+#endif
+    }
+    Com_Memset(&fsh[f], 0, sizeof(fsh[f]));
+}

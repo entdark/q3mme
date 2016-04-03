@@ -276,12 +276,14 @@ typedef enum {
 	mmeShotFormatJPG,
 	mmeShotFormatPNG,
 	mmeShotFormatAVI,
+    mmeShotFormatPIPE,
 } mmeShotFormat_t;
 
 typedef enum {
 	mmeShotTypeRGB,
 	mmeShotTypeRGBA,
 	mmeShotTypeGray,
+	mmeShotTypeBGR,
 } mmeShotType_t;
 
 typedef struct {

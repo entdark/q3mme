@@ -141,6 +141,7 @@ typedef struct {
 
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
 	void	(*Cvar_Set)( const char *name, const char *value );
+	char	*(*Cvar_VariableString)( const char *var_name );
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
@@ -162,8 +163,16 @@ typedef struct {
 	void	(*FS_FreeFileList)( char **filelist );
 	void	(*FS_WriteFile)( const char *qpath, const void *buffer, int size );
 	qboolean (*FS_FileExists)( const char *file );
-	FILE *	(*FS_DirectOpen)( const char *name, const char *mode );
 
+	fileHandle_t (*FS_FDirectOpenFileWrite)( const char *filename, const char *mode );
+	int		(*FS_Seek)( fileHandle_t f, long offset, int origin );
+	int		(*FS_Write)( const void *buffer, int len, fileHandle_t f );
+	void	(*FS_FCloseFile)( fileHandle_t f );
+	
+    fileHandle_t    (*FS_PipeOpen)                      (const char *qcmd, const char *qpath, const char *mode);
+    void			(*FS_PipeClose)                     (fileHandle_t f);
+    int				(*FS_PipeWrite)						(const void *buffer, int len, fileHandle_t f);
+    
 	// cinematic stuff
 	void	(*CIN_UploadCinematic)(int handle);
 	int		(*CIN_PlayCinematic)( const char *arg0, int xpos, int ypos, int width, int height, int bits);

@@ -680,6 +680,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 void FS_Rename( const char *from, const char *to );
 qboolean FS_Which(const char *filename, void *searchPath);
 
+fileHandle_t FS_PipeOpen(const char *qcmd, const char *qpath, const char *mode);
+void FS_PipeClose(fileHandle_t f);
+int FS_PipeWrite(const void *buffer, int len, fileHandle_t f);
+
 /*
 ==============================================================
 

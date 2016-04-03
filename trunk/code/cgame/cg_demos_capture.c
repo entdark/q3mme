@@ -502,7 +502,7 @@ void demoCaptureCommand_f(void) {
 			CG_DemosAddLog( "Capture looping stopped too" );
 			demo.loop.total = 0;
 		}
-	} else if (!Q_stricmp(cmd, "jpg") || !Q_stricmp(cmd, "tga") || !Q_stricmp(cmd, "png") || !Q_stricmp(cmd, "avi")){
+	} else if (!Q_stricmp(cmd, "jpg") || !Q_stricmp(cmd, "tga") || !Q_stricmp(cmd, "png") || !Q_stricmp(cmd, "avi") || !Q_stricmp(cmd, "pipe")){
 		demo.capture.active = qtrue;
 		demo.capture.locked = qfalse;
 		
@@ -532,7 +532,7 @@ void demoCaptureCommand_f(void) {
 		demo.loop.total = 0;
 	} else {
 		Com_Printf("capture usage:\n" );
-		Com_Printf("capture jpg/tga/png/avi fps filename, start capturing to a specific file\n" );
+		Com_Printf("capture jpg/tga/png/avi/pipe fps filename, start capturing to a specific file\n" );
 		Com_Printf("capture lock, lock capturing to the selected range\n");
 		Com_Printf("capture start/end, set start/end parts of capture range\n");
 		Com_Printf("capture stop, stop capturing\n" );

@@ -91,6 +91,8 @@ cvar_t	*mme_saveShot;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
 
+cvar_t  *mme_pipeCommand;
+
 static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl_t* control ) {
 	memset( block, 0, sizeof( *block ) );
 	size = (size + 15) & ~15;
@@ -245,7 +247,7 @@ int R_MME_MultiPassNext( ) {
 	outAlign = (__m64 *)((((int)(outAlloc)) + 15) & ~15);
 	
 	GLimp_EndFrame();
-	R_MME_GetShot( outAlign );
+	R_MME_GetShot( outAlign, shotData.main.type );
 	R_MME_BlurAccumAdd( &passData.dof, outAlign );
 	
 	tr.capturingDofOrStereo = qtrue;
@@ -264,7 +266,7 @@ int R_MME_MultiPassNext( ) {
 
 static void R_MME_MultiShot( byte * target ) {
 	if ( !passData.control.totalFrames ) {
-		R_MME_GetShot( target );
+		R_MME_GetShot( target, shotData.main.type );
 	} else {
 		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
 	}
@@ -511,20 +513,29 @@ const void *R_MME_CaptureShotCmd( const void *data ) {
 			shotData.main.format = mmeShotFormatPNG;
 		} else if (!Q_stricmp(mme_screenShotFormat->string, "avi")) {
 			shotData.main.format = mmeShotFormatAVI;
+        } else if (!Q_stricmp(mme_screenShotFormat->string, "pipe")) {
+            shotData.main.format = mmeShotFormatPIPE;
 		} else {
 			shotData.main.format = mmeShotFormatTGA;
 		}
 		
 		//grayscale works fine only with compressed avi :(
-		if (shotData.main.format != mmeShotFormatAVI || !mme_aviFormat->integer) {
+		if ((shotData.main.format != mmeShotFormatAVI && shotData.main.format != mmeShotFormatPIPE) || !mme_aviFormat->integer) {
 			shotData.depth.format = mmeShotFormatPNG;
 			shotData.stencil.format = mmeShotFormatPNG;
-		} else {
+		} else if (shotData.main.format == mmeShotFormatAVI) {
 			shotData.depth.format = mmeShotFormatAVI;
 			shotData.stencil.format = mmeShotFormatAVI;
+		} else if (shotData.main.format == mmeShotFormatPIPE) {
+			shotData.depth.format = mmeShotFormatPIPE;
+			shotData.stencil.format = mmeShotFormatPIPE;
 		}
 
-		shotData.main.type = mmeShotTypeRGB;
+		if ((shotData.main.format == mmeShotFormatAVI && !mme_aviFormat->integer) || shotData.main.format == mmeShotFormatPIPE) {
+			shotData.main.type = mmeShotTypeBGR;
+		} else {
+			shotData.main.type = mmeShotTypeRGB;
+		}
 		if ( mme_screenShotAlpha->integer ) {
 			if ( shotData.main.format == mmeShotFormatPNG )
 				shotData.main.type = mmeShotTypeRGBA;
@@ -574,6 +585,7 @@ void R_MME_Shutdown(void) {
 void R_MME_Init(void) {
 
 	// MME cvars
+    mme_pipeCommand = ri.Cvar_Get ("mme_pipeCommand", PIPE_COMMAND_DEFAULT, CVAR_ARCHIVE);
 	mme_aviFormat = ri.Cvar_Get ("mme_aviFormat", "0", CVAR_ARCHIVE);
 	mme_jpegQuality = ri.Cvar_Get ("mme_jpegQuality", "90", CVAR_ARCHIVE);
 	mme_jpegDownsampleChroma = ri.Cvar_Get ("mme_jpegDownsampleChroma", "0", CVAR_ARCHIVE);

@@ -1,14 +1,23 @@
 #include "tr_mme.h"
 
-extern GLuint pboIds[2];
-void R_MME_GetShot( void* output ) {
+extern GLuint pboIds[4];
+void R_MME_GetShot( void* output, mmeShotType_t type ) {
+	GLenum format;
+	switch (type) {
+	case mmeShotTypeBGR:
+		format = GL_BGR_EXT;
+		break;
+	default:
+		format = GL_RGB;
+		break;
+	}
 	if (!mme_pbo->integer || r_stereoSeparation->value != 0) {
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, output ); 
+		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, format, GL_UNSIGNED_BYTE, output ); 
 	} else {
 		static int index = 0;
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
-		index = index ^ 1;
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, 0 );
+		index = (index + 1) & 0x3;
+		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, format, GL_UNSIGNED_BYTE, 0 );
 
 		// map the PBO to process its data by CPU
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
@@ -93,6 +102,10 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 	case mmeShotFormatPNG:
 		extension = "png";
 		break;
+    case mmeShotFormatPIPE:
+		if (!shot->avi.f) {
+			shot->avi.pipe = qtrue;
+		}
 	case mmeShotFormatAVI:
 		if (audio)
 			mmeAviSound( &shot->avi, shot->name, shot->type, width, height, fps, aBuf, aSize );

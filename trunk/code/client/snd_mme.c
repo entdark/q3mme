@@ -109,7 +109,9 @@ qboolean S_MMEAviImport(byte *out, int *size) {
 	const int shot = Cvar_VariableIntegerValue("mme_saveShot");
 	const int depth = Cvar_VariableIntegerValue("mme_saveDepth");
 	const int stencil = Cvar_VariableIntegerValue("mme_saveStencil");
-	if (mme_saveWav->integer != 2 || Q_stricmp(format, "avi") || (!shot && !depth && !stencil))
+	if (mme_saveWav->integer != 2
+        || (!Q_stricmp(format, "avi") && !Q_stricmp(format, "pipe"))
+        || (!shot && !depth && !stencil))
 		return qfalse;
 	*size = 0;
 	if (bytesInBuf >= MME_SAMPLERATE)
@@ -168,7 +170,7 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 	const int shot = Cvar_VariableIntegerValue("mme_saveShot");
 	const int depth = Cvar_VariableIntegerValue("mme_saveDepth");
 	const int stencil = Cvar_VariableIntegerValue("mme_saveStencil");
-	if (!mme_saveWav->integer || (mme_saveWav->integer == 2 && (Q_stricmp(format, "avi") || (!shot && !depth && !stencil))))
+	if (!mme_saveWav->integer || (mme_saveWav->integer == 2 && ((!Q_stricmp(format, "avi") && !Q_stricmp(format, "pipe")) || (!shot && !depth && !stencil))))
 		return;
 	if (Q_stricmp(baseName, mmeSound.baseName) && mme_saveWav->integer != 2) {
 		char fileName[MAX_OSPATH];
