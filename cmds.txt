@@ -85,11 +85,13 @@ pause
     pause, no value or subcommand, pauses/unpauses demo playback
 
 capture
-    capture jpg/tga/png/avi fps filename, start capturing to a specific file, demo has to be not paused
+    capture jpg/tga/png/avi/pipe fps filename, start capturing to a specific file, demo has to be not paused
         capture avi 30 niceshot, will start capturing AVI file with 30 frames per second framerate
                                  into capture/[mme_demoFileName]/niceshot.000.avi (+001 after reaching 2GB filesize)
         capture png 30 episode8, will start capturing PNG screenshots into capture/[mme_demoFileName]/episode8.000000000.png
                                  (+000000001 each new screenshot) and each screenshot will be a frame of future video
+        capture pipe 42 namek, will start capturing RAW stream with 42 frames per second into given pipeline (ffmpeg by default)
+                               into capture/[mme_demoFileName]/namek[CUSTOM OUTPUT] (mme_pipeCommand)
     capture lock, lock capturing to the selected range
     capture start/end, set start/end parts of capture range
     capture stop, stop capturing
@@ -223,6 +225,10 @@ dof
     dof focus (a)0, Directly control focus, optional a before number to add to current value
     dof radius (a)0, Directly control radius, optional a before number to add to current value
     dof target, Clear/Set the target currently being focused at
+
+cut
+    cut it, cut the currently playing demo with the set range       (bound to /)
+    cut start/end, current time will be set as start/end of cutting (bound to [ and ])
 
 
 

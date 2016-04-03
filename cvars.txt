@@ -66,6 +66,8 @@ cg_drawMovementKeys     [0, 1] Draw movement keys such as W A S D v ^
 cg_drawMovementKeysPos  [0..?.? 0..?.?] Set on screen position of movement keys with two arguements (cg_drawMovementKeys 1)
 cg_drawMovementKeysScale[0.0..?.?] Set scale of movement keys (cg_drawMovementKeys 1)
 
+cg_commandSmooth        [0, 1, 2] Set clients' movements smoothing:
+                        0 = disabled, 1 = enabled for the predicted client only, 2 = enabled for all clients
 
 
 Q3MME CLIENT (ENGINE)
@@ -81,6 +83,8 @@ mme_demoFileName        [text] Resets when loading demo, uses demo name from cur
                         project/[mme_demoFileName]/, capture/[mme_demoFileName]/
 mme_demoStartProject    [text] Set project that demoList feature will use in current demo; used by the game and usually not touched
 mme_demoListQuit        [0, 1] Quit the game after completing capturing all demos from demoList feature
+mme_demoAutoQuit        [0, 1, 2] Stop the demo playback if it got to the end:
+                        0 = disabled, 1 = get back to menu, 2 = quit the game
 
 mme_anykeystopsdemo     [0, 1] Any pressed key can stop demo playback
 
@@ -156,6 +160,9 @@ mme_saveStencil         [0, 1, 2] Save stencil mask outputs:
 
 mme_cpuSSE2             [0, 1] Use SSE2 instruction to make motion blur (faster way, may crash on old CPUs)
 mme_pbo                 [0, 1] Use PBO instruction to increase capture speed in times (r_stereoSeparation 0.0)
+mme_pipeCommand         [text, %format] Set the command that opens its stdin for reading from the game raw input and set the supported output with the given format:
+                        %o = output name, %f = fps (from capture command), %w = game width, %h = game height
+                        
 
 r_zproj                 [0..?.?] Stereo focus position
 r_stereoSeparation      [-?.?..?.?] Camera stereo offset by horizontal left-to-right axis by stereo focus position;
