@@ -1,3 +1,21 @@
+Q3MME 1.8
+
+Additions:
+- added pipeline capture (credits: loda): mp4/mkv/ogg/ANY format supported with using ffmpeg (mme_pipeCommand)
+- added command time based smoothing that smoothes demos with missing snapshot very much (cg_commandSmooth)
+- added in-game demo cutter (cut command)
+- added drawing (and seeking on it) the demo progress bar on bottom
+- added smooth dynamic light
+- added the opportunity to open demos with double-click
+- added the opportunity to open demos with drag-and-drop
+- added the opportunity to stop the demo playback (or quit the game full) when the demo reaches its end (mme_demoAutoQuit)
+- made capture stop command save AVI or pipeline w/o the need to close the demo or start new capture
+
+Fixes:
+- fixed aspect ratio of the demo HUD
+- fixed memory "leak" that made the game use about 200 more MB than necessary
+- fixed configs saving only cvars with non-default values that could cause wrong configs load from other extra mods
+
 Q3MME 1.7
 
 Additions:
