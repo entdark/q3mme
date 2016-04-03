@@ -2476,7 +2476,8 @@ void CL_Init( void ) {
 	mme_demoListQuit = Cvar_Get ("mme_demoListQuit", "", CVAR_ARCHIVE );
 	mme_demoSmoothen = Cvar_Get ("mme_demoSmoothen", "1", CVAR_ARCHIVE );
 	mme_demoFileName = Cvar_Get ("mme_demoFileName", "", CVAR_TEMP | CVAR_NORESTART );
-	mme_demoStartProject = Cvar_Get ("mme_demoStartProject", "", CVAR_TEMP );
+	mme_demoStartProject = Cvar_Get ("mme_demoStartProject", "", CVAR_TEMP );;
+	mme_demoAutoQuit = Cvar_Get ("mme_demoAutoQuit", "0", CVAR_ARCHIVE );
 	mme_demoAutoNext = Cvar_Get ("mme_demoAutoNext", "1", CVAR_ARCHIVE );
 	Cvar_Get ("mme_demoExt", "", 0 );
 

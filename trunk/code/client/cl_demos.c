@@ -704,6 +704,11 @@ static void demoPlayForwardFrame( demoPlay_t *play ) {
 		if (mme_demoAutoNext->integer && demo.nextNum) {
 			CL_Disconnect_f();
 		}
+		if (mme_demoAutoQuit->integer) {
+			if (mme_demoAutoQuit->integer == 2)
+				Cbuf_ExecuteText( EXEC_APPEND, "quit" );
+			CL_Disconnect_f();
+		}
 		play->lastFrame = qtrue;
 		return;
 	}
