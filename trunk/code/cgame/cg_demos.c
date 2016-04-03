@@ -38,6 +38,7 @@ extern void trap_MME_Music( const char *musicName, float time, float length );
 extern int trap_MME_DemoInfo( mmeDemoInfo_t *info );
 extern void trap_MME_TimeFraction( float timeFraction );
 extern float trap_MME_ProgressTime( void );
+extern int trap_MME_DemoLength();
 extern void trap_S_UpdateScale( float scale );
 int lastMusicStart;
 
