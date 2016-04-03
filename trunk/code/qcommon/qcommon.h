@@ -558,6 +558,8 @@ issues.
 
 #define BASEGAME "baseq3"
 
+qboolean FS_CopyFileAbsolute(char *fromOSPath, char *toOSPath);
+
 qboolean FS_Initialized( void );
 
 void	FS_InitFilesystem ( void );
@@ -1066,6 +1068,7 @@ void	Sys_SetDefaultInstallPath(const char *path);
 char	*Sys_DefaultInstallPath(void);
 void  Sys_SetDefaultHomePath(const char *path);
 char	*Sys_DefaultHomePath(void);
+const char *Sys_Dirname( char *path );
 
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
 void	Sys_FreeFileList( char **list );

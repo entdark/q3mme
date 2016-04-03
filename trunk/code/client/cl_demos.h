@@ -100,6 +100,7 @@ typedef struct {
 typedef struct {
 	byte					buffer[128*1024];
 	qboolean				commandSmoothing;
+	qboolean				del;
 	int						nextNum, currentNum;
 	struct {
 		demoPlay_t			*handle;

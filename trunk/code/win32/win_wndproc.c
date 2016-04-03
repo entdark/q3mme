@@ -30,6 +30,7 @@ WinVars_t	g_wv;
 #endif
 
 static UINT MSH_MOUSEWHEEL;
+extern UINT MSH_BROADCASTARGS;
 
 // Console variables that we need to access from this module
 cvar_t		*vid_xpos;			// X coordinate of window position
@@ -216,6 +217,70 @@ static int MapKey (int key)
 }
 
 
+void switchMod(void) {
+	cvar_t *fs_game = Cvar_FindVar("fs_game");
+	if (!(fs_game && !Q_stricmp(fs_game->string, "mme"))) {
+		Com_Printf("Switching mod\n");
+		Cvar_Set("fs_game", "mme");
+		Cbuf_ExecuteText(EXEC_APPEND, "vid_restart\n");
+	}
+}
+
+static qboolean fileHasExt(const char *filename, const char *ext) {
+	const char *fileExt = filename + strlen(filename) - strlen(ext);
+	if (!Q_stricmp(fileExt, ext))
+		return qtrue;
+	return qfalse;
+}
+
+const char *demoExt[] = {
+	".dm_66",
+	".dm_67",
+	".dm_68",
+	".mme",
+	NULL,
+};
+static qboolean isDemo(const char *filename) {
+	int i = 0;
+	while (demoExt[i]) {
+		if (fileHasExt(filename, demoExt[i]))
+			return qtrue;
+		i++;
+	}
+	return qfalse;
+}
+
+const char *configExt = ".cfg";
+static qboolean isConfig(const char *filename) {
+	if (fileHasExt(filename, configExt))
+		return qtrue;
+	return qfalse;
+}
+
+typedef struct dropLogic_s {
+	qboolean (*isSupported)(const char *filename);
+	char *cmd;
+	char *args;
+	qboolean allowMulti;
+} dropLogic_t;
+//entTODO: implement config and other files support
+static dropLogic_t dropList[] = {
+	{isDemo, "demo", "del", qfalse},
+//	{isConfig, "exec", NULL, qtrue},
+};
+
+static qboolean isSupported(const char *filename, dropLogic_t *out) {
+	size_t len = ARRAY_LEN(dropList);
+	for (size_t i = 0; i < len; i++) {
+		if (dropList[i].isSupported(filename)) {
+			*out = dropList[i];
+			return qtrue;
+		}
+	}
+	out = NULL;
+	return qfalse;
+}
+
 /*
 ====================
 MainWndProc
@@ -255,6 +320,19 @@ LONG WINAPI MainWndProc (
 			}
 			return DefWindowProc (hWnd, uMsg, wParam, lParam);
 		}
+	}
+	if (uMsg == MSH_BROADCASTARGS) {
+		char *args = (char *)Sys_GetSharedData();
+		if (args) {
+			if (strstr(args, "+demo")) {
+				switchMod();
+			}
+			Com_ParseCommandLine(args);
+			Com_AddStartupCommands();
+//			Cbuf_ExecuteText(EXEC_APPEND, args);
+		}
+		SwitchToThisWindow(hWnd, FALSE);
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	switch (uMsg)
@@ -450,6 +528,33 @@ LONG WINAPI MainWndProc (
 
 	case WM_CHAR:
 		Sys_QueEvent( g_wv.sysMsgTime, SE_CHAR, wParam, 0, 0, NULL );
+		break;
+	case WM_DROPFILES:
+		{HDROP hDrop = (HDROP)wParam;
+		TCHAR szFileName[MAX_PATH];
+		DWORD dwCount = DragQueryFile(hDrop, 0xFFFFFFFF, szFileName, MAX_PATH);
+		for (DWORD i = 0; i < dwCount; i++) {
+			DragQueryFile(hDrop, 0, szFileName, MAX_PATH);
+			dropLogic_t drop;
+			if (!isSupported(szFileName, &drop))
+				continue;
+			char cmd[MAX_PATH+16] = {0};
+			Q_strcat(cmd, sizeof(cmd), drop.cmd);
+			Q_strcat(cmd, sizeof(cmd), " \"");
+			Q_strcat(cmd, sizeof(cmd), szFileName);
+			Q_strcat(cmd, sizeof(cmd), "\" ");
+			if (drop.args)
+				Q_strcat(cmd, sizeof(cmd), drop.args);
+			if (!Q_stricmp(drop.cmd, "demo")) {
+				switchMod();
+			}
+			Cbuf_ExecuteText(EXEC_APPEND, cmd);
+			Cbuf_ExecuteText(EXEC_APPEND, "\n");
+			if (!drop.allowMulti)
+				break;
+		}
+		DragFinish(hDrop);}
+		SwitchToThisWindow(hWnd, FALSE);
 		break;
    }
 

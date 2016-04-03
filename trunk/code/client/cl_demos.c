@@ -814,10 +814,10 @@ static int demoFindNext(const char *fileName) {
 	char name[MAX_OSPATH], seekName[MAX_OSPATH];
 	qboolean tryAgain = qtrue;
 	if (isdigit(fileName[len-1]) && ((fileName[len-2] == '.'))) {
-		Com_sprintf(seekName, len-1, fileName);
+		Com_sprintf(seekName, len-1+1, fileName);
 		demo.currentNum = fileName[len-1] - '0';
 	} else if (isdigit(fileName[len-1]) && (isdigit(fileName[len-2]) && (fileName[len-3] == '.'))) {
-		Com_sprintf(seekName, len-2, fileName);
+		Com_sprintf(seekName, len-2+1, fileName);
 		demo.currentNum = (fileName[len-2] - '0')*10 + (fileName[len-1] - '0');
 	} else {
 		Com_sprintf(seekName, MAX_OSPATH, fileName);
@@ -917,7 +917,21 @@ errorreturn:
 
 static void demoPlayStop( demoPlay_t *play ) {
 	FS_FCloseFile( play->fileHandle );
-	Z_Free( play );
+	if (demo.del && FS_FileExists(play->fileName)) {
+		FS_FileErase(play->fileName);
+	}
+	if (demo.del) {
+		char demoPath[MAX_QPATH];
+		char *ext = Cvar_FindVar("mme_demoExt")->string;
+		if (!*ext)
+			ext = ".dm_68";
+		Com_sprintf(demoPath, sizeof(demoPath), "demos/%s%s", mme_demoFileName->string, ext);
+		if (FS_FileExists(demoPath)) {
+			FS_FileErase(demoPath);
+		}
+	}
+	Z_Free(play);
+	demo.del = qfalse;
 }
 
 extern void CL_ConfigstringModified( void );
@@ -1035,7 +1049,7 @@ int demoInfo( mmeDemoInfo_t* info ) {
 	return 0;
 }
 
-qboolean demoPlay( const char *fileName ) {
+qboolean demoPlay( const char *fileName, qboolean del ) {
 	demo.play.handle = demoPlayOpen( fileName );
 	if (demo.play.handle) {
 		demoPlay_t *play = demo.play.handle;
@@ -1066,6 +1080,7 @@ qboolean demoPlay( const char *fileName ) {
 		cl.gameState.dataCount = play->frame->string.used;
 		CL_InitCGame();
 		cls.state = CA_ACTIVE;
+		demo.del = del;
 		return qtrue;
 	} else {
 		return qfalse;
@@ -1079,7 +1094,7 @@ void CL_MMEDemo_f( void ) {
 		char mmeName[MAX_OSPATH];
 		Com_sprintf (mmeName, MAX_OSPATH, "mmedemos/%s.mme", cmd);
 		if (FS_FileExists( mmeName )) {
-			demoPlay( mmeName );
+			demoPlay( mmeName, qfalse );
 		} else {
 			Com_Printf("%s not found.\n", mmeName );
 		}
@@ -1088,7 +1103,7 @@ void CL_MMEDemo_f( void ) {
 	if (!Q_stricmp( cmd, "convert")) {
 		demoConvert( Cmd_Argv( 2 ), Cmd_Argv( 3 ), mme_demoSmoothen->integer );
 	} else if (!Q_stricmp( cmd, "play")) {
-		demoPlay( Cmd_Argv( 2 ) );
+		demoPlay( Cmd_Argv( 2 ), qfalse );
 	} else {
 		Com_Printf("That does not compute...%s\n", cmd );
 	}

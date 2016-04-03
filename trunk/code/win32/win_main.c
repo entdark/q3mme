@@ -39,6 +39,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define	CD_EXE_LINUX "quake3"
 #define MEM_THRESHOLD 96*1024*1024
 
+UINT MSH_BROADCASTARGS;
+
+/* win_shared.cpp */
+void Sys_SetBinaryPath(const char *path);
+char *Sys_BinaryPath(void);
+
 static char		sys_cmdline[MAX_STRING_CHARS];
 int winHideWindow;
 
@@ -1153,7 +1159,105 @@ void Sys_Init( void ) {
 	IN_Init();		// FIXME: not in dedicated?
 }
 
+#ifndef DEFAULT_BASEDIR
+#	ifdef MACOS_X
+#		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
+#	else
+#		define DEFAULT_BASEDIR Sys_BinaryPath()
+#	endif
+#endif
 
+#include <Shlobj.h>
+
+typedef struct {
+	char *extension;
+	char *desc;
+} extensionsTable_t;
+
+static extensionsTable_t et[] = {
+	//should we reg it? jaMME and other mme mods use it too
+//	{".mme", "MovieMaker's Edition Demo"},
+	{".dm_68", "Quake III Arena Demo (v1.32c)"},
+	{".dm_67", "Quake III Arena Demo (v1.31)"},
+	{".dm_66", "Quake III Arena Demo (v1.30)"},
+};
+
+char *GetStringRegKey(HKEY hkey, const char *valueName) {
+	if (!hkey) {
+		return NULL;
+	}
+    static CHAR szBuffer[512];
+    DWORD dwBufferSize = sizeof(szBuffer);
+    LSTATUS nError = RegQueryValueEx(hkey, valueName, 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+    if (ERROR_SUCCESS == nError) {
+        return szBuffer;
+    }
+    return NULL;
+}
+
+qboolean AddRegistry(const HKEY key, const char *subkey, const char *value, const char *valueName) {
+	Com_DPrintf(S_COLOR_YELLOW"AddRegistry(%u,%s,%s,%s)\n", key, subkey, value, valueName ? valueName : "NULL");
+	HKEY hkey;
+	LSTATUS nError = RegOpenKeyEx(key, subkey, 0, KEY_READ, &hkey);
+	if (nError != ERROR_SUCCESS && nError != ERROR_FILE_NOT_FOUND) {
+		Com_DPrintf(S_COLOR_RED"RegOpenKeyEx(%u,%s,%s) error: %d\n", key, subkey, value, nError);
+		return qfalse;
+	}
+	const char *setValue = GetStringRegKey(hkey, valueName);
+	RegCloseKey(hkey);
+	//ignore the same value
+	if (!setValue || Q_stricmp(setValue, value)) {
+		nError = RegCreateKeyEx(key, subkey, 0, 0, 0, KEY_ALL_ACCESS, 0, &hkey, 0);
+		if (nError == ERROR_SUCCESS) {
+			RegSetValueEx(hkey, valueName, 0, REG_SZ, (BYTE*)value, strlen(value)+1);
+			RegCloseKey(hkey);
+			return qtrue;
+		} else {
+			Com_DPrintf(S_COLOR_RED"RegCreateKeyEx(%u,%s,%s) error: %d\n", key, subkey, value, nError);
+		}
+	}
+	return qfalse;
+}
+
+void RegisterFileTypes(char *program) {
+	char *action="q3mme";
+	qboolean refresh = qfalse; //once true - forever true
+	for (int i = 0; i < ARRAY_LEN(et); i++) {
+		char app[MAX_OSPATH+256];
+		char *extension;
+		char *desc;
+		char icon[32];
+		char path[32];
+
+		Com_sprintf(app, sizeof(app), "%s +set fs_game \"mme\" +set fs_extraGames \"osp defrag cpma\" +demo \"%%1\" del", program);
+		extension = et[i].extension;
+		desc = et[i].desc;
+		Com_sprintf(icon, sizeof(icon), "%s\\DefaultIcon", extension);
+		Com_sprintf(path, sizeof(path), "%s\\shell\\%s\\command\\", extension, action);
+
+		//using | to be able to call all 3 functions even if true got returned
+		//register the filetype extension
+		refresh |= AddRegistry(HKEY_CLASSES_ROOT, extension, desc, NULL)
+		//register application association
+		| AddRegistry(HKEY_CLASSES_ROOT, path, app, NULL)
+		//register icon for the filetype
+		| AddRegistry(HKEY_CLASSES_ROOT, icon, program, NULL);
+	}
+	if (refresh) {
+		SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+	}
+}
+
+static HANDLE mutex;
+qboolean isOtherInstanceRunning(void) {
+	mutex = CreateMutex(NULL, TRUE, PROGRAM_MUTEX);
+	//prevent multiple instances if we are opening a demo
+	if (ERROR_ALREADY_EXISTS == GetLastError()) {
+		return qtrue;
+	}
+	//in the other case just open another sintance
+	return qfalse;
+}
 //=======================================================================
 
 int	totalMsec, countMsec;
@@ -1183,6 +1287,21 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		winHideWindow = 1;
 	}
 
+	MSH_BROADCASTARGS = RegisterWindowMessage("MSH_BROADCASTARGS");
+	if (isOtherInstanceRunning()) {
+		char *bcArgs = strstr(sys_cmdline, "+demo");
+		if (!bcArgs)
+			bcArgs = strstr(sys_cmdline, "ja:");
+		if (bcArgs) {
+			Sys_CopySharedData(bcArgs, strlen(bcArgs)+1);
+			PostMessage(HWND_BROADCAST, MSH_BROADCASTARGS, 0, 0);
+			Sleep(1337);
+			ReleaseMutex(mutex);
+			CloseHandle(mutex);
+			return 0;
+		}
+	}
+
 	// done before Com/Sys_Init since we need this for error output
 	Sys_CreateConsole();
 
@@ -1197,8 +1316,18 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
 
 	Sys_InitStreamThread();
+	
+	CHAR path[512];
+	if (GetModuleFileName(NULL, path, sizeof(path))) {
+		RegisterFileTypes(path);
+	}
+	Sys_SetBinaryPath( Sys_Dirname( path ) );
+	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 
 	Com_Init( sys_cmdline );
+	
+	Com_Printf("MSH_BROADCASTARGS: %u\n", MSH_BROADCASTARGS);
+
 	NET_Init();
 
 	_getcwd (cwd, sizeof(cwd));
@@ -1209,6 +1338,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	if ( !com_dedicated->integer && !com_viewlog->integer ) {
 //		Sys_ShowConsole( 0, qfalse );
 	}
+	
+	DragAcceptFiles(GetActiveWindow(), TRUE);
 
     // main game loop
 	while( 1 ) {
@@ -1246,6 +1377,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			}
 		} 
 	}
+
+	ReleaseMutex(mutex);
+	CloseHandle(mutex);
 
 	// never gets here
 }

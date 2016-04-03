@@ -374,7 +374,7 @@ void CL_DemoCut_f( void );
 void CL_DemoShutDown( void );
 void CL_DemoSetCGameTime( void );
 void demoConvert( const char *oldName, const char *newName, qboolean smoothen );
-qboolean demoPlay( const char *fileName );
+qboolean demoPlay( const char *fileName, qboolean delDemo );
 void demoStop( void );
 
 //

@@ -542,6 +542,54 @@ FS_CopyFile
 Copy a fully specified file from one place to another
 =================
 */
+qboolean FS_CopyFileAbsolute(char *fromOSPath, char *toOSPath) {
+	FILE	*f;
+	int		len;
+	byte	*buf;
+
+	Com_DPrintf( "copy %s to %s\n", fromOSPath, toOSPath );
+
+	if (strstr(fromOSPath, "journal.dat") || strstr(fromOSPath, "journaldata.dat")) {
+		Com_Printf( "Ignoring journal files\n");
+		return qfalse;
+	}
+
+	f = fopen( fromOSPath, "rb" );
+	if ( !f ) {
+		return qfalse;
+	}
+	fseek (f, 0, SEEK_END);
+	len = ftell (f);
+	fseek (f, 0, SEEK_SET);
+
+	// we are using direct malloc instead of Z_Malloc here, so it
+	// probably won't work on a mac... Its only for developers anyway...
+	buf = (unsigned char *)malloc( len );
+	if (fread( buf, 1, len, f ) != len)
+		Com_Error( ERR_FATAL, "Short read in FS_Copyfiles()\n" );
+	fclose( f );
+
+	if( FS_CreatePath( toOSPath ) ) {
+		return qfalse;
+	}
+
+	f = fopen(FS_BuildOSPath( fs_homepath->string, fs_gamedir, toOSPath ), "wb");
+	if (!f) {
+		return qfalse;
+	}
+	if (fwrite( buf, 1, len, f ) != len)
+		Com_Error( ERR_FATAL, "Short write in FS_Copyfiles()\n" );
+	fclose( f );
+	free( buf );
+	return qtrue;
+}
+/*
+=================
+FS_CopyFile
+
+Copy a fully specified file from one place to another
+=================
+*/
 static void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 	FILE	*f;
 	int		len;

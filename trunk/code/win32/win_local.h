@@ -51,6 +51,9 @@ char	*Sys_ConsoleInput (void);
 
 qboolean	Sys_GetPacket ( netadr_t *net_from, msg_t *net_message );
 
+qboolean Sys_CopySharedData(void *data, size_t size);
+void *Sys_GetSharedData(void);
+
 // Input subsystem
 
 void	IN_Init (void);
@@ -96,3 +99,4 @@ typedef struct
 
 extern WinVars_t	g_wv;
 
+#define PROGRAM_MUTEX "q3mme"

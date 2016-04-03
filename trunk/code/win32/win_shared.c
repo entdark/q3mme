@@ -33,6 +33,60 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <io.h>
 #include <conio.h>
 
+static char binaryPath[ MAX_OSPATH ] = { 0 };
+static char installPath[ MAX_OSPATH ] = { 0 };
+
+/*
+=================
+Sys_SetBinaryPath
+=================
+*/
+void Sys_SetBinaryPath(const char *path)
+{
+	Q_strncpyz(binaryPath, path, sizeof(binaryPath));
+}
+
+/*
+=================
+Sys_BinaryPath
+=================
+*/
+char *Sys_BinaryPath(void)
+{
+	return binaryPath;
+}
+
+/*
+=================
+Sys_SetDefaultInstallPath
+=================
+*/
+void Sys_SetDefaultInstallPath(const char *path)
+{
+	Q_strncpyz(installPath, path, sizeof(installPath));
+}
+
+/*
+==============
+Sys_Dirname
+==============
+*/
+const char *Sys_Dirname( char *path )
+{
+	static char dir[ MAX_OSPATH ] = { 0 };
+	int length;
+
+	Q_strncpyz( dir, path, sizeof( dir ) );
+	length = strlen( dir ) - 1;
+
+	while( length > 0 && dir[ length ] != '\\' )
+		length--;
+
+	dir[ length ] = '\0';
+
+	return dir;
+}
+
 /*
 ================
 Sys_Milliseconds
@@ -301,6 +355,76 @@ char	*Sys_DefaultHomePath(void) {
 
 char *Sys_DefaultInstallPath(void)
 {
-	return Sys_Cwd();
+	if (*installPath)
+		return installPath;
+	else
+		return Sys_Cwd();
 }
 
+#define SHAREDDATA_SIZE 512
+#define MAPNAME PROGRAM_MUTEX"_Map"
+HANDLE hMapFile;
+qboolean Sys_CopySharedData(void *data, size_t size) {
+	HANDLE hMapFile;
+	LPCTSTR pBuf;
+
+	hMapFile = CreateFileMapping(
+					INVALID_HANDLE_VALUE,    // use paging file
+					NULL,                    // default security
+					PAGE_READWRITE,          // read/write access
+					0,                       // maximum object size (high-order DWORD)
+					SHAREDDATA_SIZE,         // maximum object size (low-order DWORD)
+					MAPNAME); 
+	if (hMapFile == NULL) {
+		hMapFile = OpenFileMapping(
+					FILE_MAP_ALL_ACCESS,   // read/write access
+					FALSE,                 // do not inherit the name
+					MAPNAME);  
+		if (hMapFile == NULL) {
+			return qfalse;
+		}
+	}
+
+	pBuf = (LPTSTR)MapViewOfFile(hMapFile,   // handle to map object
+						FILE_MAP_ALL_ACCESS, // read/write permission
+						0,
+						0,
+						SHAREDDATA_SIZE);
+	if (pBuf == NULL) {
+		return qfalse;
+	}
+
+	CopyMemory((PVOID)pBuf, data, size);
+	UnmapViewOfFile(pBuf);
+//	CloseHandle(hMapFile);
+	return qtrue;
+}
+
+void *Sys_GetSharedData(void) {
+	static char ret[SHAREDDATA_SIZE];
+	HANDLE hMapFile;
+	LPCTSTR pBuf;
+
+	hMapFile = OpenFileMapping(
+					FILE_MAP_ALL_ACCESS,   // read/write access
+					FALSE,                 // do not inherit the name
+					MAPNAME);              // name of mapping object
+	if (hMapFile == NULL) {
+		return NULL;
+	}
+
+	pBuf = (LPTSTR)MapViewOfFile(hMapFile, // handle to map object
+				FILE_MAP_ALL_ACCESS,  // read/write permission
+				0,
+				0,
+				SHAREDDATA_SIZE);
+	if (pBuf == NULL) {
+		CloseHandle(hMapFile);
+		return NULL;
+	}
+
+	Com_sprintf(ret, sizeof(ret), pBuf);
+	UnmapViewOfFile(pBuf);
+	CloseHandle(hMapFile);
+	return ret;
+}

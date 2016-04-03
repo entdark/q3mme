@@ -266,14 +266,20 @@ demo <demoname>
 */
 extern void demoCommandSmoothingEnable(qboolean enable);
 void CL_PlayDemo_f( void ) {
-	char		name[MAX_OSPATH], testName[MAX_OSPATH];
+	char		name[MAX_OSPATH], *testName, testNameActual[MAX_OSPATH];
 	char		*ext;
-	qboolean	haveConvert;
+	qboolean	haveConvert, forceNewConvert, del;
 	cvar_t		*fs_game;
-
-	if (Cmd_Argc() != 2) {
-		Com_Printf ("demo <demoname>\n");
+	
+	if (Cmd_Argc() < 2) {
+		Com_Printf ("demo <demoname> [del]\n");
 		return;
+	}
+
+	forceNewConvert = qfalse;
+	del = qfalse;
+	if (Cmd_Argc() >= 3 && !Q_stricmp(Cmd_Argv(2), "del")) {
+		del = qtrue;
 	}
 
 	fs_game = Cvar_FindVar ("fs_game" );
@@ -281,12 +287,47 @@ void CL_PlayDemo_f( void ) {
 		return;
 	demoCommandSmoothingEnable(qfalse);
 	haveConvert = mme_demoConvert->integer && !Q_stricmp( fs_game->string, "mme" );
+	if ( haveConvert )
+		demoCommandSmoothingEnable(qtrue);
+
+	if (del) {
+		ext = strstr(Cmd_Argv(1), ".mme");
+		if (!ext) {
+			int i = 0;
+			while(demo_protocols[i]) {
+				ext = strstr(Cmd_Argv(1), va(".dm_%d", demo_protocols[i]));
+				if (ext && *ext) {
+					break;
+				}
+				i++;
+			}
+		}
+		if (ext && *ext) {
+			char temp[MAX_OSPATH] = "_";
+			const char *demos = (!Q_stricmp(ext, ".mme")) ? "mmedemos" : "demos";
+			while (FS_FileExists(va("%s/%s%s", demos, temp, ext))) {
+				if (strlen(temp) >= MAX_OSPATH-1)
+					break;
+				Q_strcat(temp, sizeof(temp), "_");
+			}
+			if (FS_CopyFileAbsolute(Cmd_Argv(1), va("%s/%s%s", demos, temp, ext))) {
+				Q_strncpyz( testNameActual, temp, sizeof( testNameActual ) );
+				if (Q_stricmp(ext, ".mme"))
+					forceNewConvert = qtrue;
+			} else {
+				Q_strncpyz( testNameActual, Cmd_Argv(1), sizeof( testNameActual ) );
+			}
+		}
+	} else {
+		Q_strncpyz( testNameActual, Cmd_Argv(1), sizeof( testNameActual ) );
+	}
+
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
 	CL_Disconnect( qtrue );
 
 	// open the demo file
-	Q_strncpyz( testName, Cmd_Argv(1), sizeof( testName ) );
+	testName = testNameActual;
 	// check for an extension .dm_?? (?? is protocol)
 	ext = testName + strlen(testName) - 6;
 	if ((strlen(name) > 6) && (ext[0] == '.') && ((ext[1] == 'd') || (ext[1] == 'D')) && ((ext[2] == 'm') || (ext[2] == 'M')) && (ext[3] == '_')) {
@@ -299,10 +340,9 @@ void CL_PlayDemo_f( void ) {
 	Cvar_Set( "mme_demoFileName", testName );
 
 	if ( haveConvert ) {
-		demoCommandSmoothingEnable(qtrue);
 		Com_sprintf (name, MAX_OSPATH, "mmedemos/%s.mme", testName );
 		if (FS_FileExists( name )) {
-			if (demoPlay( name ))
+			if (demoPlay( name, del ))
 				return;
 		}
 	}
@@ -310,6 +350,7 @@ void CL_PlayDemo_f( void ) {
 	Cvar_Set( "mme_demoExt", CL_WalkDemoExt( testName, name, &clc.demofile ) );
 	if (!clc.demofile) {
 		Com_Error( ERR_DROP, "couldn't open %s", name);
+		demoCommandSmoothingEnable(qfalse);
 		return;
 	} else if ( haveConvert ) {
 		char mmeName[MAX_OSPATH];
@@ -320,7 +361,7 @@ void CL_PlayDemo_f( void ) {
 		Com_sprintf( mmeName, sizeof( mmeName ), "mmedemos/%s", testName );
 		demoConvert( name, mmeName, mme_demoSmoothen->integer );
 		Q_strcat( mmeName , sizeof( mmeName ), ".mme" );
-		if (demoPlay( mmeName ))
+		if (demoPlay( mmeName, del ))
 			return;
 		Com_Printf("Can't seem to play demo %s\n", testName );
 		demoCommandSmoothingEnable(qfalse);
