@@ -441,10 +441,12 @@ void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, in
 		outSize = SaveJPG( mme_jpegQuality->integer, width, height, type, inBuf, outBuf + 8, outSize );
 	}
 	aviWrite32( outBuf + 4, outSize );
-	aviFile->index[ aviFile->iframes ] = outSize;
-	aviFile->aindex[ aviFile->iframes ] = -1;
-	aviFile->frames++;
-	aviFile->iframes++;
+	if (!aviFile->pipe) {
+		aviFile->index[ aviFile->iframes ] = outSize;
+		aviFile->aindex[ aviFile->iframes ] = -1;
+		aviFile->frames++;
+		aviFile->iframes++;
+	}
 
 	outSize = (outSize + 9) & ~1;	//make sure we align on 2 byte boundary, hurray M$
 	if (aviFile->format == 0 && type == mmeShotTypeBGR) {
@@ -503,10 +505,12 @@ void mmeAviSound( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, i
 		}
 			
 		aviWrite32( outBuf + 4, size );
-		aviFile->index[ aviFile->iframes ] = size;
-		aviFile->aindex[ aviFile->iframes ] = size;
-		aviFile->aframes++;
-		aviFile->iframes++;
+		if (!aviFile->pipe) {
+			aviFile->index[ aviFile->iframes ] = size;
+			aviFile->aindex[ aviFile->iframes ] = size;
+			aviFile->aframes++;
+			aviFile->iframes++;
+		}
 
 		size = (size + 9) & ~1;	//make sure we align on 2 byte boundary, hurray M$
 		if (aviFile->pipe) {
