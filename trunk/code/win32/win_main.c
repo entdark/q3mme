@@ -1290,8 +1290,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	MSH_BROADCASTARGS = RegisterWindowMessage("MSH_BROADCASTARGS");
 	if (isOtherInstanceRunning()) {
 		char *bcArgs = strstr(sys_cmdline, "+demo");
-		if (!bcArgs)
-			bcArgs = strstr(sys_cmdline, "ja:");
 		if (bcArgs) {
 			Sys_CopySharedData(bcArgs, strlen(bcArgs)+1);
 			PostMessage(HWND_BROADCAST, MSH_BROADCASTARGS, 0, 0);
