@@ -473,7 +473,7 @@ void demoConvert( const char *oldName, const char *newBaseName, qboolean smoothe
 					oldSnap = &convert->snapshots[newSnap->deltaNum & PACKET_MASK];
 					if (!oldSnap->valid) {
 						Com_Printf( "Delta snapshot without base.\n" );
-						goto conversionerror;
+//						goto conversionerror;
 					} else if (oldSnap->messageNum != newSnap->deltaNum) {
 						// The frame that the server did the delta from
 						// is too old, so we can't reconstruct it properly.
