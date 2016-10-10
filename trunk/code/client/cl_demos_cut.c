@@ -166,11 +166,12 @@ void demoCutWriteDeltaSnapshot(int firstServerCommand, fileHandle_t f, qboolean 
 	clSnapshot_t	*frame, *oldframe;
 	int				lastframe = 0;
 	int				snapFlags;
+	int				serverCommand;
 	MSG_Init(msg, msgData, sizeof(msgData));
 	MSG_Bitstream(msg);
 	MSG_WriteLong(msg, clcCut->reliableSequence);
 	// copy over any commands
-	for (int serverCommand = firstServerCommand; serverCommand <= clcCut->serverCommandSequence; serverCommand++) {
+	for (serverCommand = firstServerCommand; serverCommand <= clcCut->serverCommandSequence; serverCommand++) {
 		char *command = clcCut->serverCommands[serverCommand & (MAX_RELIABLE_COMMANDS - 1)];
 		MSG_WriteByte(msg, svc_serverCommand);
 		MSG_WriteLong(msg, serverCommand/* + serverCommandOffset*/);
@@ -408,6 +409,7 @@ qboolean demoCut(const char *oldName, int startTime, int endTime) {
 	int				oldSize;
 	char			newName[MAX_OSPATH];
 	int				buf;
+	int				firstServerCommand;
 	int				readGamestate = 0;
 	demoPlay_t		*play = demo.play.handle;
 	qboolean		ret = qfalse;
@@ -518,11 +520,11 @@ cutcontinue:
 				break;
 			}
 		}
-		int firstServerCommand = demo.cut.Clc.lastExecutedServerCommand;
+		firstServerCommand = demo.cut.Clc.lastExecutedServerCommand;
 		// process any new server commands
 		for (;demo.cut.Clc.lastExecutedServerCommand < demo.cut.Clc.serverCommandSequence; demo.cut.Clc.lastExecutedServerCommand++) {
-			char *command = demo.cut.Clc.serverCommands[demo.cut.Clc.lastExecutedServerCommand & (MAX_RELIABLE_COMMANDS - 1)];
 			const char *cmd;
+			char *command = demo.cut.Clc.serverCommands[demo.cut.Clc.lastExecutedServerCommand & (MAX_RELIABLE_COMMANDS - 1)];
 			Cmd_TokenizeString(command);
 			cmd = Cmd_Argv(0);
 			if (cmd[0]) {

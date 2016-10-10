@@ -1183,12 +1183,14 @@ static extensionsTable_t et[] = {
 };
 
 char *GetStringRegKey(HKEY hkey, const char *valueName) {
+	static CHAR szBuffer[512];
+	DWORD dwBufferSize;
+	LSTATUS nError;
 	if (!hkey) {
 		return NULL;
 	}
-    static CHAR szBuffer[512];
-    DWORD dwBufferSize = sizeof(szBuffer);
-    LSTATUS nError = RegQueryValueEx(hkey, valueName, 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+	dwBufferSize = sizeof(szBuffer);
+	nError = RegQueryValueEx(hkey, valueName, 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
     if (ERROR_SUCCESS == nError) {
         return szBuffer;
     }
@@ -1196,14 +1198,15 @@ char *GetStringRegKey(HKEY hkey, const char *valueName) {
 }
 
 qboolean AddRegistry(const HKEY key, const char *subkey, const char *value, const char *valueName) {
-	Com_DPrintf(S_COLOR_YELLOW"AddRegistry(%u,%s,%s,%s)\n", key, subkey, value, valueName ? valueName : "NULL");
 	HKEY hkey;
+	const char *setValue;
 	LSTATUS nError = RegOpenKeyEx(key, subkey, 0, KEY_READ, &hkey);
+	Com_DPrintf(S_COLOR_YELLOW"AddRegistry(%u,%s,%s,%s)\n", key, subkey, value, valueName ? valueName : "NULL");
 	if (nError != ERROR_SUCCESS && nError != ERROR_FILE_NOT_FOUND) {
 		Com_DPrintf(S_COLOR_RED"RegOpenKeyEx(%u,%s,%s) error: %d\n", key, subkey, value, nError);
 		return qfalse;
 	}
-	const char *setValue = GetStringRegKey(hkey, valueName);
+	setValue = GetStringRegKey(hkey, valueName);
 	RegCloseKey(hkey);
 	//ignore the same value
 	if (!setValue || Q_stricmp(setValue, value)) {
@@ -1220,9 +1223,10 @@ qboolean AddRegistry(const HKEY key, const char *subkey, const char *value, cons
 }
 
 void RegisterFileTypes(char *program) {
+	int i;
 	char *action="q3mme";
 	qboolean refresh = qfalse; //once true - forever true
-	for (int i = 0; i < ARRAY_LEN(et); i++) {
+	for (i = 0; i < ARRAY_LEN(et); i++) {
 		char app[MAX_OSPATH+256];
 		char *extension;
 		char *desc;
@@ -1272,6 +1276,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	char		cwd[MAX_OSPATH];
 	int			startTime, endTime;
 	int			hideTime;
+	CHAR		path[512];
 
     // should never get a previous instance in Win32
     if ( hPrevInstance ) {
@@ -1315,7 +1320,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	Sys_InitStreamThread();
 	
-	CHAR path[512];
 	if (GetModuleFileName(NULL, path, sizeof(path))) {
 		RegisterFileTypes(path);
 	}

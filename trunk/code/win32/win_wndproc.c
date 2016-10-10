@@ -270,8 +270,9 @@ static dropLogic_t dropList[] = {
 };
 
 static qboolean isSupported(const char *filename, dropLogic_t *out) {
+	size_t i;
 	size_t len = ARRAY_LEN(dropList);
-	for (size_t i = 0; i < len; i++) {
+	for (i = 0; i < len; i++) {
 		if (dropList[i].isSupported(filename)) {
 			*out = dropList[i];
 			return qtrue;
@@ -530,15 +531,16 @@ LONG WINAPI MainWndProc (
 		Sys_QueEvent( g_wv.sysMsgTime, SE_CHAR, wParam, 0, 0, NULL );
 		break;
 	case WM_DROPFILES:
-		{HDROP hDrop = (HDROP)wParam;
+		{DWORD i;
+		HDROP hDrop = (HDROP)wParam;
 		TCHAR szFileName[MAX_PATH];
 		DWORD dwCount = DragQueryFile(hDrop, 0xFFFFFFFF, szFileName, MAX_PATH);
-		for (DWORD i = 0; i < dwCount; i++) {
-			DragQueryFile(hDrop, 0, szFileName, MAX_PATH);
+		for (i = 0; i < dwCount; i++) {
 			dropLogic_t drop;
+			char cmd[MAX_PATH + 16] = { 0 };
+			DragQueryFile(hDrop, 0, szFileName, MAX_PATH);
 			if (!isSupported(szFileName, &drop))
 				continue;
-			char cmd[MAX_PATH+16] = {0};
 			Q_strcat(cmd, sizeof(cmd), drop.cmd);
 			Q_strcat(cmd, sizeof(cmd), " \"");
 			Q_strcat(cmd, sizeof(cmd), szFileName);

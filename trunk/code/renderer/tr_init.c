@@ -1033,9 +1033,10 @@ void R_Init( void ) {
 	{
 		// create 2 pixel buffer objects, you need to delete them when program exits.
 		// glBufferDataARB with NULL pointer reserves only memory space.
+		int idx;
 		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
 		qglGenBuffersARB(4, pboIds);
-		for ( int idx = 0; idx < 4; idx++ ) {
+		for (idx = 0; idx < 4; idx++) {
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[idx]);
 			qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
 		}
