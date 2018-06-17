@@ -772,7 +772,7 @@ void	RB_SetGL2D (void) {
 	qglDisable( GL_CLIP_PLANE0 );
 
 	// set time for 2D shaders
-	tess.shaderTime = ri.Milliseconds();
+//	tess.shaderTime = ri.Milliseconds();
 }
 
 
