@@ -437,7 +437,8 @@ static qboolean ParseWaveForm( char **text, waveForm_t *wave, qboolean skipFunc 
 	token = COM_ParseExt( text, qfalse );
 	if ( token[0] == 0 )
 		return qfalse;
-	wave->start = (FUNCTABLE_SIZE * atof( token ));
+	wave->phase = atof(token);
+	wave->start = (FUNCTABLE_SIZE * wave->phase);
 	wave->start %= FUNCTABLE_SIZE;
 	if (wave->start < 0)
 		wave->start += FUNCTABLE_SIZE;
@@ -447,6 +448,7 @@ static qboolean ParseWaveForm( char **text, waveForm_t *wave, qboolean skipFunc 
 		return qfalse;
 
 	freq = atof( token );
+	wave->frequency = freq / 1000.0f;
 	if (freq > 0 && freq < 1000 )
 		wave->interval = 1000 / freq;
 	else {
@@ -529,14 +531,19 @@ static void ParseTexMod( char *_text, shaderStage_t *stage )
 		}
 		speed = atof( token );
 		if (speed == 0 || speed > 1000 || speed < -1000) {
-			tmi->data.scroll.interval[0] = 1;
-			tmi->data.scroll.rescale[0] = 0;
+			scroll->interval[0] = 1;
+			scroll->speed[0] = 1.0f;
+			scroll->rescale[0] = 0.0f;
 		} else if (speed >0 ){
-			tmi->data.scroll.interval[0] = 1000 / speed;
-			tmi->data.scroll.rescale[0] = 1.0 / tmi->data.scroll.interval[0];
+			scroll->interval[0] = 1000 / speed;
+			scroll->speed[0] = 1000.0f / speed;
+//			scroll->rescale[0] = 1.0 / scroll->interval[0];
+			scroll->rescale[0] = 1.0 / scroll->speed[0];
 		} else {
-			tmi->data.scroll.interval[0] = 1000 / -speed;
-			tmi->data.scroll.rescale[0] = -1.0 / tmi->data.scroll.interval[0];
+			scroll->interval[0] = 1000 / -speed;
+			scroll->speed[0] = 1000.0f / -speed;
+//			scroll->rescale[0] = -1.0 / scroll->interval[0];
+			scroll->rescale[0] = -1.0 / scroll->speed[0];
 		}
 	
 
@@ -548,14 +555,19 @@ static void ParseTexMod( char *_text, shaderStage_t *stage )
 		}
 		speed = atof( token );
 		if (speed == 0 || speed > 1000 || speed < -1000) {
-			tmi->data.scroll.interval[1] = 1;
-			tmi->data.scroll.rescale[1] = 0;
+			scroll->interval[1] = 1;
+			scroll->speed[1] = 1.0f;
+			scroll->rescale[1] = 0.0f;
 		} else if (speed >0 ){
-			tmi->data.scroll.interval[1] = 1000 / speed;
-			tmi->data.scroll.rescale[1] = 1.0 / tmi->data.scroll.interval[1];
+			scroll->interval[1] = 1000 / speed;
+			scroll->speed[1] = 1000.0f / speed;
+//			scroll->rescale[1] = 1.0 / scroll->interval[1];
+			scroll->rescale[1] = 1.0 / scroll->speed[1];
 		} else {
-			tmi->data.scroll.interval[1] = 1000 / -speed;
-			tmi->data.scroll.rescale[1] = -1.0 / tmi->data.scroll.interval[1];
+			scroll->interval[1] = 1000 / -speed;
+			scroll->speed[1] = 1000.0f / -speed;
+//			scroll->rescale[1] = -1.0 / scroll->interval[1];
+			scroll->rescale[1] = -1.0 / scroll->speed[1];
 		}
 		tmi->type = TMOD_SCROLL;
 	}
@@ -643,6 +655,7 @@ static void ParseTexMod( char *_text, shaderStage_t *stage )
 			return;
 		}
 		speed = atof( token );
+		rotate->speed = speed * 0.001f / 360.0f;
 		if ( speed == 0) {
 			rotate->interval = 0;
 		} else if ( speed < 0) {
@@ -1300,6 +1313,7 @@ static void ParseDeform( char **text ) {
 			return;
 		}
 		freq = atof( token );
+		ds->normals.frequency = freq * 0.001f;
 		if ( freq > 0 )
             ds->normals.interval = 1000 / freq;
 

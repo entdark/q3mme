@@ -26,11 +26,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <altivec.h>
 #endif
 
-static inline float EvalWaveIndex( const waveForm_t *wf, int offset ) {
-	float timeFraction = (backEnd.refdef ? backEnd.refdef->timeFraction : 0.0f);
-	float index = (float)(tess.shaderTime % wf->interval) + timeFraction;
+static inline unsigned int EvalWaveIndex( const waveForm_t *wf, int offset ) {
+	unsigned int index;
+	index = tess.shaderTime % wf->interval;
 	index = (index * FUNCTABLE_SIZE) / wf->interval;
-	index = ((float)wf->start + index + (float)offset);
+	index = (wf->start + index + offset);
 	return index;
 }
 /*
@@ -38,33 +38,47 @@ static inline float EvalWaveIndex( const waveForm_t *wf, int offset ) {
 **
 ** Evaluates a given waveForm_t, referencing backEnd.refdef.time directly
 */
-static float EvalWaveFormAt( const waveForm_t *wf, float index  ) {
-	index = fmod(index / FUNCTABLE_SIZE, 1.0);
-	if (wf->table == tr.sinTable) {
-		return wf->base + wf->amplitude * sin(DEG2RAD(index * 360.0)); 
-	} else if (wf->table == tr.triangleTable) {
-		if (index < 0.25f) {
-			index = index / 0.25f;
-		} else if (index < 0.5f) {
-			index = 1.0 - ((index - 0.25f) / 0.25f);
-		} else if (index < 0.75f) {
-			index = -((index - 0.5f) / 0.25f);
-		} else if (index <= 1.0f) {
-			index = -(1.0f - ((index - 0.75f) / 0.25f));
-		}
-		return wf->base + wf->amplitude * index; 
-	} else if (wf->table == tr.sawToothTable) {
-		return wf->base + wf->amplitude * index; 
-	} else if (wf->table == tr.inverseSawToothTable) {
-		return wf->base + wf->amplitude * (1.0f - index); 
-	} else { // square/noise or some unknown table o_o
-		return wf->base + wf->amplitude * wf->table[ (int)(index * FUNCTABLE_SIZE) & FUNCTABLE_MASK ]; 
-	}
+static float EvalWaveFormAt(const waveForm_t *wf, unsigned int index) {
+	return wf->base + wf->amplitude * wf->table[index & FUNCTABLE_MASK];
 }
 
 static float EvalWaveForm( const waveForm_t *wf ) {
-	float index = EvalWaveIndex( wf, 0 );
+	unsigned int index = EvalWaveIndex( wf, 0 );
 	return EvalWaveFormAt( wf, index );
+}
+
+static inline double EvalWaveIndexNew(const waveForm_t *wf, const float offset) {
+	double index = wf->phase + offset + ((double)tess.shaderTime + tess.shaderTimeFraction) * wf->frequency;
+	return fmod(index, 1.0);
+}
+
+static float EvalWaveFormAtNew(const waveForm_t *wf, double index) {
+	if (wf->table == tr.sinTable) {
+		return wf->base + sin(DEG2RAD(index * 360.0)) * wf->amplitude;
+	} else if (wf->table == tr.triangleTable) {
+		if (index < 0.25) {
+			index = index / 0.25;
+		} else if (index < 0.5) {
+			index = 1.0 - ((index - 0.25) / 0.25);
+		} else if (index < 0.75) {
+			index = -((index - 0.5) / 0.25);
+		} else if (index <= 1.0) {
+			index = -(1.0 - ((index - 0.75) / 0.25));
+		}
+		return wf->base + index * wf->amplitude;
+	} else if (wf->table == tr.sawToothTable) {
+		return wf->base + index * wf->amplitude;
+	} else if (wf->table == tr.inverseSawToothTable) {
+		return wf->base + (1.0 - index) * wf->amplitude;
+	} else {
+		return wf->base + wf->table[(int)(index * FUNCTABLE_SIZE) & FUNCTABLE_MASK] * wf->amplitude;
+	}
+	return 0.0f;
+}
+
+static float EvalWaveFormNew(const waveForm_t *wf) {
+	double index = EvalWaveIndexNew(wf, 0.0f);
+	return EvalWaveFormAtNew(wf, index);
 }
 
 // not even a table
@@ -77,7 +91,7 @@ float NewCosTable (double index) {
 
 
 static float EvalWaveFormClamped( const waveForm_t *wf ) {
-	float glow  = EvalWaveForm( wf );
+	float glow  = EvalWaveFormNew( wf );
 	if ( glow < 0 )
 		return 0;
 	else if ( glow > 1 )
@@ -90,7 +104,7 @@ static float EvalWaveFormClamped( const waveForm_t *wf ) {
 */
 void RB_CalcStretchTexCoords( const waveForm_t *wf,const float *srcTexCoords, float *dstTexCoords ) {
 	texModTransform_t tf;
-	float p = 1.0f / EvalWaveForm( wf );
+	float p = 1.0f / EvalWaveFormNew( wf );
 
 	tf.matrix[0][0] = p;
 	tf.matrix[1][0] = 0;
@@ -129,14 +143,17 @@ void RB_CalcDeformVertexes( const deformStage_t *ds ) {
 	normal = tess.normal;
 
 	if ( ds->vertexes.wave.interval == 0 ) {
-		scale = EvalWaveFormAt( &ds->vertexes.wave, ds->vertexes.wave.start );
+//		scale = EvalWaveFormAt( &ds->vertexes.wave, ds->vertexes.wave.start );
+		scale = EvalWaveFormAtNew( &ds->vertexes.wave, ds->vertexes.wave.phase );
 		for ( i = 0; i < tess.numVertexes; i++, inXyz++, outXyz++, normal++ ) {
 			VectorMA( inXyz[0], scale, normal[0], outXyz[0] );
 		}
 	} else {
 		for ( i = 0; i < tess.numVertexes; i++, inXyz++, outXyz++, normal++ ) {
-			int off = Q_ftol(( inXyz[0][0] + inXyz[0][1] + inXyz[0][2] ) * ds->vertexes.spread * FUNCTABLE_SIZE);
-			scale = EvalWaveForm( &ds->vertexes.wave );
+//			int off = Q_ftol(( inXyz[0][0] + inXyz[0][1] + inXyz[0][2] ) * ds->vertexes.spread * FUNCTABLE_SIZE);
+//			scale = EvalWaveFormAt( &ds->vertexes.wave, EvalWaveIndex( &ds->vertexes.wave, off ));
+			float off = (inXyz[0][0] + inXyz[0][1] + inXyz[0][2]) * ds->vertexes.spread;
+			scale = EvalWaveFormAtNew( &ds->vertexes.wave, EvalWaveIndexNew( &ds->vertexes.wave, off ) );
 			VectorMA( inXyz[0], scale, normal[0], outXyz[0] );
 		}
 	}
@@ -151,28 +168,29 @@ Wiggle the normals for wavy environment mapping
 */
 void RB_CalcDeformNormals( const deformStage_t *ds ) {
 	int i;
-	double scale, t;
+	float scale;
+	double t;
 	const vecSimd_t *xyz, *inNormal;
 	vecSimd_t *outNormal;
-	double timeFraction = (backEnd.refdef ? backEnd.refdef->timeFraction : 0.0);
 
 	xyz = tess.xyz;
 	inNormal = tess.normal;
 	outNormal = tess.normal;
 //	tess.normal = tess.normal;
 
-	t = (double)tess.shaderTime / (double)ds->normals.interval + timeFraction / (double)ds->normals.interval;
+//	t = tess.shaderTime / (float)ds->normals.interval;
+	t = ((double)tess.shaderTime + tess.shaderTimeFraction) * ds->normals.frequency;
 
 	for ( i = 0; i < tess.numVertexes; i++, xyz++, inNormal++, outNormal++ ) {
-		scale = 0.98;
+		scale = 0.98f;
 		scale = R_NoiseGet4f( xyz[0][0] * scale, xyz[0][1] * scale, xyz[0][2] * scale, t );
 		outNormal[0][0] = inNormal[0][0] + ds->normals.amplitude * scale;
 
-		scale = 0.98;
+		scale = 0.98f;
 		scale = R_NoiseGet4f( 100 + xyz[0][0] * scale, xyz[0][1] * scale, xyz[0][2] * scale, t );
 		outNormal[0][1] = inNormal[0][1] + ds->normals.amplitude * scale;
 
-		scale = 0.98;
+		scale = 0.98f;
 		scale = R_NoiseGet4f( 200 + xyz[0][0] * scale, xyz[0][1] * scale, xyz[0][2] * scale, t );
 		outNormal[0][2] = inNormal[0][2] + ds->normals.amplitude * scale;
 		VectorNormalizeFast( outNormal[0] );
@@ -191,22 +209,26 @@ void RB_CalcBulgeVertexes( const deformStage_t *ds ) {
 	const vecSimd_t *inXyz, *normal;
 	const vec2_t *texCoords;
 	vecSimd_t *outXyz;
-	double timeFraction = (backEnd.refdef ? backEnd.refdef->timeFraction : 0.0);
-	//CANATODO, fix timing here too
-	double now = (double)tess.shaderTime * ds->bulge.speed * 0.001 + timeFraction * ds->bulge.speed * 0.001;
+	double		now;
 
 	inXyz = tess.xyz;
 	outXyz = tess.xyz;
 	normal = tess.normal;
 	texCoords = tess.texCoords;
 
+	//CANATODO, fix timing here too
+//	now = tess.shaderTime * ds->bulge.speed * 0.001f;
+	now = ((double)tess.shaderTime + tess.shaderTimeFraction) * ds->bulge.speed * 0.001;
+
 	for ( i = 0; i < tess.numVertexes; i++, inXyz++, outXyz++, texCoords++, normal++ ) {
-		double off;
-		float scale;
+//		int		off;
+//		float scale;
 //		off = (float)( FUNCTABLE_SIZE / (M_PI*2) ) * ( texCoords[0][0] * ds->bulge.width + now );
 //		scale = tr.sinTable[ off & FUNCTABLE_MASK ] * ds->bulge.height;
+		double off, scale;
 		off = ( texCoords[0][0] * ds->bulge.width + now ) / (M_PI*2);
 		scale = NewSinTable(off) * ds->bulge.height;
+
 		VectorMA( inXyz[0], scale, normal[0], outXyz[0] );
 	}
 }
@@ -226,7 +248,7 @@ void RB_CalcMoveVertexes( const deformStage_t *ds ) {
 	float		scale;
 	vec3_t		offset;
 
-	scale = EvalWaveForm( &ds->move.wave );
+	scale = EvalWaveFormNew( &ds->move.wave );
 
 	VectorScale( ds->move.vector, scale, offset );
 
@@ -574,11 +596,11 @@ void RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors ) {
 	byte	color[4];
 
 	if ( wf->table != tr.noiseTable) {
-		glow = EvalWaveForm( wf ) * tr.identityLight;
+		glow = EvalWaveFormNew( wf ) * tr.identityLight;
 	} else {
-		double timeFraction = (backEnd.refdef ? backEnd.refdef->timeFraction : 0.0);
 		//CANATODO, nothing really shader doesn't use a repeating wave form :(
-		double noiseTime = (double)tess.shaderTime * ( 1.0 / wf->interval ) + timeFraction * ( 1.0 / wf->interval );
+//		float noiseTime = tess.shaderTime * (1.0f / wf->interval);
+		double noiseTime = (wf->phase + ((double)tess.shaderTime + tess.shaderTimeFraction)) * wf->frequency;
 		glow = wf->base + R_NoiseGet4f( 0, 0, 0, noiseTime ) * wf->amplitude;
 	}
 
@@ -799,13 +821,17 @@ void RB_CalcEnvironmentTexCoords( float *st ) {
 */
 void RB_CalcTurbulentTexCoords( const waveForm_t *wf, const float *srcTexCoords, float *dstTexCoords ) {
 	int i;
-	float now = EvalWaveIndex( wf, 0 );
-	const float	*xyz = tess.xyz[0];
+	const float	*xyz;
+//	int now;
+//	now = EvalWaveIndex( wf, 0 );
+	double now = EvalWaveIndexNew( wf, 0.0f );
+
+	xyz = tess.xyz[0];
 	for ( i = 0; i < tess.numVertexes; i++, srcTexCoords += 2, dstTexCoords += 2, xyz += VEC_SIMD ) {
 //		dstTexCoords[0] = srcTexCoords[0] + tr.sinTable[ ( ( int ) ( ( ( xyz[0] + xyz[2] )* 1.0/128 * 0.125) * FUNCTABLE_SIZE ) + now ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
 //		dstTexCoords[1] = srcTexCoords[1] + tr.sinTable[ ( ( int ) ( ( xyz[1] * 1.0/128 * 0.125 ) * FUNCTABLE_SIZE ) + now) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
-		dstTexCoords[0] = srcTexCoords[0] + NewSinTable( ( xyz[0] + xyz[2] )* 1.0/128 * 0.125 + now / FUNCTABLE_SIZE ) * wf->amplitude;
-		dstTexCoords[1] = srcTexCoords[1] + NewSinTable( xyz[1] * 1.0/128 * 0.125 + now / FUNCTABLE_SIZE) * wf->amplitude;
+		dstTexCoords[0] = srcTexCoords[0] + NewSinTable( ( ( xyz[0] + xyz[2] )* 1.0/128 * 0.125) + now ) * wf->amplitude;
+		dstTexCoords[1] = srcTexCoords[1] + NewSinTable(xyz[1] * 1.0 / 128 * 0.125 + now) * wf->amplitude;
 	}
 }
 
@@ -826,10 +852,14 @@ void RB_CalcScaleTexCoords( const float scale[2], const float *srcTexCoords, flo
 void RB_CalcScrollTexCoords( const texModScroll_t *scroll,  const float *srcTexCoords, float *dstTexCoords ) {
 	int i;
 	float adjustedScrollS, adjustedScrollT;
-	float timeFraction = backEnd.refdef ? backEnd.refdef->timeFraction : 0.0f;
 
-	adjustedScrollS = (tess.shaderTime % scroll->interval[0]) * scroll->rescale[0] + timeFraction * scroll->rescale[0];
-	adjustedScrollT = (tess.shaderTime % scroll->interval[1]) * scroll->rescale[1] + timeFraction * scroll->rescale[1];
+//	adjustedScrollS = (tess.shaderTime % scroll->interval[0]) * scroll->rescale[0];
+//	adjustedScrollT = (tess.shaderTime % scroll->interval[1]) * scroll->rescale[1];
+	adjustedScrollS = fmod((double)tess.shaderTime + tess.shaderTimeFraction, scroll->speed[0]) * scroll->rescale[0];
+	adjustedScrollT = fmod((double)tess.shaderTime + tess.shaderTimeFraction, scroll->speed[1]) * scroll->rescale[1];
+
+//	adjustedScrollS -= floor(adjustedScrollS);
+//	adjustedScrollT -= floor(adjustedScrollT);
 
 	for ( i = 0; i < tess.numVertexes; i++, srcTexCoords += 2, dstTexCoords += 2 ) {
 		dstTexCoords[0] = srcTexCoords[0] + adjustedScrollS;
@@ -857,13 +887,14 @@ void RB_CalcTransformTexCoords( const texModTransform_t *tf, const float *srcTex
 ** RB_CalcRotateTexCoords
 */
 void RB_CalcRotateTexCoords( const texModRotate_t *rotate, const float *srcTexCoords, float *dstTexCoords ) {
-	float index, sinValue, cosValue;
+	float sinValue, cosValue;
 	texModTransform_t tf;
-	float timeFraction = backEnd.refdef ? backEnd.refdef->timeFraction : 0.0f;
-
-	index = (((float)(tess.shaderTime % rotate->interval) + timeFraction) * (float)rotate->scale) / (float)rotate->interval;
-	index /= FUNCTABLE_SIZE;
-
+//	int index;
+//	index = ((tess.shaderTime % rotate->interval) * rotate->scale) / rotate->interval;
+//	sinValue = tr.sinTable[ index & FUNCTABLE_MASK ];
+//	cosValue = tr.sinTable[ ( index + (FUNCTABLE_SIZE / 4) ) & FUNCTABLE_MASK ];
+	double index;
+	index = ((double)tess.shaderTime + tess.shaderTimeFraction) * -rotate->speed;
 	sinValue = NewSinTable(index);
 	cosValue = NewCosTable(index);
 

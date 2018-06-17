@@ -85,7 +85,7 @@ void RB_SurfaceAnim( md4Surface_t *surface ) {
 	vec2_t			*texCoords;
 
 
-	RB_CheckShaderTime( backEnd.refdef->time - backEnd.currentModel->shaderTime );
+	RB_CheckShaderTime( backEnd.refdef->time - backEnd.currentModel->shaderTime, backEnd.refdef->timeFraction );
 	if (  backEnd.currentModel->oldframe == backEnd.currentModel->frame ) {
 		backlerp = 0;
 		frontlerp = 1;

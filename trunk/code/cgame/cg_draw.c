@@ -134,10 +134,10 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandl
 	refdef.height = h;
 
 	refdef.time = cg.time;
-	trap_MME_TimeFraction(cg.timeFraction);
 
 	trap_R_ClearScene();
 	trap_R_AddRefEntityToScene( &ent );
+	trap_MME_TimeFraction(cg.timeFraction);
 	trap_R_RenderScene( &refdef );
 }
 

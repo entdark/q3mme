@@ -375,7 +375,7 @@ void RB_RenderFlare( flare_t *f ) {
 
 	RB_BeginSurface( tr.flareShader, f->fogNum );
 
-	RB_CheckShaderTime( backEnd.refdef->time );
+	RB_CheckShaderTime( backEnd.refdef->time, backEnd.refdef->timeFraction);
 
 	// FIXME: use quadstamp?
 	xyz[0][0] = f->windowX - size;

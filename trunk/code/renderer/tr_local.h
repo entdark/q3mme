@@ -242,8 +242,7 @@ typedef enum {
 
 typedef struct {
 	const float *table;
-	float base;
-	float amplitude;
+	float base, amplitude, phase, frequency;
 	int	start;
 	int	interval;
 } waveForm_t;
@@ -283,13 +282,14 @@ typedef union {
 	struct {
 		deform_t	deformation;
 		int			interval;
-		float		amplitude;
+		float		amplitude, frequency;
 	} normals;
 } deformStage_t;
 
 typedef struct {
 	int		interval[2];
 	float	rescale[2];
+	float	speed[2];
 } texModScroll_t;
 
 typedef struct {
@@ -299,6 +299,7 @@ typedef struct {
 
 typedef struct {
 	int			interval, scale;
+	float		speed;
 } texModRotate_t;
 
 typedef struct {
@@ -1470,6 +1471,7 @@ typedef struct shaderCommands_s
 	int			numDlightIndexes;
 	shader_t	*shader;
     int			shaderTime;
+	float		shaderTimeFraction;
 	int			fogNum;
 	unsigned int dlightBits;
 	unsigned int needMask;
@@ -1487,12 +1489,13 @@ static ID_INLINE qboolean RB_CheckOverflow( int verts, int indexes ) {
 	RB_EndSurface();
 	return qtrue;
 }
-static ID_INLINE void RB_CheckShaderTime( int time ) {
+static ID_INLINE void RB_CheckShaderTime( int time, float timeFraction ) {
 	if ( tess.needMask & SHADER_NEED_TIME ) {
-		if ( tess.shaderTime == time )
+		if ( tess.shaderTime == time && tess.shaderTimeFraction == timeFraction )
 			return;
 		RB_EndSurface();
 		tess.shaderTime = time;
+		tess.shaderTimeFraction = timeFraction;
 	} 
 }
 

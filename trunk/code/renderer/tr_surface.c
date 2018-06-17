@@ -150,7 +150,7 @@ static void RB_SurfaceSprite( const srfSprite_t *sprite ) {
 	vec3_t		left, up;
 	float		radius;
 
-	RB_CheckShaderTime( backEnd.refdef->time - sprite->shaderTime );
+	RB_CheckShaderTime( backEnd.refdef->time - sprite->shaderTime, backEnd.refdef->timeFraction);
 	// calculate the xyz locations for the four corners
 	radius = sprite->radius;
 	if ( sprite->rotation == 0 ) {
@@ -196,7 +196,7 @@ void RB_SurfacePolychain( const srfPoly_t *p ) {
 	const color4ub_t *color;
 
 
-	RB_CheckShaderTime( backEnd.refdef->time );
+	RB_CheckShaderTime( backEnd.refdef->time, backEnd.refdef->timeFraction);
 	RB_CheckOverflow( p->numVerts, 3*(p->numVerts - 2) );
 
 	// fan triangles into the tess array
@@ -231,7 +231,7 @@ RB_SurfaceTriangles
 void RB_SurfaceTriangles( const srfTriangles_t *surf ) {
 	int i;
 
-	RB_CheckShaderTime( backEnd.refdef->time );
+	RB_CheckShaderTime( backEnd.refdef->time, backEnd.refdef->timeFraction);
 	RB_CheckOverflow( surf->numVertexes, surf->numIndexes );
 	tess.dlightBits |= surf->dlightBits[ backEnd.smpFrame ];
 	for ( i = 0; i < surf->numVertexes ; i++ ) {
@@ -261,7 +261,7 @@ void RB_SurfaceBeam( const srfBeam_t *beam )
 	vec3_t	direction, line, up;
 	float	angle = 0;
 
-	RB_CheckShaderTime( backEnd.refdef->time - beam->shaderTime );
+	RB_CheckShaderTime( backEnd.refdef->time - beam->shaderTime, backEnd.refdef->timeFraction);
 	VectorSubtract( beam->end, beam->start, direction );
 	length = VectorNormalize( direction );
 	if (!length )
@@ -344,7 +344,7 @@ void RB_SurfaceRings( const srfRings_t *rings ) {
 	float	dist, length, stepSize;
 	vec3_t	dir, up, right;
 
-	RB_CheckShaderTime( backEnd.refdef->time - rings ->shaderTime );
+	RB_CheckShaderTime( backEnd.refdef->time - rings ->shaderTime, backEnd.refdef->timeFraction);
 	VectorSubtract( rings ->end, rings ->start, dir );
 	length = VectorNormalize( dir );
 	if (!length )
@@ -390,7 +390,7 @@ void RB_SurfaceDecal( const srfDecal_t *decal ) {
 	const vec2_t	*st;
 	color4ub_t color;
 
-	RB_CheckShaderTime( backEnd.refdef->time );
+	RB_CheckShaderTime( backEnd.refdef->time, backEnd.refdef->timeFraction);
 	Byte4Copy( decal->color, color );
 	if (!(decal->flags & DECAL_TEMP)) {
 		float leftTime = (decal->endTime - backEnd.refdef->time) - backEnd.refdef->timeFraction; 
@@ -622,7 +622,7 @@ void RB_SurfaceMesh( md3Surface_t *surface ) {
 	int				numVerts;
 	int				numIndexes;
 
-	RB_CheckShaderTime( backEnd.refdef->time - backEnd.currentModel->shaderTime );
+	RB_CheckShaderTime( backEnd.refdef->time - backEnd.currentModel->shaderTime, backEnd.refdef->timeFraction);
 	Byte4Copy( backEnd.currentModel->shaderRGBA, backEnd.entityColor );
 
 	if (  backEnd.currentModel->oldframe == backEnd.currentModel->frame ) {
@@ -665,7 +665,7 @@ RB_SurfaceFace
 void RB_SurfaceFace( const srfFace_t *surf ) {
 	int i;
 
-	RB_CheckShaderTime( backEnd.refdef->time );
+	RB_CheckShaderTime( backEnd.refdef->time, backEnd.refdef->timeFraction);
 	RB_CheckOverflow( surf->numVertexes, surf->numIndexes );
 
 	tess.dlightBits |= surf->dlightBits[ backEnd.smpFrame ];
