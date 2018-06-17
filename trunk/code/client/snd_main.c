@@ -342,6 +342,7 @@ void S_ClearSoundBuffer( void ) {
 	s_playScale = 1.0f;
 	// stop looping sounds
 	Com_Memset( s_entitySounds, 0, sizeof( s_entitySounds ));
+	VectorClear(s_listenOrigin);
 	// Signal the real sound mixer to stop any sounds
 	S_DMAClearBuffer();
 	S_MMEClearBuffer();
