@@ -77,6 +77,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef BUILD_FREETYPE
 #include <ft2build.h>
+#include <freetype/fttypes.h>
 #include <freetype/fterrors.h>
 #include <freetype/ftsystem.h>
 #include <freetype/ftimage.h>
@@ -88,7 +89,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define _TRUNC(x)  ((x) >> 6)
 
 FT_Library ftLibrary = NULL; 
-#pragma comment (lib, "freetype2410.lib")
+#pragma comment (lib, "freetype.lib")
 #endif
 
 #define MAX_FONTS 6
