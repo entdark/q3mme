@@ -64,6 +64,8 @@ local.properties
 *.vspscc
 .builds
 *.dotCover
+.vs/
+*.VC.db
 
 winquake.res
 
