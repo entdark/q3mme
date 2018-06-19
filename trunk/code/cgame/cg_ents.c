@@ -911,9 +911,6 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		nextState = &cent->nextState;
 	}
 
-	if (!currentState->apos.trTime) {
-		currentState->apos.trTime = cg.time - cg.time % 360;
-	}
 	// if this player does not want to see extrapolated players
 	if ( !cg_smoothClients.integer ) {
 		// make sure the clients use TR_INTERPOLATE
