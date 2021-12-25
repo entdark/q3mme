@@ -71,7 +71,7 @@ static void CG_DemosUpdatePlayer( void ) {
 			if (demo.deltaRight > 0) {
                 demo.play.time += interval - rem;
 			} else {
-                demo.play.time -= interval + rem;
+                demo.play.time -= !demo.play.paused ? (interval + rem) : (rem ? rem : interval);
 			}
 			demo.play.fraction = 0;
 		}
