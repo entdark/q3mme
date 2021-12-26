@@ -164,6 +164,8 @@ vmCvar_t	cg_zoomFov;
 vmCvar_t	cg_thirdPerson;
 vmCvar_t	cg_thirdPersonRange;
 vmCvar_t	cg_thirdPersonAngle;
+vmCvar_t	cg_thirdPersonHorzOffset;
+vmCvar_t	cg_thirdPersonVertOffset;
 vmCvar_t	cg_stereoSeparation;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
@@ -330,6 +332,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", NULL, CVAR_CHEAT },
 	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "60", NULL, CVAR_CHEAT },
 	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", NULL, CVAR_CHEAT },
+	{ &cg_thirdPersonHorzOffset, "cg_thirdPersonHorzOffset", "0", NULL, CVAR_CHEAT },
+	{ &cg_thirdPersonVertOffset, "cg_thirdPersonVertOffset", "0", NULL, CVAR_CHEAT },
 	{ &cg_thirdPerson, "cg_thirdPerson", "0", NULL, 0 },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", NULL, CVAR_ARCHIVE  },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", NULL, CVAR_ARCHIVE  },
