@@ -14,7 +14,7 @@ Additions:
 - added a possibility to align speedometer to the left, right, or center (cg_drawSpeedometerAlignment)
 
 Changes:
-- holding mouse2 is chase view now lets roll the view
+- holding mouse2 in chase view now lets roll the view
 - set new default value for com_affinity "0": pipe capture is considered default and it works faster with all cores
 - set new default value for mme_cpuSSE2 "1"
 - set default value for mme_pipeCommand "auto": automatically chooses the command by depending on cubemap and/or stereo or their missing
