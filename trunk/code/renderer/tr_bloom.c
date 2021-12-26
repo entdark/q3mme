@@ -28,6 +28,7 @@ static cvar_t *r_bloom_alpha;
 static cvar_t *r_bloom_darken;
 static cvar_t *r_bloom_intensity;
 static cvar_t *r_bloom_diamond_size;
+static cvar_t *r_bloom_range;
 
 /* 
 ============================================================================== 
@@ -154,12 +155,12 @@ static void R_Bloom_InitTextures( void )
 
 	data = ri.Hunk_AllocateTempMemory( bloom.screen.width * bloom.screen.height * 4 );
 	Com_Memset( data, 0, bloom.screen.width * bloom.screen.height * 4 );
-	bloom.screen.texture = R_CreateImage( "***bloom screen texture***", data, bloom.screen.width, bloom.screen.height, qfalse, qfalse, qfalse );
+	bloom.screen.texture = R_CreateImage( "***bloom screen texture***", data, bloom.screen.width, bloom.screen.height, qfalse, qfalse, GL_CLAMP_TO_EDGE );
 	ri.Hunk_FreeTempMemory( data );
 
 	data = ri.Hunk_AllocateTempMemory( bloom.effect.width * bloom.effect.height * 4 );
 	Com_Memset( data, 0, bloom.effect.width * bloom.effect.height * 4 );
-	bloom.effect.texture = R_CreateImage( "***bloom effect texture***", data, bloom.effect.width, bloom.effect.height, qfalse, qfalse, qfalse );
+	bloom.effect.texture = R_CreateImage( "***bloom effect texture***", data, bloom.effect.width, bloom.effect.height, qfalse, qfalse, GL_CLAMP_TO_EDGE );
 	ri.Hunk_FreeTempMemory( data );
 	bloom.started = qtrue;
 }
@@ -226,9 +227,13 @@ static void R_Bloom_WarsowEffect( void )
 	GL_Bind( bloom.effect.texture );
 	qglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, bloom.work.width, bloom.work.height );
 
+	if ( !r_bloom_diamond_size->integer )
+		return;
+
 	// bluring passes, warsow uses a repeated semi blend on a selectable diamond grid
 	qglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR );
+
 	if( r_bloom_diamond_size->integer > 7 || r_bloom_diamond_size->integer <= 3 ) {
 		if( r_bloom_diamond_size->integer != 8 )
 			ri.Cvar_Set( "r_bloom_diamond_size", "8" );
@@ -266,8 +271,8 @@ static void R_Bloom_WarsowEffect( void )
 			if( intensity < 0.01f )
 				continue;
 			qglColor4f( intensity, intensity, intensity, 1.0 );
-			x = (i - k) * ( 2 / 640.0f ) * bloom.effect.readW;
-			y = (j - k) * ( 2 / 480.0f ) * bloom.effect.readH;
+			x = (i - k) * ( 5.0f / glConfig.vidWidth ) * bloom.effect.readW;
+			y = (j - k) * ( 5.0f / glConfig.vidHeight ) * bloom.effect.readH;
 
 			R_Bloom_Quad( bloom.work.width, bloom.work.height, x, y, bloom.effect.readW, bloom.effect.readH );
 		}
@@ -345,7 +350,7 @@ static void R_Bloom_CreateEffect( void ) {
 	GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
 //	GL_Bind( bloom.screen.texture );
 	GL_Bind( bloom.effect.texture );
-	range = 4;
+	range = Com_Clamp( 1.0f, 16.0f, r_bloom_range->value );
 	for (dir = 0;dir < 2;dir++)
 	{
 		// blend on at multiple vertical offsets to achieve a vertical blur
@@ -361,7 +366,7 @@ static void R_Bloom_CreateEffect( void ) {
 				yoffset = 0;
 			}
 			xoffset /= bloom.work.width;
-			yoffset /= bloom.work.height;
+			yoffset /= bloom.work.height / ( glConfig.vidWidth / (float)glConfig.vidHeight );
 			// this r value looks like a 'dot' particle, fading sharply to
 			// black at the edges
 			// (probably not realistic but looks good enough)
@@ -401,7 +406,7 @@ void R_BloomScreen( void )
 			return;
 	}
 
-	return;
+//	return;
 
 	if (!backEnd.projection2D )
 		RB_SetGL2D();
@@ -427,11 +432,12 @@ void R_BloomScreen( void )
 	// Use the bloom texture through multiple passes for the final result
 	// Couldn't i just use the original texture for this in certain overlapping passes?
 	R_Bloom_WarsowEffect ();
-//	R_Bloom_CreateEffect();
+	if ( r_bloom->integer == 2 )
+		R_Bloom_CreateEffect();
 	// restore the screen-backup to the screen
 	R_Bloom_RestoreScreen();
 	// Do the final pass using the bloom texture for the final effect
-//	R_Bloom_DrawEffect ();
+	R_Bloom_DrawEffect ();
 }
 
 
@@ -441,6 +447,7 @@ void R_BloomInit( void ) {
 	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE );
 	r_bloom_alpha = ri.Cvar_Get( "r_bloom_alpha", "0.3", CVAR_ARCHIVE );
 	r_bloom_diamond_size = ri.Cvar_Get( "r_bloom_diamond_size", "8", CVAR_ARCHIVE );
+	r_bloom_range = ri.Cvar_Get( "r_bloom_range", "4", CVAR_ARCHIVE );
 	r_bloom_intensity = ri.Cvar_Get( "r_bloom_intensity", "1.3", CVAR_ARCHIVE );
 	r_bloom_darken = ri.Cvar_Get( "r_bloom_darken", "4", CVAR_ARCHIVE );
 	r_bloom_sample_size = ri.Cvar_Get( "r_bloom_sample_size", "128", CVAR_ARCHIVE|CVAR_LATCH );

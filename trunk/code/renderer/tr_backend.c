@@ -1281,7 +1281,9 @@ again:
 			RB_SetColor( data );
 			break;
 		case RC_STRETCH_PIC:
-			R_BloomScreen();
+			if ( !R_MME_CubemapActive( r_stereoSeparation->value > 0 ) ) {
+				R_BloomScreen();
+			}
 			RB_StretchPic( data );
 			break;
 		case RC_DRAW_SURFS:
