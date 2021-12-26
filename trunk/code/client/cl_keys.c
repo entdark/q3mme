@@ -45,6 +45,11 @@ qboolean	key_overstrikeMode;
 int				anykeydown;
 qkey_t		keys[MAX_KEYS];
 
+#if _WIN32
+#include <Windows.h>
+#endif
+qboolean	numlockActive = qfalse;
+
 
 typedef struct {
 	char	*name;
@@ -534,7 +539,7 @@ void Console_Key (int key) {
 
 	// command history (ctrl-p ctrl-n for unix style)
 
-	if ( (key == K_MWHEELUP && keys[K_SHIFT].down) || ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
+	if ( (key == K_MWHEELUP && keys[K_SHIFT].down) || ( key == K_UPARROW ) || ( ( key == K_KP_UPARROW ) && !numlockActive ) ||
 		 ( ( tolower(key) == 'p' ) && keys[K_CTRL].down ) ) {
 		if ( nextHistoryLine - historyLine < COMMAND_HISTORY 
 			&& historyLine > 0 ) {
@@ -544,7 +549,7 @@ void Console_Key (int key) {
 		return;
 	}
 
-	if ( (key == K_MWHEELDOWN && keys[K_SHIFT].down) || ( key == K_DOWNARROW ) || ( key == K_KP_DOWNARROW ) ||
+	if ( (key == K_MWHEELDOWN && keys[K_SHIFT].down) || ( key == K_DOWNARROW ) || ( ( key == K_KP_DOWNARROW ) && !numlockActive ) ||
 		 ( ( tolower(key) == 'n' ) && keys[K_CTRL].down ) ) {
 		if (historyLine == nextHistoryLine)
 			return;
@@ -1023,6 +1028,10 @@ Called by the system for both key up and key down events
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
 	char	*kb;
 	char	cmd[1024];
+
+#if _WIN32
+	numlockActive = ((GetKeyState(VK_NUMLOCK) & 0x0001) != 0);
+#endif
 
 	// update auto-repeat status and BUTTON_ANY status
 	keys[key].down = down;
