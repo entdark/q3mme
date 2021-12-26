@@ -589,7 +589,15 @@ void cameraMove(void) {
 		if (!(demo.oldcmd.buttons & BUTTON_ATTACK)) {
 			VectorClear( demo.camera.velocity );
 		}
-		VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		if ( !mov_view6DoFRotation.integer ) {
+			VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		} else {
+			Quat_t q1, q2, qr;
+			QuatFromAngles( angles, q1 );
+			QuatFromAngles( demo.cmdDeltaAngles, q2 );
+			QuatMultiply( q1, q2, qr );
+			QuatToAngles( qr, angles );
+		}
 		AnglesNormalize180( angles );
 		demoMovePoint( origin, demo.camera.velocity, moveAngles );
 		if (point)

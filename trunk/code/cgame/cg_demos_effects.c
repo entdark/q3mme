@@ -675,7 +675,15 @@ void demoEffectMove( void ) {
 			AnglesNormalize180( angles );
 			return;
 		}
-		VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		if ( !mov_view6DoFRotation.integer ) {
+			VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		} else {
+			Quat_t q1, q2, qr;
+			QuatFromAngles( angles, q1 );
+			QuatFromAngles( demo.cmdDeltaAngles, q2 );
+			QuatMultiply( q1, q2, qr );
+			QuatToAngles( qr, angles );
+		}
 		AnglesNormalize180( angles );
 		VectorCopy( angles, moveAngles );
 		moveAngles[ROLL] = 0;

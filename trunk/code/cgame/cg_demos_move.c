@@ -886,7 +886,15 @@ void demoMoveChase(void) {
 		if (!(demo.oldcmd.buttons & BUTTON_ATTACK)) {
 			VectorClear( demo.chase.velocity );
 		}
-		VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		if ( !mov_view6DoFRotation.integer ) {
+			VectorAdd( angles, demo.cmdDeltaAngles, angles );
+		} else {
+			Quat_t q1, q2, qr;
+			QuatFromAngles( angles, q1 );
+			QuatFromAngles( demo.cmdDeltaAngles, q2 );
+			QuatMultiply( q1, q2, qr );
+			QuatToAngles( qr, angles );
+		}
 		AnglesNormalize180( angles );
 		demoMovePoint( origin, demo.chase.velocity, angles );
 	} else if (demo.cmd.buttons & BUTTON_AFFIRMATIVE && !(demo.oldcmd.buttons & BUTTON_AFFIRMATIVE)) {

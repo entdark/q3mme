@@ -287,6 +287,7 @@ vmCvar_t	mov_rewardCount;
 vmCvar_t	mov_bobScale;
 vmCvar_t	mov_wallhack;
 vmCvar_t	mov_smoothCamPos;
+vmCvar_t	mov_view6DoFRotation;
 
 vmCvar_t	mov_hitSounds;
 vmCvar_t	mov_chatBox;
@@ -469,6 +470,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &mov_gridRange,		"mov_gridRange",		"500",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_gridColor,		"mov_gridColor",		"x222222",		NULL,	CVAR_ARCHIVE	},
 	{ &mov_hudOverlay,		"mov_hudOverlay",		"",				NULL,	CVAR_ARCHIVE	},
+	{ &mov_view6DoFRotation,"mov_view6DoFRotation",	"0",			NULL,	CVAR_ARCHIVE	},
 };
 
 static int  cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );
