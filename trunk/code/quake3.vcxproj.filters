@@ -551,10 +551,10 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="client\fx_main.c">
-      <Filter>mme fx</Filter>
+      <Filter>Effects</Filter>
     </ClCompile>
     <ClCompile Include="client\fx_parse.c">
-      <Filter>mme fx</Filter>
+      <Filter>Effects</Filter>
     </ClCompile>
     <ClCompile Include="renderer\tr_mme_fbo.c">
       <Filter>Renderer</Filter>
@@ -850,13 +850,13 @@
       <Filter>Renderer\jpeg\JPG Headers</Filter>
     </ClInclude>
     <ClInclude Include="client\fx_local.h">
-      <Filter>mme fx</Filter>
+      <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="client\fx_public.h">
-      <Filter>mme fx</Filter>
+      <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="client\fx_types.h">
-      <Filter>mme fx</Filter>
+      <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="renderer\tr_mme.h">
       <Filter>Renderer</Filter>
@@ -911,7 +911,7 @@
     <Filter Include="Renderer\jpeg\JPG Source">
       <UniqueIdentifier>{60216b3f-3c94-45cf-b77e-7e2f121c2a56}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mme fx">
+    <Filter Include="Effects">
       <UniqueIdentifier>{9504a8e5-e221-4367-adf8-74d20221859e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
