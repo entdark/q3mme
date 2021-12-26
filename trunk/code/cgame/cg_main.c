@@ -218,6 +218,7 @@ vmCvar_t	cg_drawSpeedometer;
 vmCvar_t	cg_drawSpeedometerScale;
 vmCvar_t	cg_drawSpeedometerPos;
 vmCvar_t	cg_drawSpeedometerFormat;
+vmCvar_t	cg_drawSpeedometerAlignment;
 
 vmCvar_t	cg_drawMovementKeys;
 vmCvar_t	cg_drawMovementKeysPos;
@@ -379,6 +380,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerPos, "cg_drawSpeedometerPos", "320.0 7.0",	CG_SetSpedometerPos, CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerAlignment,"cg_drawSpeedometerAlignment","right",	NULL, CVAR_ARCHIVE },
 	
 	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320 140",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},

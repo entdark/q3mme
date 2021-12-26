@@ -1222,6 +1222,7 @@ extern	vmCvar_t		cg_drawSpeedometer;
 extern	vmCvar_t		cg_drawSpeedometerScale;
 extern	vmCvar_t		cg_drawSpeedometerPos;
 extern	vmCvar_t		cg_drawSpeedometerFormat;
+extern	vmCvar_t		cg_drawSpeedometerAlignment;
 
 extern	vmCvar_t		cg_drawMovementKeys;
 extern	vmCvar_t		cg_drawMovementKeysPos;
@@ -1777,4 +1778,8 @@ void	CG_ParticleExplosion (char *animStr, vec3_t origin, vec3_t vel, int duratio
 extern qboolean		initparticles;
 int CG_NewParticleArea ( int num );
 
-
+typedef enum {
+	AL_CENTER,
+	AL_LEFT,
+	AL_RIGHT
+} alignment_t;

@@ -1000,6 +1000,24 @@ static int CG_DrawPickupItem( int y ) {
 }
 #endif // MISSIONPACK
 
+static alignment_t CG_DrawParseAlignment( const char *alignment ) {
+	if ( !Q_stricmp( alignment, "left" ) )
+		return AL_LEFT;
+	else if ( !Q_stricmp( alignment, "right" ) )
+		return AL_RIGHT;
+	return AL_CENTER;
+}
+
+static ID_INLINE float CG_DrawAlign( const alignment_t alignment, const float x, const float w, float ratio ) {
+	switch ( alignment ) {
+	case AL_LEFT:
+		return x;
+	case AL_RIGHT:
+		return x - w * ratio;
+	}
+	return x - w * 0.5f * ratio;
+}
+
 static void CG_DrawMovementKeys( void ) {
 	usercmd_t cmd = { 0 };
 	char str1[32] = { 0 }, str2[32] = { 0 };
@@ -1520,6 +1538,7 @@ static void CG_DrawSpeedometer(void) {
 	float	speed;
 	vec3_t	velocity;
 	char	*speedText;//, *speedFormat;
+	alignment_t alignment;
 	
 	const	char *format;
 	qboolean haveTag = qfalse;
@@ -1529,13 +1548,13 @@ static void CG_DrawSpeedometer(void) {
 	char	lastColor[16];
 	int		testColor, colorLen = 0;
 
-	if (!cg_drawSpeedometer.integer || !cg.snap)
+	if (!cg_drawSpeedometer.integer)
 		return;
 	
 	charW = BIGCHAR_WIDTH;
 	trap_R_SetColor( color );
 	scale = cg_drawSpeedometerScale.value;
-	y = cg.speedPos[1] + BIGCHAR_HEIGHT;
+	y = cg.speedPos[1];
 	
 	if (cg.playerPredicted) {
 		VectorCopy(cg.predictedPlayerState.velocity, velocity);
@@ -1555,7 +1574,7 @@ static void CG_DrawSpeedometer(void) {
 			haveTag = qfalse;
 			switch (ch) {
 			case 's':		//Speed
-				Com_sprintf( outBuf + outIndex, outLeft, "%4", ((int)speed));
+				Com_sprintf( outBuf + outIndex, outLeft, "%d", ((int)speed));
 				outIndex += strlen( outBuf + outIndex );
 				break;
 			case 't':		//Speed tabulated
@@ -1602,15 +1621,16 @@ static void CG_DrawSpeedometer(void) {
 	speedText = outBuf;
 	//speed formatting end
 
+	alignment = CG_DrawParseAlignment( cg_drawSpeedometerAlignment.string );
 	if ( cgs.textFontValid ) {
-		scale *= 0.5;
-		y += scale * BIGCHAR_HEIGHT;
+		y += scale * 1.5f * BIGCHAR_HEIGHT;
+		scale *= 0.5f;
 		w = CG_Text_Width( speedText, scale, 0 );
-		x = cg.speedPos[0] - w / 2.0f;
+		x = CG_DrawAlign(alignment, cg.speedPos[0], w, 1.0f);
 		CG_Text_Paint( x, y, scale, color, speedText, qtrue );
 	} else {
-		w = cg_drawSpeedometerScale.value * charW * CG_DrawStrlen( speedText );
-		x = cg.speedPos[0] - (w / 2.0f)*cgs.widthRatioCoef;
+		w = scale * charW * CG_DrawStrlen( speedText );
+		x = CG_DrawAlign(alignment, cg.speedPos[0], w, cgs.widthRatioCoef);
 		CG_DrawStringExt( x, y, speedText, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
 	}
 }
