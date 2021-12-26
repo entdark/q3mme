@@ -522,6 +522,8 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		cg.rewardStack = 0;
 		cg.rewardTime = 0;
 
+		cg.defrag.timer.nextTime = 0;
+
 		trap_S_ClearLoopingSounds(qtrue);
 		
 		for (i = 0; i < MAX_CHATBOX_ITEMS; i++)

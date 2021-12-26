@@ -1635,6 +1635,182 @@ static void CG_DrawSpeedometer(void) {
 	}
 }
 
+//entTODO: move to DrawActiveFrame to process the time globally
+static qboolean CG_GetDefragTime( snapshot_t *snap, int *outTime ) {
+#define lshift(v, s) (int)(((unsigned int)v << s) & 0xffffffff)
+#define rshift(v, s) (int)(((unsigned int)v & 0xffffffff) >> s)
+	int i, temp, serverTime;
+	int time = snap->ps.stats[8] & 0xffff | lshift(snap->ps.stats[7], 0x10);
+	*outTime = time;
+	if ( !time )
+		return qtrue;
+	if ( !cg.defrag.timer.encryption && mov_defragTimer.integer == 1 )
+		return qtrue;
+	if ( cg.defrag.timer.encryption && mov_defragTimer.integer == 2 )
+		return qtrue;
+	time ^= abs((int)snap->ps.origin[0]) & 0xffff;
+	time ^= lshift(abs((int)snap->ps.velocity[0]), 0x10);
+	time ^= snap->ps.stats[0] > 0 ? (snap->ps.stats[0] & 0xff) : 150;
+	time ^= lshift(snap->ps.movementDir & 0xf, 0x1c);
+
+	for (i = 0x18; i > 0; i -= 8) {
+		temp = (rshift(time, i) ^ rshift(time, i - 8)) & 0xff;
+		time = (time & ~lshift(0xff, i)) | lshift(temp, i);
+	}
+
+	serverTime = lshift(snap->serverTime, 2);
+	serverTime += lshift(cg.defrag.version + cg.defrag.timer.checkSum, 8);
+	serverTime ^= lshift(snap->serverTime, 0x18);
+	time ^= serverTime;
+	serverTime = rshift(time, 0x1c);
+	serverTime |= lshift(~serverTime, 4) & 0xff;
+	serverTime |= lshift(serverTime, 8);
+	serverTime |= lshift(serverTime, 0x10);
+	time ^= serverTime;
+	serverTime = rshift(time, 0x16) & 0x3f;
+	time &= 0x3fffff;
+
+	temp = 0;
+	for (i = 0; i < 3; i++){
+		temp += rshift(time, 6 * i) & 0x3f;
+	}
+
+	temp += rshift(time, 0x12) & 0xf;
+	*outTime = time;
+	if (serverTime != (temp & 0x3f))
+		return qfalse;
+	return qtrue;
+}
+
+//stats[8] - time in signed short in range -32768..32767
+//starts from 0 until 32767, then -32768 until -1: 65536 msecs total or ~65 seconds
+//stats[7] - count of stats[8] or count of 65536 time fractions
+static qboolean CG_ProcessDefragTime( void ) {
+	int time, nextTime;
+	qboolean valid;
+	if ( !cg.defrag.detected )
+		return qfalse;
+	if ( !mov_defragTimer.integer )
+		return qfalse;
+	if ( !cg.snap )
+		return;
+	valid = CG_GetDefragTime( cg.snap, &time );
+	if ( !valid )
+		return qfalse;
+	if ( !cg.nextSnap || !mov_defragTimerInterpolated.integer ) {
+		cg.defrag.timer.time = time;
+		return qtrue;
+	}
+	valid = CG_GetDefragTime( cg.nextSnap, &nextTime );
+	if ( !valid || time == nextTime ) {
+		cg.defrag.timer.time = time;
+		return qtrue;
+	}
+	if ( cg.defrag.timer.nextTime != nextTime ) {
+		cg.defrag.timer.nextTime = nextTime;
+		cg.defrag.timer.serverTime = cg.time;
+	}
+	//entTODO: make actual interpolation based on server time diff and defrag timer diff between snapshots - done?
+	//time = current time / server delta time * defrag timer delta time
+	//is it accurate enough?
+	cg.defrag.timer.time = time + ( ( cg.time - cg.defrag.timer.serverTime ) + cg.timeFraction )
+		/ ( cg.nextSnap->serverTime - cg.snap->serverTime )
+		* ( nextTime - time );
+	if ( cg.defrag.timer.time < 0 )
+		cg.defrag.timer.time = 0;
+	return qtrue;
+}
+static void CG_DrawDefragTimer(void) {
+	float	x, y, w, wmsec;
+	vec4_t	color;
+	float	scale;
+	float	charW;
+	char	timerText[32], msecText[8];
+	int		precision;
+	int		time, hour, min, sec, msec;
+	char	*point;
+	qboolean msecAlign;
+	alignment_t alignment;
+	qboolean valid;
+
+	if ( !cg.defrag.detected || !mov_defragTimer.integer )
+		return;
+	
+	valid = CG_ProcessDefragTime( );
+
+	charW = BIGCHAR_WIDTH;
+	trap_R_SetColor( color );
+	scale = mov_defragTimerScale.value;
+	y = cg.defrag.timer.pos[1] + BIGCHAR_HEIGHT;
+
+	color[0] = color[1] = color[2] = color[3] = 1.0f;
+	Q_parseColor( mov_defragTimerColor.string, defaultColors, color );
+
+	time = cg.defrag.timer.time >= 0 ? cg.defrag.timer.time : 0;
+
+	if ( valid ) {
+		hour = time / 3600000;
+		min = ( time / 60000 ) % 60;
+		sec = ( time / 1000 ) % 60;
+		msec = time % 1000;
+
+		precision = mov_defragTimerPrecision.integer;
+
+		switch ( precision ) {
+			case 0:
+				Com_sprintf( msecText, sizeof( msecText ), "" );
+				break;
+			case 1:
+				Com_sprintf( msecText, sizeof( msecText ), ".%d", msec / 100 );
+				break;
+			case 2:
+				Com_sprintf( msecText, sizeof( msecText ), ".%02d", msec / 10 );
+				break;
+			default:
+				Com_sprintf( msecText, sizeof( msecText ), ".%03d", msec );
+				break;
+		}
+
+		if ( hour )
+			Com_sprintf( timerText, sizeof( timerText ), "%d:%02d:%d%s", hour, min, sec, msecText );
+		else if ( min )
+			Com_sprintf( timerText, sizeof( timerText ), "%d:%02d%s", min, sec, msecText );
+		else
+			Com_sprintf( timerText, sizeof( timerText ), "%d%s", sec, msecText );
+	} else {
+		Com_sprintf( timerText, sizeof( timerText ), "invalid timer" );
+	}
+
+	point = Q_strrchr(timerText, '.');
+	if ( point ) {
+		*point = ':';
+	}
+	if ( !Q_stricmp(mov_defragTimerAlignment.string, "msec") ) {
+		if ( !point ) {
+			msecAlign = qfalse;
+			alignment = AL_RIGHT;
+		} else {
+			msecAlign = qtrue;
+			wmsec = cgs.textFontValid ? CG_Text_Width( point+1, scale * 0.5f, 0 ) : (scale * charW * CG_DrawStrlen( point ));
+		}
+	} else {
+		msecAlign = qfalse;
+		alignment = CG_DrawParseAlignment(mov_defragTimerAlignment.string);
+	}
+
+	if ( cgs.textFontValid ) {
+		scale *= 0.5f;
+		y += scale * BIGCHAR_HEIGHT;
+		w = CG_Text_Width( timerText, scale, 0 );
+		x = msecAlign ? (cg.defrag.timer.pos[0]+wmsec-w) : CG_DrawAlign( alignment, cg.defrag.timer.pos[0], w, 1.0f );
+		CG_Text_Paint( x, y, scale, color, timerText, qtrue );
+	} else {
+		w = scale * charW * CG_DrawStrlen( timerText );
+		x = msecAlign ? (cg.defrag.timer.pos[0]+(wmsec-w)*cgs.widthRatioCoef) : CG_DrawAlign( alignment, cg.defrag.timer.pos[0], w, cgs.widthRatioCoef );
+		CG_DrawStringExt( x, y, timerText, color, qfalse, qtrue, scale * charW*cgs.widthRatioCoef, scale * charW, 0 );
+	}
+}
+
 /*
 ================================================================================
 
@@ -2023,6 +2199,7 @@ void CG_Draw2D( void ) {
 				CG_DrawWeaponSelect();
 				CG_DrawHoldableItem();
 				CG_DrawReward();
+				CG_DrawDefragTimer();
 			}
 		}
 	} else {

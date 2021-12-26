@@ -686,6 +686,13 @@ typedef struct {
 	} cpma;
 	struct			{
 		qboolean	detected;
+		int			version;
+		struct {
+			int		time, nextTime, serverTime;
+			vec2_t	pos;
+			int		checkSum;
+			qboolean encryption;
+		} timer;
 	} defrag;
 	struct			{
 		qboolean	detected;
@@ -1229,6 +1236,14 @@ extern	vmCvar_t		cg_drawSpeedometerAlignment;
 extern	vmCvar_t		cg_drawMovementKeys;
 extern	vmCvar_t		cg_drawMovementKeysPos;
 extern	vmCvar_t		cg_drawMovementKeysScale;
+
+extern	vmCvar_t		mov_defragTimer;
+extern	vmCvar_t		mov_defragTimerScale;
+extern	vmCvar_t		mov_defragTimerPos;
+extern	vmCvar_t		mov_defragTimerPrecision;
+extern	vmCvar_t		mov_defragTimerAlignment;
+extern	vmCvar_t		mov_defragTimerInterpolated;
+extern	vmCvar_t		mov_defragTimerColor;
 
 extern	vmCvar_t		mov_Obituaries;
 extern	vmCvar_t		mov_fragFormat;

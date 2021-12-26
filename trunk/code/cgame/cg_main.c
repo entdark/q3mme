@@ -98,6 +98,13 @@ static void CG_SetSpedometerPos( void ) {
 	}
 }
 
+static void CG_SetDefragTimerPos( void ) {
+	if ( sscanf( mov_defragTimerPos.string, "%f %f", &cg.defrag.timer.pos[0], &cg.defrag.timer.pos[1] ) != 2 ) {
+		cg.defrag.timer.pos[0] = (SCREEN_WIDTH / 2);
+		cg.defrag.timer.pos[1] = (SCREEN_HEIGHT / 2);
+	}
+}
+
 static void CG_SetNewSkin(void) {
 	int i;
 	for ( i = 0; i < MAX_CLIENTS ; i++ )
@@ -225,6 +232,14 @@ vmCvar_t	cg_drawSpeedometerAlignment;
 vmCvar_t	cg_drawMovementKeys;
 vmCvar_t	cg_drawMovementKeysPos;
 vmCvar_t	cg_drawMovementKeysScale;
+
+vmCvar_t	mov_defragTimer;
+vmCvar_t	mov_defragTimerScale;
+vmCvar_t	mov_defragTimerPos;
+vmCvar_t	mov_defragTimerPrecision;
+vmCvar_t	mov_defragTimerAlignment;
+vmCvar_t	mov_defragTimerInterpolated;
+vmCvar_t	mov_defragTimerColor;
 
 vmCvar_t	mov_Obituaries;
 vmCvar_t	mov_chatBeep;
@@ -389,6 +404,14 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320.0 140.0",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
 	{ &cg_drawMovementKeysScale, "cg_drawMovementKeysScale", "1.0",	NULL,	CVAR_ARCHIVE	},
+
+	{ &mov_defragTimer,		"mov_defragTimer",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_defragTimerScale,"mov_defragTimerScale",	"1.0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_defragTimerPos,	"mov_defragTimerPos",	"640.0 270.0",	CG_SetDefragTimerPos, CVAR_ARCHIVE	},
+	{ &mov_defragTimerPrecision,"mov_defragTimerPrecision","3",		NULL,	CVAR_ARCHIVE	},
+	{ &mov_defragTimerAlignment,"mov_defragTimerAlignment","right",	NULL,	CVAR_ARCHIVE	},
+	{ &mov_defragTimerInterpolated,"mov_defragTimerInterpolated","0",NULL,	CVAR_ARCHIVE	},
+	{ &mov_defragTimerColor,"mov_defragTimerColor",	"xFFFFFF",		NULL,	CVAR_ARCHIVE	},
 
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
@@ -1182,8 +1205,24 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	if (strstr( s, "cpma") ) {
 		cg.cpma.detected = qtrue;
 	} else if (strstr( s, "defrag") ) {
+		int c, len;
+		char *mapname;
 		CG_Printf( "Defrag demo detected\n" );
 		cg.defrag.detected = qtrue;
+		s = CG_ConfigString( CS_SERVERINFO );
+		cg.defrag.version = atoi( Info_ValueForKey( s, "defrag_vers" ) );
+		cg.defrag.timer.encryption =
+			!( ( cg.defrag.version != 190 && atoi( Info_ValueForKey( s, "defrag_gametype" ) ) > 4 )
+			|| ( cg.defrag.version >= 19112 && atoi( Info_ValueForKey( s, "sv_cheats" ) ) ) );
+		mapname = Info_ValueForKey( s, "mapname" );
+		len = strlen( mapname );
+		if ( len > 0 ) {
+			int i, sum = 0;
+			for ( i = 0; i < len; i++ ) {
+				sum += tolower( mapname[i] );
+			}
+			cg.defrag.timer.checkSum = sum & 0xff;
+		}
 	}
 	//RA3 seems to use 12 as a version whatever index
 	s = CG_ConfigString( 12 );
