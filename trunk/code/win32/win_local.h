@@ -53,6 +53,7 @@ qboolean	Sys_GetPacket ( netadr_t *net_from, msg_t *net_message );
 
 qboolean Sys_CopySharedData(void *data, size_t size);
 void *Sys_GetSharedData(void);
+const char *Sys_CpuFeatures(void);
 
 // Input subsystem
 

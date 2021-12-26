@@ -1156,6 +1156,9 @@ void Sys_Init( void ) {
 
 	Cvar_Set( "username", Sys_GetCurrentUser() );
 
+	Com_Printf("\n...detecting CPU features, found:\n");
+	Com_Printf("%s\n", Sys_CpuFeatures());
+
 	IN_Init();		// FIXME: not in dedicated?
 }
 

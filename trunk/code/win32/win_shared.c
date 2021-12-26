@@ -428,3 +428,92 @@ void *Sys_GetSharedData(void) {
 	CloseHandle(hMapFile);
 	return ret;
 }
+
+#include <intrin.h>
+const char *Sys_CpuFeatures(void) {
+	static char features[1024] = {0};
+#define cpuidex(info, x) __cpuidex(info, x, 0)
+	int info[4];
+	cpuidex(info, 0);
+	int ids = info[0];
+	cpuidex(info, 0x80000000);
+	unsigned int exids = info[0];
+	//  Detect Features
+	if (ids >= 0x00000001) {
+		cpuidex(info, 0x00000001);
+		if ((info[3] & ((int)1 << 23)) != 0)
+			strcat(features, "MMX\n");
+		if ((info[3] & ((int)1 << 25)) != 0)
+			strcat(features, "SSE\n");
+		if ((info[3] & ((int)1 << 26)) != 0)
+			strcat(features, "SSE2\n");
+		if ((info[2] & ((int)1 << 0)) != 0)
+			strcat(features, "SSE3\n");
+
+		if ((info[2] & ((int)1 << 9)) != 0)
+			strcat(features, "SSSE3\n");
+		if ((info[2] & ((int)1 << 19)) != 0)
+			strcat(features, "SSE41\n");
+		if ((info[2] & ((int)1 << 20)) != 0)
+			strcat(features, "SSE42\n");
+		if ((info[2] & ((int)1 << 25)) != 0)
+			strcat(features, "AES\n");
+
+		if ((info[2] & ((int)1 << 28)) != 0)
+			strcat(features, "AVX\n");
+		if ((info[2] & ((int)1 << 12)) != 0)
+			strcat(features, "FMA3\n");
+
+		if ((info[2] & ((int)1 << 30)) != 0)
+			strcat(features, "RDRAND\n");
+	}
+	if (ids >= 0x00000007) {
+		cpuidex(info, 0x00000007);
+		if ((info[1] & ((int)1 << 5)) != 0)
+			strcat(features, "AVX2\n");
+
+		if ((info[1] & ((int)1 << 3)) != 0)
+			strcat(features, "BMI1\n");
+		if ((info[1] & ((int)1 << 8)) != 0)
+			strcat(features, "BMI2\n");
+		if ((info[1] & ((int)1 << 19)) != 0)
+			strcat(features, "ADX\n");
+		if ((info[1] & ((int)1 << 29)) != 0)
+			strcat(features, "SHA\n");
+		if ((info[2] & ((int)1 << 0)) != 0)
+			strcat(features, "PREFETCHWT1\n");
+
+		if ((info[1] & ((int)1 << 16)) != 0)
+			strcat(features, "AVX512F\n");
+		if ((info[1] & ((int)1 << 28)) != 0)
+			strcat(features, "AVX512CD\n");
+		if ((info[1] & ((int)1 << 26)) != 0)
+			strcat(features, "AVX512PF\n");
+		if ((info[1] & ((int)1 << 27)) != 0)
+			strcat(features, "AVX512ER\n");
+		if ((info[1] & ((int)1 << 31)) != 0)
+			strcat(features, "AVX512VL\n");
+		if ((info[1] & ((int)1 << 30)) != 0)
+			strcat(features, "AVX512BW\n");
+		if ((info[1] & ((int)1 << 17)) != 0)
+			strcat(features, "AVX512DQ\n");
+		if ((info[1] & ((int)1 << 21)) != 0)
+			strcat(features, "AVX512IFMA\n");
+		if ((info[2] & ((int)1 << 1)) != 0)
+			strcat(features, "AVX512VBMI\n");
+	}
+	if (exids >= 0x80000001) {
+		cpuidex(info, 0x80000001);
+		if ((info[3] & ((int)1 << 29)) != 0)
+			strcat(features, "x64\n");
+		if ((info[2] & ((int)1 << 5)) != 0)
+			strcat(features, "ABM\n");
+		if ((info[2] & ((int)1 << 6)) != 0)
+			strcat(features, "SSE4a\n");
+		if ((info[2] & ((int)1 << 16)) != 0)
+			strcat(features, "FMA4\n");
+		if ((info[2] & ((int)1 << 11)) != 0)
+			strcat(features, "XOP\n");
+	}
+	return features;
+}
