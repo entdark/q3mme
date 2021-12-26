@@ -2532,7 +2532,7 @@ void Com_Init( char *commandLine ) {
 	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
 #endif
 	
-	com_affinity = Cvar_Get ("com_affinity", "1", CVAR_ARCHIVE);
+	com_affinity = Cvar_Get ("com_affinity", "0", CVAR_ARCHIVE);
 
 	if ( com_dedicated->integer ) {
 		if ( !com_viewlog->integer ) {
