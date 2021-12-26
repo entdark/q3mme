@@ -1066,7 +1066,7 @@ void VM_Compile(vm_t *vm, vmHeader_t *header)
 	int		maxLength;
 	int		v;
 	int		i;
-        int		callProcOfsSyscall, callProcOfs, callDoSyscallOfs;
+	int		callProcOfsSyscall, callProcOfs, callDoSyscallOfs;
 
 	jusedSize = header->instructionCount + 2;
 
