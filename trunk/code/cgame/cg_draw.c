@@ -268,7 +268,7 @@ static void CG_DrawStatusBarHead( float x ) {
 
 	VectorClear( angles );
 
-	if ( cg.damageTime && cg.time - cg.damageTime < DAMAGE_TIME ) {
+	if ( cg.playerPredicted && cg.damageTime && cg.time - cg.damageTime < DAMAGE_TIME ) {
 		frac = ((cg.time - cg.damageTime ) + cg.timeFraction) / DAMAGE_TIME;
 		size = ICON_SIZE * 1.25 * ( 1.5 - frac * 0.5 );
 
@@ -309,7 +309,7 @@ static void CG_DrawStatusBarHead( float x ) {
 	angles[PITCH] = cg.headStartPitch + ( cg.headEndPitch - cg.headStartPitch ) * frac;
 
 	CG_DrawHead( x, 480 - size, size*cgs.widthRatioCoef, size, 
-				cg.snap->ps.clientNum, angles );
+				cg.playerCent->currentState.clientNum, angles );
 }
 #endif // MISSIONPACK
 
@@ -358,7 +358,7 @@ CG_DrawStatusBar
 
 ================
 */
-static void CG_DrawStatusBar( void ) {
+void CG_DrawStatusBar( void ) {
 	int			color;
 	centity_t	*cent;
 	playerState_t	*ps;
@@ -378,11 +378,15 @@ static void CG_DrawStatusBar( void ) {
 		return;
 	}
 
-	// draw the team background
-	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, cg.snap->ps.persistant[PERS_TEAM] );
+	if ( !cg.playerPredicted && !( cg.cpma.detected && cg.cpma.multiview ) ) {
+		return;
+	}
 
-	cent = &cg_entities[cg.snap->ps.clientNum];
+	cent = cg.playerCent;
 	ps = &cg.snap->ps;
+
+	// draw the team background
+	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, cgs.clientinfo[cent->currentState.clientNum].team );
 
 	VectorClear( angles );
 
@@ -398,15 +402,21 @@ static void CG_DrawStatusBar( void ) {
 
 	CG_DrawStatusBarHead( 185 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef );
 
-	if( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
-	} else if( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
-	} else if( cg.predictedPlayerState.powerups[PW_NEUTRALFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_FREE );
+	if ( cg.playerPredicted ) {
+		if( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
+			CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
+		} else if( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
+			CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
+		} else if( cg.predictedPlayerState.powerups[PW_NEUTRALFLAG] ) {
+			CG_DrawStatusBarFlag( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_FREE );
+		}
 	}
-
-	if ( ps->stats[ STAT_ARMOR ] ) {
+	
+	if (cg.playerPredicted)
+		value = ps->stats[STAT_ARMOR];
+	else
+		value = (ps->powerups[cent->currentState.clientNum] >> 16) & 0xff;
+	if ( value ) {
 		origin[0] = 90;
 		origin[1] = 0;
 		origin[2] = -10;
@@ -419,9 +429,13 @@ static void CG_DrawStatusBar( void ) {
 	// ammo
 	//
 	if ( cent->currentState.weapon ) {
-		value = ps->ammo[cent->currentState.weapon];
+		if (cg.playerPredicted)
+			value = ps->ammo[cent->currentState.weapon];
+		else
+			value = ps->ammo[cent->currentState.clientNum] & 0xff;
 		if ( value > -1 ) {
-			if ( cg.predictedPlayerState.weaponstate == WEAPON_FIRING
+			if ( cg.playerPredicted
+				&& cg.predictedPlayerState.weaponstate == WEAPON_FIRING
 				&& cg.predictedPlayerState.weaponTime > 100 ) {
 				// draw as dark grey when reloading
 				color = 2;	// dark grey
@@ -441,7 +455,7 @@ static void CG_DrawStatusBar( void ) {
 			if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
 				qhandle_t	icon;
 
-				icon = cg_weapons[ cg.predictedPlayerState.weapon ].ammoIcon;
+				icon = cg_weapons[ cent->currentState.weapon ].ammoIcon;
 				if ( icon ) {
 					CG_DrawPic( (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE, icon );
 				}
@@ -452,7 +466,10 @@ static void CG_DrawStatusBar( void ) {
 	//
 	// health
 	//
-	value = ps->stats[STAT_HEALTH];
+	if (cg.playerPredicted)
+		value = ps->stats[STAT_HEALTH];
+	else
+		value = (ps->powerups[cent->currentState.clientNum] >> 24) & 0xff;
 	if ( value > 100 ) {
 		trap_R_SetColor( colors[3] );		// white
 	} else if (value > 25) {
@@ -473,7 +490,10 @@ static void CG_DrawStatusBar( void ) {
 	//
 	// armor
 	//
-	value = ps->stats[STAT_ARMOR];
+	if (cg.playerPredicted)
+		value = ps->stats[STAT_ARMOR];
+	else
+		value = (ps->powerups[cent->currentState.clientNum] >> 16) & 0xff;
 	if (value > 0 ) {
 		trap_R_SetColor( colors[0] );
 		CG_DrawField (370, 432, 3, value);
@@ -846,10 +866,23 @@ static float CG_DrawScores( float y ) {
 	float		x, w;
 	vec4_t		color;
 	float		y1;
+	clientInfo_t *ci;
 	//gitem_t		*item;
 
-	s1 = cgs.scores1;
-	s2 = cgs.scores2;
+	ci = &cgs.clientinfo[cg.playerCent->currentState.clientNum];
+
+	if ( cg.cpma.detected/* && cg.cpma.multiview*/ ) {
+		s1 = ( cgs.areaInfo + ci->area )->redScore;
+		s2 = ( cgs.areaInfo + ci->area )->blueScore;
+		if ( ci->score != s1 && ( ( CG_GameType() < gameTypeTeamStart ) || ( CG_GameType() == gameTypeUnknown ) ) ) {
+			s1 ^= s2;
+			s2 ^= s1;
+			s1 ^= s2;
+		}
+	} else {
+		s1 = cgs.scores1;
+		s2 = cgs.scores2;
+	}
 
 	y -=  BIGCHAR_HEIGHT + 8;
 
@@ -866,7 +899,7 @@ static float CG_DrawScores( float y ) {
 		w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 		x -= w;
 		CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
-		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_BLUE ) {
+		if ( ci->team == TEAM_BLUE ) {
 			CG_DrawPic( x, y-4, w, BIGCHAR_HEIGHT+8, cgs.media.selectShader );
 		}
 		CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
@@ -879,7 +912,7 @@ static float CG_DrawScores( float y ) {
 		w = (CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8)*cgs.widthRatioCoef;
 		x -= w;
 		CG_FillRect( x, y-4,  w, BIGCHAR_HEIGHT+8, color );
-		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED ) {
+		if ( ci->team == TEAM_RED ) {
 			CG_DrawPic( x, y-4, w, BIGCHAR_HEIGHT+8, cgs.media.selectShader );
 		}
 		CG_DrawBigString( x + 4*cgs.widthRatioCoef, y, s, 1.0F);
@@ -960,7 +993,7 @@ static void CG_DrawLowerRight( void ) {
 
 	y = 480 - ICON_SIZE;
 
-	if ( cg.playerPredicted && cg_drawScores.integer ) {
+	if ( ( cg.playerPredicted || ( cg.cpma.detected && cg.cpma.multiview ) ) && cg_drawScores.integer ) {
         y = CG_DrawScores( y );
 	} else {
 		y -= BIGCHAR_HEIGHT + 16;
@@ -2216,6 +2249,7 @@ void CG_Draw2D( void ) {
 	} else {
 		// don't draw any status if dead or the scoreboard is being explicitly shown
 		if ( !cg.showScores && !(cg.playerCent->currentState.eFlags & EF_DEAD) ) {
+			CG_DrawStatusBar();
 			CG_DrawCrosshair();
 			CG_DrawCrosshairNames();
 		}

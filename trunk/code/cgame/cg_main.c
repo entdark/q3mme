@@ -249,6 +249,8 @@ vmCvar_t	mov_defragTimerAlignment;
 vmCvar_t	mov_defragTimerInterpolated;
 vmCvar_t	mov_defragTimerColor;
 
+vmCvar_t	mov_cpmaAutoMultiView;
+
 vmCvar_t	mov_Obituaries;
 vmCvar_t	mov_chatBeep;
 vmCvar_t	mov_fragFormat;
@@ -420,6 +422,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &mov_defragTimerAlignment,"mov_defragTimerAlignment","right",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_defragTimerInterpolated,"mov_defragTimerInterpolated","0",NULL,	CVAR_ARCHIVE	},
 	{ &mov_defragTimerColor,"mov_defragTimerColor",	"xFFFFFF",		NULL,	CVAR_ARCHIVE	},
+
+	{ &mov_cpmaAutoMultiView, "mov_cpmaAutoMultiView", "1",			NULL,	CVAR_ARCHIVE	},
 
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
@@ -1215,7 +1219,38 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	s = CG_ConfigString( CS_GAME_VERSION );
 
 	if (strstr( s, "cpma") ) {
+		char *v;
+		int i;
+		char *playersKeys[] = { "Players_Active", "Players_Red", "Players_Blue" };
+
 		cg.cpma.detected = qtrue;
+		s = CG_ConfigString( CS_SERVERINFO );
+		v = Info_ValueForKey( s, "gameversion" );
+		if ( v[0] ) {
+			char *point = strchr( v, '.' );
+			cg.cpma.version.major = atoi( v );
+			if ( point ) {
+				cg.cpma.version.minor = atoi( ++point );
+			}
+		}
+		for (i = 0; i < MAX_CLIENTS; i++) {
+			cg.cpma.activePlayers[i] = -1;
+		}
+		for (i = 0; i < TEAM_SPECTATOR; i++) {
+			v = Info_ValueForKey(s, playersKeys[i]);
+			if (v[0]) {
+				char *player = strtok(v, " ");
+				while (player) {
+					if (player[0]) {
+						int clientNum = atoi(player);
+						if (clientNum >= 0 && clientNum < MAX_CLIENTS) {
+							cg.cpma.activePlayers[clientNum] = i;
+						}
+					}
+					player = strtok(NULL, " ");
+				}
+			}
+		}
 	} else if (strstr( s, "defrag") ) {
 		int c, len;
 		char *mapname;

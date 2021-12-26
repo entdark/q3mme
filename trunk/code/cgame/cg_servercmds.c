@@ -204,12 +204,17 @@ void CG_ShaderStateChanged(void) {
 
 
 static void CG_CPMAParseArea( int i ) {
+	const char *sr, *sb;
 	const char *s = CG_ConfigString( 672 + i );
 	areaInfo_t* area = cgs.areaInfo + i;
 
 	area->timeStart = atoi( Info_ValueForKey( s, "ts" ) );
 	area->timeWait = atoi( Info_ValueForKey( s, "tw" ) );
 	area->timeLimit = atoi( Info_ValueForKey( s, "tl" ) );
+	if ( *( sr = Info_ValueForKey( s, "sr" ) ) && *( sb = Info_ValueForKey( s, "sb" ) ) ) {
+		area->redScore = atoi( sr );
+		area->blueScore = atoi( sb );
+	}
 	i = area->timeStart - cg.time;
 }
 
@@ -267,6 +272,8 @@ static void CG_ConfigStringModified( void ) {
 	if ( cg.cpma.detected ) {
 		if ( num >= 672 && ( num < 672 + MAX_AREAS )  ) {
 			CG_CPMAParseArea( num - 672 );
+		} else if ( num >= 710 && ( num < 710 + MAX_AREAS )  ) {
+			CG_CPMAParseSocres( num - 710 );
 		}
 	} else {
 		if ( num == CS_SCORES1 ) {
@@ -1062,6 +1069,31 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 	if ( !strcmp( cmd, "initmodels")) {
+		return;
+	}
+	if ( !strcmp( cmd, "mstats")) {
+		int clientNum, i, argc;
+		if ( !cg.cpma.detected )
+			return;
+		clientNum = atoi(CG_Argv(1));
+		if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+			return;
+		argc = trap_Argc();
+		if (argc < 4)
+			return;
+		//not the perfect solution but it works
+		for (i = 2; i < argc; i++) {
+			const char *argv = CG_Argv(i);
+			if ((*argv >= 'a' && *argv <= 'z')
+				|| (*argv >= 'A' && *argv <= 'Z')) {
+				//next arg is score
+				i++;
+				break;
+			}
+		}
+		if (i == argc)
+			return;
+		cgs.clientinfo[clientNum].score = atoi(CG_Argv(i));
 		return;
 	}
 	if ( mov_debug.integer & 1) {

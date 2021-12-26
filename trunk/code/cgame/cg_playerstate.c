@@ -314,7 +314,14 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 	int			health, armor, reward;
 	sfxHandle_t sfx;
 
-	if (!cg.playerPredicted) {
+	if ( !cg.playerPredicted ) {
+		if ( cg.playerCent && cg.cpma.detected && cg.cpma.multiview ) {
+			int clientNum = cg.playerCent->currentState.clientNum;
+			int damage = ( ( ps->powerups[clientNum] & 0xffff ) - ( ops->powerups[clientNum] & 0xffff ) );
+			if ( damage > 0 ) {
+				trap_S_StartLocalSound( CG_SelectCPMAHitSounds( damage ), CHAN_LOCAL_SOUND );
+			}
+		}
 		return;
 	}
 	// don't play the sounds if the player just changed teams

@@ -329,6 +329,48 @@ void demoProcessSnapShots( qboolean hadSkip ) {
 	} while (1);
 }
 
+static void demoExtraInit( void ) {
+	static qboolean initDone = qfalse;
+	if (initDone)
+		return;
+	initDone = qtrue;
+	
+	if (cg.cpma.detected) {
+		cg.cpma.multiview = cg.snap->ps.pm_type == PM_FREEZE/* && cgs.clientinfo[cg.clientNum].team != TEAM_SPECTATOR*/;
+		if (cg.cpma.multiview && mov_cpmaAutoMultiView.integer) {
+			int i, teamCounter = 0;
+			qboolean firstClient = qtrue;
+			team_t teamGame;
+			for (i = 0; i < MAX_CLIENTS; i++) {
+//				if (cg.cpma.activePlayers[i] != -1) {
+				if (cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team < TEAM_SPECTATOR) {
+					if (firstClient) {
+						firstClient = qfalse;
+						demo.chase.target = i;
+						cg.playerCent = i == cg.snap->ps.clientNum ? &cg.predictedPlayerEntity : &cg_entities[i];
+//						teamGame = cg.cpma.activePlayers[i];
+						teamGame = cgs.clientinfo[i].team;
+					} else if (!teamGame) {
+						trap_SendConsoleCommand(va("multispec add client %d x 640 y 0 s 0.33333\n", i));
+						trap_SendConsoleCommand("multispec teamoverlay offset 0.33333\n");
+						trap_SendConsoleCommand("multispec edit\n");
+						break;
+//					} else if (cg.cpma.activePlayers[i] == teamGame) {
+					} else if (cgs.clientinfo[i].team == teamGame) {
+						teamCounter++;
+					}
+				}
+			}
+			if (teamCounter) {
+				//do not allow scale > 0.33333f
+				if (teamCounter < 3)
+					teamCounter = 3;
+				trap_SendConsoleCommand(va("multispec teamoverlay %f\n", 0.99999f / teamCounter));
+			}
+		}
+	}
+}
+
 void demoAddViewPos( const char *baseName, const vec3_t origin, const vec3_t angles, float fov ) {
 	char dataLine[256];
 	char fileName[MAX_OSPATH];
@@ -377,6 +419,8 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		CG_DrawInformation();
 		return;
 	}
+
+	demoExtraInit();
 
 	captureFrame = demo.capture.active && !demo.play.paused;
 	if ( captureFrame ) {

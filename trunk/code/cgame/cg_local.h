@@ -1,3 +1,4 @@
+#pragma once
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
@@ -683,6 +684,11 @@ typedef struct {
 	} osp;
 	struct			{
 		qboolean	detected;
+		struct {
+			int		major, minor;
+		} version;
+		qboolean	multiview;
+		team_t		activePlayers[MAX_CLIENTS];
 	} cpma;
 	struct			{
 		qboolean	detected;
@@ -1244,6 +1250,8 @@ extern	vmCvar_t		mov_defragTimerPrecision;
 extern	vmCvar_t		mov_defragTimerAlignment;
 extern	vmCvar_t		mov_defragTimerInterpolated;
 extern	vmCvar_t		mov_defragTimerColor;
+
+extern	vmCvar_t		mov_cpmaAutoMultiView;
 
 extern	vmCvar_t		mov_Obituaries;
 extern	vmCvar_t		mov_fragFormat;
