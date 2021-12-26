@@ -1,3 +1,41 @@
+Q3MME 1.9
+
+Additions:
+- added maps autodownload support (credits: ioq3, q3e) (cl_dlURL, cl_mapAutoDownload)
+- added support for CPMA multiview (credits: wolfcamql) (mov_cpmaAutoMultiview)
+- added multispec feature (multispec command)
+- added a possibility to use either numbers or cursor controls on numpad by depending on the state of Num Lock
+- added a possibility to capture cubemaps for VR (mme_saveCubemap, mme_combineStereoShots)
+- added DeFRaG timer (mov_defragTimer*)
+- added a minor optimization for SSE blurring functions (mme_cpmSSE2)
+- added displaying CPU features on startup
+- added a possibility to offeset view horizontally and vertcially in third person POV (cg_thirdPersonHorzOffset and cg_thirdPersonVertOffset)
+- added a possibility to align speedometer to the left, right, or center (cg_drawSpeedometerAlignment)
+
+Changes:
+- set new default value for com_affinity "0": pipe capture is considered default and it works faster with all cores
+- set new default value for mme_cpuSSE2 "1"
+- set default value for mme_pipeCommand "auto": automatically chooses the command by depending on cubemap and/or stereo or their missing
+- increased amount of patch planes from 2048 to 8192
+- increased amount of shader files from 4096 to 8192
+- set new default values for cg_drawSpeedometerPos and cg_drawMovementKeysPos
+- made stepped rewinding align to the closest time when paused
+- made shaders in 2D (HUD/console) depend on the game time instead of real time
+
+Fixes:
+- fixed never working bloom (r_bloom)
+- added ratio fix for drawing a rectangle
+- added ratio fix to ammo warning position
+- fixed drawing speedometer and chatbox twice
+- fixed setting incorrect CPMA colours for nicknames and models
+- added ratio fix to the loading screen
+- fixed never resetting underwater effect when going back to main menu
+- fixed requiring admin rights to open demos that are associated with q3mme
+- fixed having no hit sounds in CPMA demos when CPMA assets were not loaded
+- fixed jittering map objects that has to move by sine trajectory
+- fixed sometimes silent or moved stereo sounds in main menu after closing a demo
+- fixed incorrectly moving shaders in 1st person and also adjusted precision of shaders time calculations
+
 Q3MME 1.8
 
 Additions:
