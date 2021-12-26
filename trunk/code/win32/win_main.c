@@ -1241,11 +1241,11 @@ void RegisterFileTypes(char *program) {
 
 		//using | to be able to call all 3 functions even if true got returned
 		//register the filetype extension
-		refresh |= AddRegistry(HKEY_CLASSES_ROOT, extension, desc, NULL)
+		refresh |= AddRegistry(HKEY_CURRENT_USER, extension, desc, NULL)
 		//register application association
-		| AddRegistry(HKEY_CLASSES_ROOT, path, app, NULL)
+		| AddRegistry(HKEY_CURRENT_USER, path, app, NULL)
 		//register icon for the filetype
-		| AddRegistry(HKEY_CLASSES_ROOT, icon, program, NULL);
+		| AddRegistry(HKEY_CURRENT_USER, icon, program, NULL);
 	}
 	if (refresh) {
 		SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
