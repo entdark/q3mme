@@ -234,12 +234,12 @@ multispec
     <subcommands>:
     list, view current settings, red tag means an override
     del id, delete window with id
-    clear, delete all windows
+    clear, delete all windows                                       (bound to -)
     background (shader), toggle showing main scene, optional shader to fill whole screen
     teamoverlay (replace/offset/scale), multispec for teamoverlay, optional replace to hide/show original or offset it, or scale for all windows
     or
-    add, add a new multispec window
-    edit (id), toggle editing mode, optional id to update
+    add, add a new multispec window                                 (bound to =)
+    edit (id), toggle editing mode, optional id to update           (bound to \)
     Followed by a list of 2 parameter combinations
     x "X", Set x coordinate
     y "Y", Set y coordinate
