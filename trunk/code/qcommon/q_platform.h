@@ -72,6 +72,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #undef QDECL
 #define QDECL __cdecl
 
+#undef Q_RESTRICT
+#define Q_RESTRICT __restrict
+
 #if defined( _MSC_VER )
 #define OS_STRING "win_msvc"
 #define ID_INLINE __forceinline
@@ -110,6 +113,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ID_INLINE inline
 #define PATH_SEP '/'
 
+#undef Q_RESTRICT
+#define Q_RESTRICT __restrict__
+
 #ifdef __ppc__
 #define ARCH_STRING "ppc"
 #define Q3_BIG_ENDIAN
@@ -129,6 +135,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define OS_STRING "linux"
 #define ID_INLINE inline
 #define PATH_SEP '/'
+
+#undef Q_RESTRICT
+#define Q_RESTRICT __restrict__
 
 #if defined __i386__
 #define ARCH_STRING "i386"
@@ -179,6 +188,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define OS_STRING "freebsd"
 #define ID_INLINE inline
 #define PATH_SEP '/'
+
+#undef Q_RESTRICT
+#define Q_RESTRICT __restrict__
 
 #ifdef __i386__
 #define ARCH_STRING "i386"

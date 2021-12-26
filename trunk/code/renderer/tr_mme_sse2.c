@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 
-void MME_AccumClearSSE( void *w, const void *r, short int mul, int count ) {
+void MME_AccumClearSSE( void* Q_RESTRICT w, const void* Q_RESTRICT r, short int mul, int count ) {
 	const __m128i * reader = (const __m128i *) r;
 	__m128i *writer = (__m128i *) w;
 	int i; 
@@ -56,7 +56,7 @@ void MME_AccumClearSSE( void *w, const void *r, short int mul, int count ) {
 }
 
 
-void MME_AccumAddSSE( void* w, const void* r, short int mul, int count ) {
+void MME_AccumAddSSE( void* Q_RESTRICT w, const void* Q_RESTRICT r, short int mul, int count ) {
 	int i; 
 	const __m128i * reader = (const __m128i *) r;
 	__m128i *writer = (__m128i *) w;

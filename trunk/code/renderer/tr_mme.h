@@ -91,8 +91,8 @@ void R_MME_BlurAccumShift( mmeBlurBlock_t *block  );
 void blurCreate( mmeBlurControl_t* control, const char* type, int frames );
 void R_MME_JitterTable(float *jitarr, int num);
 
-void MME_AccumClearSSE( void *w, const void *r, short int mul, int count );
-void MME_AccumAddSSE( void* w, const void* r, short int mul, int count );
+void MME_AccumClearSSE( void* Q_RESTRICT w, const void* Q_RESTRICT r, short int mul, int count );
+void MME_AccumAddSSE( void* Q_RESTRICT w, const void* Q_RESTRICT r, short int mul, int count );
 void MME_AccumShiftSSE( const void *r, void *w, int count );
 
 float R_MME_FocusScale(float focus);
