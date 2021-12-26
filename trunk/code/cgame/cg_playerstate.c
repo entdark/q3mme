@@ -294,14 +294,15 @@ sfxHandle_t CG_SelectCPMAHitSounds(int dmg) {
 		return 0;
 	if (!cg.cpma.detected && mov_hitSounds.integer != 2)
 		return cgs.media.hitSound;
-	if (dmg <= 25)
+	if (dmg <= 25 && cgs.media.cpmaHitSound25)
 		return cgs.media.cpmaHitSound25;
-	else if (dmg <= 50)
+	else if (dmg <= 50 && cgs.media.cpmaHitSound50)
 		return cgs.media.cpmaHitSound50;
-	else if (dmg <= 75)
+	else if (dmg <= 75 && cgs.media.cpmaHitSound75)
 		return cgs.media.cpmaHitSound75;
-	else
+	else if (cgs.media.cpmaHitSound100)
 		return cgs.media.cpmaHitSound100;
+	return cgs.media.hitSound;
 }
 
 /*
