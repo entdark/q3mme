@@ -11,10 +11,10 @@
     that makes moviemaking a lot easier for everybody.
  
   .data
-    ver : mme 1.8
-    day : apr 3rd 2016
+    ver : mme 1.9
+    day : dec 26th 2021
     irc : #moviemaking @ quakenet
-    web : q3mme.proboards75.com
+    web : q3mme.proboards.com
  
   .news
     HMage created this wonderful project years ago and left soon after.
@@ -24,7 +24,7 @@
     but now in 2014 it begins again with the new programmer: ent.
     Many things have been worked on, bugs have been fixed, exciting new
     features have been added. The forum works, feedback and inspiration
-    are welcome. Enjoy the new version 1.7 and keep on creating movies.
+    are welcome. Enjoy the new version 1.9 and keep on creating movies.
  
   .crew
     HMage   : creator & former programmer
