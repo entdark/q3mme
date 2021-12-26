@@ -1,6 +1,7 @@
 Q3MME 1.9
 
 Additions:
+- added an option to rotate camera, chase or effect view in 6DoF instead of Euler angles (mov_view6DoFRotation)
 - added maps autodownload support (credits: ioq3, q3e) (cl_dlURL, cl_mapAutoDownload)
 - added support for CPMA multiview (credits: wolfcamql) (mov_cpmaAutoMultiview)
 - added multispec feature (multispec command)
@@ -13,6 +14,7 @@ Additions:
 - added a possibility to align speedometer to the left, right, or center (cg_drawSpeedometerAlignment)
 
 Changes:
+- holding mouse2 is chase view now lets roll the view
 - set new default value for com_affinity "0": pipe capture is considered default and it works faster with all cores
 - set new default value for mme_cpuSSE2 "1"
 - set default value for mme_pipeCommand "auto": automatically chooses the command by depending on cubemap and/or stereo or their missing
