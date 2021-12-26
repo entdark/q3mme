@@ -40,12 +40,12 @@ CG_DrawLoadingIcons
 */
 static void CG_DrawLoadingIcons( void ) {
 	int		n;
-	int		x, y;
+	float	x, y;
 
 	for( n = 0; n < loadingPlayerIconCount; n++ ) {
 		x = 16 + n * 78;
 		y = 324-40;
-		CG_DrawPic( x, y, 64, 64, loadingPlayerIcons[n] );
+		CG_DrawPic( x*cgs.widthRatioCoef, y, 64*cgs.widthRatioCoef, 64, loadingPlayerIcons[n] );
 	}
 
 	for( n = 0; n < loadingItemIconCount; n++ ) {
@@ -54,7 +54,7 @@ static void CG_DrawLoadingIcons( void ) {
 			y += 40;
 		}
 		x = 16 + n % 13 * 48;
-		CG_DrawPic( x, y, 32, 32, loadingItemIcons[n] );
+		CG_DrawPic( x*cgs.widthRatioCoef, y, 32*cgs.widthRatioCoef, 32, loadingItemIcons[n] );
 	}
 }
 
