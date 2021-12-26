@@ -561,7 +561,7 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	}
 
 	/* With teamskins, team's will always get override */
-	if ( mov_teamSkins.integer && CG_GameType() > gameTypeTDM ) {
+	if ( mov_teamSkins.integer && CG_GameType() > gameTypeTeamStart && CG_GameType() < gameTypeUnknown ) {
 		headSkinName = skinName = ci->team == TEAM_BLUE ? "blue" : "red";
 	}
 	
@@ -838,7 +838,7 @@ void CG_NewClientInfo( int clientNum ) {
 	v = ConfigValue( strings, "c1" );
 
 	/* Parse the rail color */
-	colorLen = Q_parseColor(v, ospColors, newInfo.color1 );
+	colorLen = Q_parseColor(v, cg.cpma.detected ? defaultColors : ospColors, newInfo.color1 );
 	newInfo.c1RGBA[0] = newInfo.color1[0] * 255;
 	newInfo.c1RGBA[1] = newInfo.color1[1] * 255;
 	newInfo.c1RGBA[2] = newInfo.color1[2] * 255;
@@ -851,21 +851,21 @@ void CG_NewClientInfo( int clientNum ) {
 	if ( slash[0] )
 		 v = slash;
 	/* Parse the head color */
-	colorLen = Q_parseColor(v, ospColors, color );
+	colorLen = Q_parseColor(v, cg.cpma.detected ? defaultColors : ospColors, color );
 	v += colorLen;
 	newInfo.headRGBA[0] = color[0] * 255;
 	newInfo.headRGBA[1] = color[1] * 255;
 	newInfo.headRGBA[2] = color[2] * 255;
 	newInfo.headRGBA[3] = 0xff;
 	/* Parse the torso color */
-	colorLen = Q_parseColor(v, ospColors, color );
+	colorLen = Q_parseColor(v, cg.cpma.detected ? defaultColors : ospColors, color );
 	v += colorLen;
 	newInfo.torsoRGBA[0] = color[0] * 255;
 	newInfo.torsoRGBA[1] = color[1] * 255;
 	newInfo.torsoRGBA[2] = color[2] * 255;
 	newInfo.torsoRGBA[3] = 0xff;
 	/* Parse the leg color */
-	colorLen = Q_parseColor(v, ospColors, color );
+	colorLen = Q_parseColor(v, cg.cpma.detected ? defaultColors : ospColors, color );
 	v += colorLen;
 	newInfo.legsRGBA[0] = color[0] * 255;
 	newInfo.legsRGBA[1] = color[1] * 255;
@@ -873,9 +873,11 @@ void CG_NewClientInfo( int clientNum ) {
 	newInfo.legsRGBA[3] = 0xff;
 
 	// color2
-	v = ConfigValue( strings, "c2");
+	slash = ConfigValue( strings, "c2");
+	if ( slash[0] )
+		 v = slash;
 	
-	Q_parseColor(v, ospColors, newInfo.color2 );
+	Q_parseColor(v, cg.cpma.detected ? defaultColors : ospColors, newInfo.color2 );
 	newInfo.c2RGBA[0] = newInfo.color2[0] * 255;
 	newInfo.c2RGBA[1] = newInfo.color2[1] * 255;
 	newInfo.c2RGBA[2] = newInfo.color2[2] * 255;

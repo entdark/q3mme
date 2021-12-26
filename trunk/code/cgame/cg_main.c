@@ -593,6 +593,8 @@ gameType_t CG_GameType( void ) {
 		return mov_gameType.integer - 1;
 	}
 	switch ( cgs.gametype ) {
+	case GT_HARVESTER:
+		return cg.cpma.detected ? gameTypeCTF : gameTypeUnknown;
 	case GT_CTF:
 		return gameTypeCTF;
 	case GT_TEAM:

@@ -846,34 +846,13 @@ vec3_t ospColors[10] =
 
 int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color ) {
 	char c = *p++;
+	qboolean fullRange = numberColors == defaultColors;
 	if (c >= '0' && c <='9') {
 		if (!color)
 			return 1;
 		memcpy( color, numberColors + c - '0', sizeof( vec3_t ));
 		return 1;
-	} else if ( ( c >= 'a' && c < 'x') || (c >= 'A' && c < 'X') ) {
-		int deg;
-		float angle, v;
-		if (!color)
-			return 1;
-		deg = (((c|32) - 'a') * 360) / 24;
-		angle = (DEG2RAD(deg % 120));
-		v = ((cos(angle) / cos((M_PI / 3) - angle)) + 1) / 3;
-		if ( deg <= 120) {
-			color[0] = v;
-			color[1] = 1-v;
-			color[2] = 0;
-		} else if ( deg <= 240) {
-			color[0] = 0;
-			color[1] = v;
-			color[2] = 1-v;
-		} else {
-			color[0] = 1-v;
-			color[1] = 0;
-			color[2] = v;
-		}
-		return 1;
-	} else if ( c == 'x' || c == 'X' )  {
+	} else if ( ( ( c == 'x' || c == 'X' ) && !fullRange ) || c == '#' )  {
 		int i;
 		int val;
 		for (i = 0;i<6;i++) {
@@ -901,6 +880,50 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color ) {
 			}
 		}
 		return 7;
+	} else if ( ( c >= 'a' && c <= 'x') || (c >= 'A' && c <= 'X') ) {
+		int deg;
+		float h, v;
+		if (!color)
+			return 1;
+		h = (c - ((c >= 'a') ? 'a' : 'A')) / ('x' - 'a' + (fullRange ? 1.0f : 0.0f));
+		deg = h * 360;
+		v = (deg % 60) / 60.0f;
+		if ( deg < 60) {
+			color[0] = 1.0f;
+			color[1] = v;
+			color[2] = 0;
+		} else if ( deg < 120) {
+			color[0] = 1-v;
+			color[1] = 1;
+			color[2] = 0;
+		} else if ( deg < 180) {
+			color[0] = 0;
+			color[1] = 1;
+			color[2] = v;
+		} else if ( deg < 240) {
+			color[0] = 0;
+			color[1] = 1-v;
+			color[2] = 1;
+		} else if ( deg < 300) {
+			color[0] = v;
+			color[1] = 0;
+			color[2] = 1;
+		} else {
+			color[0] = 1;
+			color[1] = 0;
+			color[2] = 1-v;
+		}
+		return 1;
+	} else if ( ( ( c == 'y') || (c == 'Y') ) && fullRange ) {
+		if (!color)
+			return 1;
+		color[0] = color[1] = color[2] = 1.0f;
+		return 1;
+	} else if ( ( ( c == 'z') || (c == 'Z') ) && fullRange ) {
+		if (!color)
+			return 1;
+		color[0] = color[1] = color[2] = 0.5f;
+		return 1;
 	}
 	if (color) {
 		color[0] = color[1] = color[2] = 1.0f;

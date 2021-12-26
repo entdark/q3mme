@@ -102,7 +102,7 @@ CG_Draw3DModel
 ================
 */
 extern void trap_MME_TimeFraction( float timeFraction );
-void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles ) {
+void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandle_t skin, byte *color, vec3_t origin, vec3_t angles ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
 
@@ -119,6 +119,8 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandl
 	VectorCopy( origin, ent.origin );
 	ent.hModel = model;
 	ent.customSkin = skin;
+	if ( color )
+		Byte4Copy( color[0], ent.shaderRGBA );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
 	refdef.rdflags = RDF_NOWORLDMODEL;
@@ -177,7 +179,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		// allow per-model tweaking
 		VectorAdd( origin, ci->headOffset, origin );
 
-		CG_Draw3DModel( x, y, w, h, ci->headModel, ci->headSkin, origin, headAngles );
+		CG_Draw3DModel( x, y, w, h, ci->headModel, ci->headSkin, cg.cpma.detected ? ci->headRGBA : NULL, origin, headAngles );
 	} else if ( cg_drawIcons.integer ) {
 		CG_DrawPic( x, y, w, h, ci->modelIcon );
 	}
@@ -230,7 +232,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		} else {
 			return;
 		}
-		CG_Draw3DModel( x, y, w, h, handle, 0, origin, angles );
+		CG_Draw3DModel( x, y, w, h, handle, 0, NULL, origin, angles );
 	} else if ( cg_drawIcons.integer ) {
 		gitem_t *item;
 
@@ -389,7 +391,7 @@ static void CG_DrawStatusBar( void ) {
 		origin[2] = 0;
 		angles[YAW] = 90 + 20 * sin( (cg.time / 1000.0) + cg.timeFraction / 1000.0 );
 		CG_Draw3DModel( (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE,
-					   cg_weapons[ cent->currentState.weapon ].ammoModel, 0, origin, angles );
+					   cg_weapons[ cent->currentState.weapon ].ammoModel, 0, NULL, origin, angles );
 	}
 
 	CG_DrawStatusBarHead( 185 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef );
@@ -408,7 +410,7 @@ static void CG_DrawStatusBar( void ) {
 		origin[2] = -10;
 		angles[YAW] = ( (cg.time & 2047) + cg.timeFraction ) * 360 / 2048.0;
 		CG_Draw3DModel( 370 + (CHAR_WIDTH*3 + TEXT_ICON_SPACE)*cgs.widthRatioCoef, 432, ICON_SIZE*cgs.widthRatioCoef, ICON_SIZE,
-					   cgs.media.armorModel, 0, origin, angles );
+					   cgs.media.armorModel, 0, NULL, origin, angles );
 	}
 
 	//

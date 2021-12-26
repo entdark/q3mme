@@ -633,7 +633,7 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 			color[0] = color[1] = color[2] = 1;
 			color[3] = 0;
 			offset[0] = offset[1] = offset[2] = 0;
-			Q_parseColor( mov_gridColor.string, ospColors, color );
+			Q_parseColor( mov_gridColor.string, cg.cpma.detected ? defaultColors : ospColors, color );
 			demoDrawGrid( demo.viewOrigin, color, offset, mov_gridWidth.value, mov_gridStep.value, mov_gridRange.value, shader );
 		}
 	}
