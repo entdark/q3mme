@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../../ui/menudef.h"
 #include "../ui/keycodes.h"
 
+extern float trap_MME_ProgressTime( void );
+
 #define MAX_HUD_ITEMS	128
 #define MAX_HUD_STRINGS (16*1024)
 
@@ -919,6 +921,7 @@ void hudDraw( void ) {
 			continue;
 		hudDrawItem( item );
 	}
+	demoDrawProgress(trap_MME_ProgressTime());
 
 	if ( hud.keyCatcher & KEYCATCH_CGAME ) {
 		float x,y,w,h;

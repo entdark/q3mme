@@ -37,7 +37,6 @@ extern int trap_MME_SeekTime( int seekTime );
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern int trap_MME_DemoInfo( mmeDemoInfo_t *info );
 extern void trap_MME_TimeFraction( float timeFraction );
-extern float trap_MME_ProgressTime( void );
 extern int trap_MME_DemoLength();
 extern void trap_S_UpdateScale( float scale );
 int lastMusicStart;
@@ -672,9 +671,6 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
 		hudDraw();
-		if (demo.editType) {
-			demoDrawProgress(trap_MME_ProgressTime());
-		}
 	}
 //checkCaptureEnd:
 	if ( demo.capture.active && demo.capture.locked && demo.play.time > demo.capture.end  ) {
