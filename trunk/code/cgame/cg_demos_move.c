@@ -897,10 +897,9 @@ void demoMoveChase(void) {
 		}
 		AnglesNormalize180( angles );
 		demoMovePoint( origin, demo.chase.velocity, angles );
-	} else if (demo.cmd.buttons & BUTTON_AFFIRMATIVE && !(demo.oldcmd.buttons & BUTTON_AFFIRMATIVE)) {
-		VectorCopy( demo.viewOrigin, origin );
-		VectorCopy( demo.viewAngles, angles );
-		CG_DemosAddLog("Chase position synced to current view");
+	} else if (demo.cmd.buttons & BUTTON_AFFIRMATIVE) {
+		angles[ROLL] -= demo.cmdDeltaAngles[YAW];
+		AnglesNormalize180( angles );
 	} else if ( demo.cmd.upmove > 0) {
 		*distance -= demo.serverDeltaTime * 700 * demo.cmdDeltaAngles[YAW];
 		if (*distance < 0)
