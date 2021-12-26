@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // cg_weapons.c -- events and effects dealing with weapons
 #include "cg_local.h"
+#include "cg_multispec.h"
 
 /*
 ==========================
@@ -1074,7 +1075,9 @@ void CG_AddViewWeaponDirect( centity_t *cent ) {
 	}
 
 	// drop gun lower at higher fov
-	if ( cg_fov.integer > 90 ) {
+	if ( CG_MultiSpecActive() ) {
+		fovOffset = -0.2 * ( CG_MultiSpecFov() - 90 );
+	} else if ( cg_fov.integer > 90 ) {
 		fovOffset = -0.2 * ( cg_fov.integer - 90 );
 	} else {
 		fovOffset = 0;

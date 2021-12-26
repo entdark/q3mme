@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #include "cg_local.h"
+#include "cg_multispec.h"
 
 static long (QDECL *syscall)( long arg, ... ) = (long (QDECL *)( long, ...))-1;
 
@@ -43,6 +44,7 @@ int PASSFLOAT( float x ) {
 }
 
 void	trap_Print( const char *fmt ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_PRINT, fmt );
 }
 
@@ -184,10 +186,12 @@ int		trap_CM_MarkFragments( int numPoints, const vec3_t *points,
 }
 
 void	trap_S_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_STARTSOUND, origin, entityNum, entchannel, sfx );
 }
 
 void	trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum ) {
+	if (CG_MultiSpecActive()) return;
 	//announcer is always hearable, rite?
 	if ( channelNum == CHAN_ANNOUNCER )
 		syscall( CG_S_STARTSOUND, 0, ENTITYNUM_NONE, CHAN_ANNOUNCER, sfx );
@@ -196,34 +200,42 @@ void	trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum ) {
 }
 
 void	trap_S_ClearLoopingSounds( qboolean killall ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_CLEARLOOPINGSOUNDS, killall );
 }
 
 void	trap_S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_ADDLOOPINGSOUND, entityNum, origin, velocity, sfx );
 }
 
 void	trap_S_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_ADDREALLOOPINGSOUND, entityNum, origin, velocity, sfx );
 }
 
 void	trap_S_StopLoopingSound( int entityNum ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_STOPLOOPINGSOUND, entityNum );
 }
 
 void	trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_UPDATEENTITYPOSITION, entityNum, origin );
 }
 
 void	trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_RESPATIALIZE, entityNum, origin, axis, inwater );
 }
 
 sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed ) {
+	if (CG_MultiSpecActive()) return 0;
 	return syscall( CG_S_REGISTERSOUND, sample, compressed );
 }
 
 void	trap_S_StartBackgroundTrack( const char *intro, const char *loop ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_STARTBACKGROUNDTRACK, intro, loop );
 }
 
@@ -289,6 +301,7 @@ void	trap_R_SetColor( const float *rgba ) {
 
 void	trap_R_DrawStretchPic( float x, float y, float w, float h, 
 							   float s1, float t1, float s2, float t2, qhandle_t hShader ) {
+	CG_MultiSpecAdjust2D(&x, &y, &w, &h);
 	syscall( CG_R_DRAWSTRETCHPIC, PASSFLOAT(x), PASSFLOAT(y), PASSFLOAT(w), PASSFLOAT(h), PASSFLOAT(s1), PASSFLOAT(t1), PASSFLOAT(s2), PASSFLOAT(t2), hShader );
 }
 
@@ -482,6 +495,7 @@ void trap_MME_TimeFraction( float timeFraction ) {
 	syscall( CG_MME_TIMEFRACTION, PASSFLOAT(timeFraction) );
 }
 void trap_S_UpdateScale( float scale ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_S_UPDATE_SCALE, PASSFLOAT(scale) );
 }
 void trap_R_AddSpriteToScene( const refSprite_t *sprite ) {
@@ -516,6 +530,7 @@ void trap_FX_Run( fxHandle_t handle, const fxParent_t *parent, const void *key )
 	syscall( CG_FX_RUN, handle, parent, key );
 }
 void trap_FX_VibrateView( float scale, vec3_t origin, vec3_t angles ) {
+	if (CG_MultiSpecActive()) return;
 	syscall( CG_FX_VIBRATEVIEW, PASSFLOAT( scale ), origin, angles );
 }
 float trap_MME_ProgressTime( void ) {

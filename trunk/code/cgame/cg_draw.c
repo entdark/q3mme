@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // active (after loading) gameplay
 
 #include "cg_local.h"
+#include "cg_multispec.h"
 
 int sortedTeamPlayers[TEAM_MAXOVERLAY];
 int	numSortedTeamPlayers;
@@ -111,7 +112,8 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandl
 	}
 
 	CG_AdjustFrom640( &x, &y, &w, &h );
-
+	CG_MultiSpecAdjust2D( &x, &y, &w, &h );
+	
 	memset( &refdef, 0, sizeof( refdef ) );
 
 	memset( &ent, 0, sizeof( ent ) );
@@ -667,6 +669,8 @@ static void CG_DrawUpperRight( void ) {
 	float	y;
 
 	y = 0;
+
+	y += CG_MultiSpecTeamOverlayOffset();
 
 	if ( cg_drawSnapshot.integer ) {
 		y = CG_DrawSnapshot( y );
@@ -1866,6 +1870,11 @@ static void CG_DrawCrosshair(void) {
 		h *= ( 1 + f );
 	}
 
+	if (CG_MultiSpecActive()) {
+		w *= 1.7f;
+		h *= 1.7f;
+	}
+
 	x = cg_crosshairX.integer;
 	y = cg_crosshairY.integer;
 	CG_AdjustFrom640( &x, &y, &w, &h );
@@ -2285,8 +2294,12 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		VectorMA( cg.refdef.vieworg, -separation, cg.refdef.viewaxis[1], cg.refdef.vieworg );
 	}
 
-	// draw 3D view
-	trap_R_RenderScene( &cg.refdef );
+	if (CG_MultiSpecSkipBackground()) {
+		trap_R_ClearScene();
+		CG_MultiSpecDrawBackground();
+	} else
+		// draw 3D view
+		trap_R_RenderScene( &cg.refdef );
 
 	// restore original viewpoint if running stereo
 	if ( separation != 0 ) {
@@ -2295,6 +2308,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// draw status bar and other floating elements
  	CG_Draw2D();
+
+	CG_MultiSpecMain();
 }
 
 

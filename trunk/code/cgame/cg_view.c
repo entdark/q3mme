@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cg_view.c -- setup all the parameters (position, angle, etc)
 // for a 3D rendering
 #include "cg_local.h"
+#include "cg_multispec.h"
 
 
 /*
@@ -486,7 +487,11 @@ static int CG_CalcFov( void ) {
 			// dmflag to prevent wide fov for all clients
 			fov_x = 90;
 		} else {
-			fov_x = cg_fov.value;
+			if (CG_MultiSpecActive()) {
+				fov_x = CG_MultiSpecFov();
+			} else {
+				fov_x = cg_fov.value;
+			}
 			if ( fov_x < 1 ) {
 				fov_x = 1;
 			} else if ( fov_x > 160 ) {
@@ -611,7 +616,8 @@ Sets cg.refdef view values
 */
 int CG_CalcViewValues( void ) {
 	entityState_t *es = &cg.playerCent->currentState;
-	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
+//	if (!CG_MultiSpecActive())
+		memset( &cg.refdef, 0, sizeof( cg.refdef ) );
 
 	// strings for in game rendering
 	// Q_strncpyz( cg.refdef.text[0], "Park Ranger", sizeof(cg.refdef.text[0]) );

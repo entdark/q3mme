@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "cg_demos.h" 
+#include "cg_multispec.h"
 
 demoMain_t demo;
 
@@ -103,7 +104,7 @@ static void CG_DemosUpdatePlayer( void ) {
 }
 
 
-static int demoSetupView( void) {
+int demoSetupView( void) {
 	vec3_t forward;
 	int inwater = qfalse;
 	qboolean behindView = qfalse;
@@ -654,10 +655,17 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	if (captureFrame && stereoSep > 0.0f)
 		trap_Cvar_Set("r_stereoSeparation", va("%f", -stereoSep));
 	trap_MME_TimeFraction(cg.timeFraction);
-	trap_R_RenderScene( &cg.refdef );
+	if (CG_MultiSpecSkipBackground()) {
+		trap_R_ClearScene();
+		CG_MultiSpecDrawBackground();
+	} else
+		// draw 3D view
+		trap_R_RenderScene( &cg.refdef );
 
 	if ( demo.viewType == viewChase && cg.playerCent && ( cg.playerCent->currentState.number < MAX_CLIENTS ) )
 		CG_Draw2D();
+
+	CG_MultiSpecMain();
 	
 //	CG_DrawSmallString( 0, 0, va( "height %d", cg.playerCent->pe.viewHeight ), 1 );
 
@@ -670,7 +678,8 @@ void CG_DemosDrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
-		hudDraw();
+		if (!CG_MultiSpecEditing())
+			hudDraw();
 	}
 //checkCaptureEnd:
 	if ( demo.capture.active && demo.capture.locked && demo.play.time > demo.capture.end  ) {

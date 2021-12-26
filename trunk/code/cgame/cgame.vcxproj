@@ -192,6 +192,7 @@
     <ClCompile Include="cg_localents.c" />
     <ClCompile Include="cg_main.c" />
     <ClCompile Include="cg_marks.c" />
+    <ClCompile Include="cg_multispec.c" />
     <ClCompile Include="cg_players.c" />
     <ClCompile Include="cg_playerstate.c" />
     <ClCompile Include="cg_predict.c" />
@@ -212,6 +213,7 @@
     <ClInclude Include="..\game\bg_local.h" />
     <ClInclude Include="..\game\bg_public.h" />
     <ClInclude Include="cg_local.h" />
+    <ClInclude Include="cg_multispec.h" />
     <ClInclude Include="cg_public.h" />
     <ClInclude Include="..\ui\keycodes.h" />
     <ClInclude Include="..\..\ui\menudef.h" />
