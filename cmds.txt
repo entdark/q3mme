@@ -230,6 +230,43 @@ cut
     cut it, cut the currently playing demo with the set range       (bound to /)
     cut start/end, current time will be set as start/end of cutting (bound to [ and ])
 
+multispec
+    <subcommands>:
+    list, view current settings, red tag means an override
+    del id, delete window with id
+    clear, delete all windows
+    background (shader), toggle showing main scene, optional shader to fill whole screen
+    teamoverlay (replace/offset/scale), multispec for teamoverlay, optional replace to hide/show original or offset it, or scale for all windows
+    or
+    add, add a new multispec window
+    edit (id), toggle editing mode, optional id to update
+    Followed by a list of 2 parameter combinations
+    x "X", Set x coordinate
+    y "Y", Set y coordinate
+    s "scale", Set window scale
+    client "0-31", Set window pov on a client
+    fov "1-180", Set player FOV
+    2d "0,1", Draw 2D for that client
+    bw "width", Set window border width
+    bc "0-9,#hexcode", Set window border colour
+        multispec add, result:
+            a new multispec window appears in the centre of the screen,
+            editing mode gets activated and mouse cursor appears,
+            clicking on the window with either mouse1 or mouse2 switches between next or previous players', camera or chase POVs,
+            clicking on the window, holding mouse1 and moving the cursor makes the window move by following the cursor,
+            putting the cursor in the window bounds and scrolling mouse wheel changes window scale
+            hitting ESC or ENTER closes the editing mode
+        multispec add x 0 client 2, result:
+            a new multispec window appears in the horizontal position 0, trying to follow client 2 POV or other closest,
+            the rest matches the example above
+        multispec teamoverlay, result:
+            in a team game mode it adds multispec windows for each followed player's teammate on the top of the screen
+        multispec teamoverlay offset 0.5, result:
+            upper right 2D elements on the main non-multispec POV gets offset vertically down by half of the screen
+        multispec edit 2 fov 133.7 2d 0
+            window with id 2 gets value 133.7 for window client's FOV and disables drawing 2d for that window
+
+
 
 
 Q3MME CLIENT (ENGINE)

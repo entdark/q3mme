@@ -4,7 +4,7 @@ Example mask:
 cvarName               [value] Explanation (requirement/limitation):
                        value = explanation
 ? - integer(1337), ?.? - float(13.37), text - path/name/filename("mme/shader", "captureName"),
-?..? - range(0..2), xHEXCOL - colour in hexadecimal representation (x00d52f)(0..f)
+?..? - range(0..2), #HEXCOL - colour in hexadecimal representation (x00d52f)(0..f)
 
 Q3MME CLIENT GAME
 
@@ -56,11 +56,24 @@ mov_chatBox             [0..?] Set time of chat box displaying on screen in mill
 mov_chatBoxHeight       [0.0..?.?] Vertical position of chat box
 mov_chatBoxScale        [0.0..?.?] Set scale of chat box messages
 
+mov_defragTimer         [0, 1] Draw DeFRaG timer (DeFRaG demo)
+mov_defragTimerScale    [0.0..?.?] Set scale of speedometer (mov_defragTimer 1)
+mov_defragTimerPos      [0.0..?.? 0.0..?.?] Set on screen position of DeFRaG timer with two arguements (mov_defragTimer 1)
+mov_defragTimerPrecision[0, 1, 2, 3] Set the number of decimals for milliseconds (mov_defragTimer 1)
+mov_defragTimerAlignment[left, right, center, msec] Align DeFRaG timer from [mov_defragTimerPos X] (mov_defragTimer 1):
+                        left = to the right, right = to the left, center = equally to the left and to the right, msec = to the left and to the right from the milliseconds delimiter
+mov_defragTimerInterpolated[0, 1] Interpolate value of DeFRaG timer between next and previous time (mov_defragTimer 1)
+mov_defragTimerColor    [0, 1..9, a..z, #HEXCOL] Set colour of DeFRaG timer (mov_defragTimer 1)
+
+mov_cpmaAutoMultiview   [0, 1] Automatically enables multispec feature if CPMA MVD detected
+
 cg_drawSpeedometer      [0, 1] Draw speedometer in ups on screen
 cg_drawSpeedometerScale [0.0..?.?] Set scale of speedometer (cg_drawSpeedometer 1)
 cg_drawSpeedometerPos   [0.0..?.? 0.0..?.?] Set on screen position of speedometer with two arguements (cg_drawSpeedometer 1)
 cg_drawSpeedometerFormat[text, %format] Draw speedometer in certain colours (^ and the colour key) and certain tabulation (cg_drawSpeedometer 1):
                         %s = draw speed number directly, %t = draw speed number tabulated by 4 letters, %% = %
+cg_drawSpeedometerAlignment[left, right, center] Align speedometer from [cg_drawSpeedometerPos X] (cg_drawSpeedometer 1):
+                        left = to the right, right = to the left, center = equally to the left and to the right
 
 cg_drawMovementKeys     [0, 1] Draw movement keys such as W A S D v ^
 cg_drawMovementKeysPos  [0..?.? 0..?.?] Set on screen position of movement keys with two arguements (cg_drawMovementKeys 1)
@@ -68,6 +81,9 @@ cg_drawMovementKeysScale[0.0..?.?] Set scale of movement keys (cg_drawMovementKe
 
 cg_commandSmooth        [0, 1, 2] Set clients' movements smoothing:
                         0 = disabled, 1 = enabled for the predicted client only, 2 = enabled for all clients
+
+cg_thirdPersonHorzOffset[-?.?..?.?] Set horizontal position offset in third person view (cg_thirdPerson 1)
+cg_thirdPersonVertOffset[-?.?..?.?] Set vertical position offset in third person view (cg_thirdPerson 1)
 
 
 Q3MME CLIENT (ENGINE)
@@ -88,7 +104,7 @@ mme_demoAutoQuit        [0, 1, 2] Stop the demo playback if it got to the end:
 
 mme_anykeystopsdemo     [0, 1] Any pressed key can stop demo playback
 
-com_affinity            [bit-field: 1..32 in HEX] Set cores that the game will use (the game works very smoothly with 1 core)
+com_affinity            [bit-field: 0..32 in HEX] Set cores that the game will use (the game works very smoothly with 1 core, but captures very fast with pipe with all cores (value of 0))
 
 fs_extraGames           [text text] Tell the game which mod folders it can load files from:
                         fs_extraGames "japlus" will load files from japlus folder like custom models and maps or
@@ -106,6 +122,9 @@ s_effects               [0..6] Use the underwater sound effect:
                         0 = disabled, 1 = basic, 2 = circular, 3 = shuffle, 4 = split, 5 = double z, 6 = double h
                         Values over 0 are different instructions, but they produce almost the same effect.
 com_soundMegs           [0..?] Set how many megabytes are allocated for sounds.
+
+cl_dlURL                [text] Set URL to download missing maps from (cl_mapAutoDownload 1)
+cl_mapAutoDownload      [0, 1] Automatically download missing maps
 
 MME FX
 fx_Megs                 [0..?] Set how many megabytes are allocated for mme fx system.
@@ -129,7 +148,7 @@ mme_jpegOptimizeHuffman [0, 1] Currently does nothing
 mme_tgaCompression      [0, 1] Use lossless compression for TGA output
 mme_pngCompression      [0..9] Lossless compression level for PNG output
 
-mme_skykey              [0, 1..9, a..t, xHEXCOL] Set a colour for skybox; could be used as chroma key
+mme_skykey              [0, 1..9, a..z, #HEXCOL] Set a colour for skybox; could be used as chroma key
 mme_worldShader         [text] Replace environment textures with yours
 
 mme_pip                 [0, 1] Replaces textures on the map to old couple having fun
@@ -141,8 +160,8 @@ mme_blurGamma           [0, 1] Correct gamma in every frame that will be merged
 mme_blurJitter          [0..?.?] Jitter effect (random offset) power for blur frames
 mme_blurStrength        [0, 1.0..?.?] Strength of blur frames blending (r_fbo 0)
 
-mme_dofFrames           [0..256] Number of frames that will be captured at the same time with view offset each and merged into one to emulate realistic DOF (r_fbo 0)
-mme_dofRadius           [0.0..?.?] Set view offset for every dof frame (power of dof blur) (r_fbo 0)
+mme_dofFrames           [0..256] Number of frames that will be captured at the same time with view offset each and merged into one to emulate realistic DOF (r_fbo 0 and mme_saveCubemap 0)
+mme_dofRadius           [0.0..?.?] Set view offset for every dof frame (power of dof blur) (r_fbo 0 and mme_saveCubemap 0)
 
 mme_renderWidth         [0, 1..?] Width of resolution that game will capture frames with in demoList feature
 mme_renderHeight        [0, 1..?] Height of resolution that game will capture frames with in demoList feature
@@ -157,11 +176,17 @@ mme_saveDepth           [0, 1, 2] Save depth of field mask outputs:
                         0 = don't save dof output, 1 = merge dof blur frames (if have) and save, 2 = save every dof blur frame (if have) as a single frame
 mme_saveStencil         [0, 1, 2] Save stencil mask outputs:
                         0 = don't save stencil output, 1 = merge stencil blur frames (if have) and save, 2 = save every stencil blur frame (if have) as a single frame
+mme_saveCubemap         [-2, -1, 0, 1, 2] Save cubemap output:
+                        0 = don't save cubemap output, 1 = save fast cubemap 1x6 (vertical), 2 = save human-pleasing cubemap 6x1 (horizontal),
+                        -1 = same as 1 but view angles are not locked, -2 = same as 2 but view angles are not locked
 
 mme_cpuSSE2             [0, 1] Use SSE2 instruction to make motion blur (faster way, may crash on old CPUs)
 mme_pbo                 [0, 1] Use PBO instruction to increase capture speed in times (r_stereoSeparation 0.0)
 mme_pipeCommand         [text, %format] Set the command that opens its stdin for reading from the game raw input and set the supported output with the given format:
-                        %o = output name, %f = fps (from capture command), %w = game width, %h = game height
+                        %o = output name, %f = fps (from capture command), %w = game width, %h = game height, %% = %
+                        auto = automatically choose the best pipe command for current settings: default, stereo, VR180, VR360
+mme_combineStereoShots  [0, 1, 2] Combine 2 stereo shots into 1 (r_stereoSeparation not 0.0):
+                        0 = save stereo shots separately, 1 = combine stereo shots fast and save (top-bottom), 2 = combine stereo shots human-pleasing and save (side-by-side)
                         
 
 r_zproj                 [0..?.?] Stereo focus position
@@ -174,11 +199,19 @@ r_anisotropy            [0, 2, 4, 8, 16] Anisotropic filter factor
 
 r_fogMinOpaqueDistance  [-?.?..?.?] Minimal distance that fog starts clipping from
 
+r_bloom                 [0, 1, 2] Draws glowing effect over the whole screen (mme_saveCubemap 0 or mme_saveCubemap not 0 and all 2D disabled: cg_draw2D 0, con_notifytime -1)
+                        0 - disabled, 1 - warsow style, 2 - warsow style + custom style
+r_bloom_sample_size     [0..?] Set the bloom texture size (r_bloom 1)
+r_bloom_fast_sample     [0, 1] Unused, undocumented (r_bloom 1)
+r_bloom_alpha           [0.0..1.0] Opacity of bloom (r_bloom 1)
+r_bloom_darken          [0..?] Intensity of dark parts of bloom (r_bloom 1)
+r_bloom_intensity       [0.0..?.?] Intensity for light parts of bloom (r_bloom 1 and r_bloom_diamond_size > 0)
+r_bloom_diamond_size    [0, 4, 6, 8] Size of bloom matrix (r_bloom 1)
+r_bloom_range           [1.0..16.0] Length of rays of cross glowing (r_bloom 2)
+
 FRAME BUFFER OBJECT
 r_fbo                   [0, 1] Use framebuffer object feature (r_fboWidth > 0 and r_fboHeight > 0)
-r_fboMultiSample        [0, 2, 4, 8] Anti-aliasing in FBO mode (r_fbo 1; r_DynamicGlow 0; cg_shadows != 2);
-                        the feature doesn't work together with volumetric shadows, dynamic glow,
-                        disables distortion effect in force push/pull, boon, sphere shield, repeater orb
+r_fboMultiSample        [0, 2, 4, 8] Anti-aliasing in FBO mode (r_fbo 1)
 r_fboBlur               [0, 1, 2] Motion blur capture in FBO mode (very fast) (mme_blurFrames > 0; gpu or cpu with opengl 2.0 or higher support):
                         0 = disabled, 1 = 16 bit colour buffer, 2 = 32 bit colour buffer
 r_fboWidth              [0..?] Width of resolution in FBO mode, not depended on current game resolution and will be fit in it
