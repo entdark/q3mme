@@ -97,7 +97,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>IOQ3_VM;_DEBUG;WIN32;_WINDOWS;BOTLIB;HAVE_VM_COMPILED;HAVE_VM_NATIVE;ENGINE_Q3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_CURL;CURL_STATICLIB;IOQ3_VM;_DEBUG;WIN32;_WINDOWS;BOTLIB;HAVE_VM_COMPILED;HAVE_VM_NATIVE;ENGINE_Q3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -123,7 +123,7 @@
       <Culture>0x0000</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;winmm.lib;libmad.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;winmm.lib;libmad.lib;freetype.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -162,7 +162,7 @@
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
-      <PreprocessorDefinitions>IOQ3_VM;NDEBUG;WIN32;_WINDOWS;BOTLIB;HAVE_VM_COMPILED;HAVE_VM_NATIVE;ENGINE_Q3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_CURL;CURL_STATICLIB;IOQ3_VM;NDEBUG;WIN32;_WINDOWS;BOTLIB;HAVE_VM_COMPILED;HAVE_VM_NATIVE;ENGINE_Q3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>
       </StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -194,7 +194,7 @@
       <AdditionalIncludeDirectories>C:\Program Files %28x86%29\Microsoft SDKs\Windows\v7.1A\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MSVCRT.lib;legacy_stdio_definitions.lib;ws2_32.lib;winmm.lib;libmad.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MSVCRT.lib;legacy_stdio_definitions.lib;ws2_32.lib;winmm.lib;libmad.lib;freetype.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -284,6 +284,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="botlib\aasfile.h" />
+    <ClInclude Include="client\cl_curl.h" />
     <ClInclude Include="client\cl_demos.h" />
     <ClInclude Include="client\fx_local.h" />
     <ClInclude Include="client\fx_public.h" />
@@ -402,6 +403,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="client\cl_curl.c" />
     <ClCompile Include="client\cl_demos_cut.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>

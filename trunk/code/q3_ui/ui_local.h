@@ -246,6 +246,8 @@ extern char	*ui_medalNames[];
 extern char	*ui_medalPicNames[];
 extern char	*ui_medalSounds[];
 
+extern void UI_DrawConnectScreen( qboolean overlay );
+
 //
 // ui_mfield.c
 //
@@ -420,6 +422,7 @@ typedef struct {
 	glconfig_t			glconfig;
 	qboolean			debug;
 	qhandle_t			whiteShader;
+	qhandle_t			menuBackShader;
 	qhandle_t			charset;
 	qhandle_t			charsetProp;
 	qhandle_t			charsetPropGlow;

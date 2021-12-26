@@ -392,7 +392,7 @@ rescan:
 GetClipboardData
 ====================
 */
-static void GetClipboardData( char *buf, int buflen ) {
+static void CL_GetClipboardData( char *buf, int buflen ) {
 	char	*cbd;
 
 	cbd = Sys_GetClipboardData();
@@ -796,7 +796,7 @@ long CL_CgameSystemCalls( long *args ) {
 		Key_SetOverstrikeMode( args[1] );
 		return 0;
 	case CG_GETCLIPBOARDDATA:
-		GetClipboardData( VMA(1), args[2] );
+		CL_GetClipboardData( VMA(1), args[2] );
 		return 0;
 	case CG_FX_RESET:
 		FX_Reset();

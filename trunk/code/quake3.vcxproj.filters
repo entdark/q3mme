@@ -568,6 +568,9 @@
     <ClCompile Include="client\cl_demos_cut.c">
       <Filter>Client</Filter>
     </ClCompile>
+    <ClCompile Include="client\cl_curl.c">
+      <Filter>Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer\libpng\png.h">
@@ -862,6 +865,9 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="client\cl_demos.h">
+      <Filter>Client</Filter>
+    </ClInclude>
+    <ClInclude Include="client\cl_curl.h">
       <Filter>Client</Filter>
     </ClInclude>
   </ItemGroup>

@@ -33,6 +33,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	RETRANSMIT_TIMEOUT	3000	// time between connection packet retransmits
 
+#ifdef USE_CURL
+#include "cl_curl.h"
+extern qboolean CL_Download(const char *cmd, const char *pakname, qboolean autoDownload);
+#endif /* USE_CURL */
 // snapshots are a view of the server at a given time
 typedef struct {
 	qboolean		valid;			// cleared if delta parsing was invalid
@@ -205,6 +209,19 @@ typedef struct {
 
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t	netchan;
+
+#ifdef USE_CURL
+	struct {
+		qboolean	gotError;
+		qboolean	enabled;
+		qboolean	used;
+		qboolean	disconnected;
+		char		downloadURL[MAX_OSPATH];
+		CURL		*downloadCURL;
+		CURLM		*downloadCURLM;
+	} curl;
+#endif /* USE_CURL */
+	char		dlURL[MAX_CVAR_VALUE_STRING];
 } clientConnection_t;
 
 extern	clientConnection_t clc;
@@ -261,6 +278,8 @@ typedef struct {
 	qboolean	uiStarted;
 	qboolean	cgameStarted;
 	qboolean	fxStarted;
+
+	qboolean	startCgame;
 
 	int			framecount;
 	int			frametime;			// msec since last frame
@@ -347,6 +366,8 @@ extern	cvar_t	*cl_timedemo;
 
 extern	cvar_t	*cl_activeAction;
 
+extern	cvar_t	*cl_dlURL;
+extern	cvar_t	*cl_mapAutoDownload;
 extern	cvar_t	*cl_allowDownload;
 extern	cvar_t	*cl_conXOffset;
 extern	cvar_t	*cl_inGameVideo;
@@ -397,6 +418,7 @@ void CL_StartDemoLoop( void );
 void CL_NextDemo( void );
 void CL_ReadDemoMessage( void );
 
+qboolean CL_InitMapAutoDownload(void);
 void CL_InitDownloads(void);
 void CL_NextDownload(void);
 

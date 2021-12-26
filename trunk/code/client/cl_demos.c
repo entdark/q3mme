@@ -1058,6 +1058,7 @@ qboolean demoPlay( const char *fileName, qboolean del ) {
 	demo.play.handle = demoPlayOpen( fileName );
 	if (demo.play.handle) {
 		demoPlay_t *play = demo.play.handle;
+		demo.del = del;
 		clc.demoplaying = qtrue;
 		clc.newDemoPlayer = qtrue;
 		clc.serverMessageSequence = 0;
@@ -1078,14 +1079,15 @@ qboolean demoPlay( const char *fileName, qboolean del ) {
 		// will be cleared, note that this is done after the hunk mark has been set
 		CL_FlushMemory();
 		// initialize the CGame
-		cls.cgameStarted = qtrue;
 		// Create the gamestate
 		Com_Memcpy( cl.gameState.stringOffsets, play->frame->string.offsets, sizeof( play->frame->string.offsets ));
 		Com_Memcpy( cl.gameState.stringData, play->frame->string.data, play->frame->string.used );
 		cl.gameState.dataCount = play->frame->string.used;
+		if (CL_InitMapAutoDownload())
+			return;
+		cls.cgameStarted = qtrue;
 		CL_InitCGame();
 		cls.state = CA_ACTIVE;
-		demo.del = del;
 		return qtrue;
 	} else {
 		return qfalse;

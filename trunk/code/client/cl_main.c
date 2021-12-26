@@ -62,6 +62,8 @@ cvar_t	*cl_activeAction;
 
 cvar_t	*cl_motdString;
 
+cvar_t	*cl_dlURL;
+cvar_t	*cl_mapAutoDownload;
 cvar_t	*cl_allowDownload;
 cvar_t	*cl_conXOffset;
 cvar_t	*cl_inGameVideo;
@@ -373,7 +375,7 @@ void CL_PlayDemo_f( void ) {
 	Q_strncpyz( cls.servername, Cmd_Argv(1), sizeof( cls.servername ) );
 
 	// read demo messages until connected
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED ) {
+	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && !*clc.downloadName ) {
 		CL_ReadDemoMessage();
 	}
 	// don't get the first snapshot this frame, to prevent the long
@@ -648,6 +650,9 @@ CL_ShutdownAll
 */
 void CL_ShutdownAll(void) {
 
+#ifdef USE_CURL
+	CL_cURL_Shutdown();
+#endif
 	FX_Shutdown();
 	// clear sounds
 	S_DisableSounds();
@@ -1278,12 +1283,14 @@ void CL_Vid_Restart_f( void ) {
 	CL_StartHunkUsers();
 
 	// start the cgame if connected
-	if ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) {
+	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) || cls.startCgame ) {
 		cls.cgameStarted = qtrue;
 		CL_InitCGame();
 		// send pure checksums
 		CL_SendPureChecksums();
 	}
+
+	cls.startCgame = qfalse;
 }
 
 /*
@@ -1405,6 +1412,10 @@ void CL_DownloadsComplete( void ) {
 	// will be cleared, note that this is done after the hunk mark has been set
 	CL_FlushMemory();
 
+	if (CL_InitMapAutoDownload()) {
+		return;
+	}
+
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
@@ -1502,35 +1513,59 @@ After receiving a valid game state, we valid the cgame and local zip files here
 and determine if we need to download them
 =================
 */
+qboolean CL_InitMapAutoDownload(void) {
+#ifdef USE_CURL
+	if (cl_mapAutoDownload->integer) {
+		const char *info, *mapname, *bsp;
+
+		// get map name and BSP file name
+		info = cl.gameState.stringData + cl.gameState.stringOffsets[CS_SERVERINFO];
+		mapname = Info_ValueForKey(info, "mapname");
+		bsp = va("maps/%s.bsp", mapname);
+
+		if (!FS_FOpenFileRead(bsp, NULL, qfalse)) {
+			if (CL_Download("dlmap", mapname, qtrue)) {
+				cls.state = CA_CONNECTED; // prevent continue loading and shows the ui download progress screen
+				return qtrue;
+			}
+		}
+	}
+#endif // USE_CURL
+	return qfalse;
+}
+
+/*
+=================
+CL_InitDownloads
+
+After receiving a valid game state, we valid the cgame and local zip files here
+and determine if we need to download them
+=================
+*/
 void CL_InitDownloads(void) {
-  char missingfiles[1024];
+	char missingfiles[1024];
 
-  if ( !cl_allowDownload->integer )
-  {
-    // autodownload is disabled on the client
-    // but it's possible that some referenced files on the server are missing
-    if (FS_ComparePaks( missingfiles, sizeof( missingfiles ), qfalse ) )
-    {      
-      // NOTE TTimo I would rather have that printed as a modal message box
-      //   but at this point while joining the game we don't know wether we will successfully join or not
-      Com_Printf( "\nWARNING: You are missing some files referenced by the server:\n%s"
-                  "You might not be able to join the game\n"
-                  "Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n", missingfiles );
-    }
-  }
-  else if ( FS_ComparePaks( clc.downloadList, sizeof( clc.downloadList ) , qtrue ) ) {
-
-    Com_Printf("Need paks: %s\n", clc.downloadList );
-
-		if ( *clc.downloadList ) {
+	if (!cl_allowDownload->integer) {
+		// autodownload is disabled on the client
+		// but it's possible that some referenced files on the server are missing
+		if (FS_ComparePaks(missingfiles, sizeof(missingfiles), qfalse))
+		{
+			// NOTE TTimo I would rather have that printed as a modal message box
+			//   but at this point while joining the game we don't know wether we will successfully join or not
+			Com_Printf("\nWARNING: You are missing some files referenced by the server:\n%s"
+				"You might not be able to join the game\n"
+				"Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n", missingfiles);
+		}
+	} else if (FS_ComparePaks(clc.downloadList, sizeof(clc.downloadList), qtrue)) {
+		Com_Printf("Need paks: %s\n", clc.downloadList);
+		if (*clc.downloadList) {
 			// if autodownloading is not enabled on the server
 			cls.state = CA_CONNECTED;
 			CL_NextDownload();
 			return;
 		}
-
 	}
-		
+
 	CL_DownloadsComplete();
 }
 
@@ -2051,6 +2086,24 @@ void CL_Frame ( int dmsec ) {
 		return;
 	}
 
+#ifdef USE_CURL
+	if ( clc.curl.downloadCURLM ) {
+		CL_cURL_PerformDownload();
+		// we can't process frames normally when in disconnected
+		// download mode since the ui vm expects cls.state to be
+		// CA_CONNECTED
+		if ( clc.curl.disconnected ) {
+			cls.frametime = dmsec;
+			cls.realtime += dmsec;
+			cls.framecount++;
+			SCR_UpdateScreen();
+			S_Update( );
+			Con_RunConsole();
+			return;
+		}
+	}
+#endif
+
 	if ( cls.cddialog ) {
 		// bring up the cd error dialog if needed
 		cls.cddialog = qfalse;
@@ -2410,7 +2463,9 @@ void CL_Init( void ) {
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
 
 	cl_showMouseRate = Cvar_Get ("cl_showmouserate", "0", 0);
-
+	
+	cl_dlURL = Cvar_Get ("cl_dlURL", "http://ws.q3df.org/maps/download", CVAR_ARCHIVE);
+	cl_mapAutoDownload = Cvar_Get ("cl_mapAutoDownload", "1", CVAR_ARCHIVE);
 	cl_allowDownload = Cvar_Get ("cl_allowDownload", "0", CVAR_ARCHIVE);
 
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
@@ -3384,6 +3439,99 @@ CL_ShowIP_f
 void CL_ShowIP_f(void) {
 	Sys_ShowIP();
 }
+
+#ifdef USE_CURL
+/*
+=================
+Com_DL_ValidFileName
+=================
+*/
+qboolean CL_DownloadValidFileName( const char *fileName )
+{
+	int c;
+	while ( (c = *fileName++) != '\0' )
+	{
+		if ( c == '/' || c == '\\' || c == ':' )
+			return qfalse;
+		if ( c < ' ' || c > '~' )
+			return qfalse;
+	}
+	return qtrue;
+}
+
+qboolean CL_Download(const char *cmd, const char *pakname, qboolean autoDownload)
+{
+	char url[MAX_OSPATH];
+	char name[MAX_CVAR_VALUE_STRING];
+	const char *s;
+
+	if (cl_dlURL->string[0] == '\0')
+	{
+		Com_Printf(S_COLOR_YELLOW "cl_dlURL cvar is not set\n");
+		return qfalse;
+	}
+
+	// skip leading slashes
+	while (*pakname == '/' || *pakname == '\\')
+		pakname++;
+
+	// skip gamedir
+	s = strrchr(pakname, '/');
+	if (s)
+		pakname = s + 1;
+
+	if (!CL_DownloadValidFileName(pakname))
+	{
+		Com_Printf(S_COLOR_YELLOW "invalid file name: '%s'.\n", pakname);
+		return qfalse;
+	}
+
+	if (!Q_stricmp(cmd, "dlmap"))
+	{
+		Q_strncpyz(name, pakname, sizeof(name));
+		COM_StripExtension(name, name);
+		if (!name[0])
+			return qfalse;
+		s = va("maps/%s.bsp", name);
+		if (FS_FileIsInPAK(s, NULL, url) == 1)
+		{
+			Com_Printf(S_COLOR_YELLOW " map %s already exists in %s.pk3\n", name, url);
+			return qfalse;
+		}
+	}
+	COM_DefaultExtension(pakname, MAX_QPATH, ".pk3");
+
+	if(!CL_cURL_Init()) {
+		Com_Printf(S_COLOR_YELLOW"WARNING: could not load cURL library\n");
+		return qfalse;
+	}
+	CL_cURL_BeginDownload(va(BASEGAME"/%s", pakname), va("%s/%s", cl_dlURL->string, name));
+	return qtrue;
+}
+
+
+/*
+==================
+CL_Download_f
+==================
+*/
+/*static void CL_Download_f(void)
+{
+	if (Cmd_Argc() < 2 || *Cmd_Argv(1) == '\0')
+	{
+		Com_Printf("usage: %s <mapname>\n", Cmd_Argv(0));
+		return;
+	}
+
+	if (!strcmp(Cmd_Argv(1), "-"))
+	{
+		Com_DL_Cleanup(&download);
+		return;
+	}
+
+	CL_Download(Cmd_Argv(0), Cmd_Argv(1), qfalse);
+}*/
+#endif // USE_CURL
 
 /*
 =================
