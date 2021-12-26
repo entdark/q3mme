@@ -52,6 +52,8 @@ mov_hitSounds           [0, 1, 2] Select hit sounds type:
                         0 = disabled, 1 = default hit sounds (CPMA hit sounds if CPMA demo detected (fs_extraGames "CPMA")), 2 = CPMA hit sounds (forced) (fs_extraGames "CPMA")
 mov_smoothCamPos        [0, 1.0..?.?] Smoothing camera position movement factor for slowly moving camera:
                         0 = no smoothing, >=1 = x times smoothing factor
+mov_view6DoFRotation    [0, 1] Control view rotation with 6 degrees of freedom rather than Euler angles - WYSIWYG
+
 mov_chatBox             [0..?] Set time of chat box displaying on screen in milliseconds
 mov_chatBoxHeight       [0.0..?.?] Vertical position of chat box
 mov_chatBoxScale        [0.0..?.?] Set scale of chat box messages
