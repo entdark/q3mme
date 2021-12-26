@@ -70,8 +70,8 @@ Coords are virtual 640x480
 void CG_DrawSides(float x, float y, float w, float h, float size) {
 	CG_AdjustFrom640( &x, &y, &w, &h );
 	size *= cgs.screenXScale;
-	trap_R_DrawStretchPic( x, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
-	trap_R_DrawStretchPic( x + w - size, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
+	trap_R_DrawStretchPic( x, y, size*cgs.widthRatioCoef, h, 0, 0, 0, 0, cgs.media.whiteShader );
+	trap_R_DrawStretchPic( x + w - size*cgs.widthRatioCoef, y, size*cgs.widthRatioCoef, h, 0, 0, 0, 0, cgs.media.whiteShader );
 }
 
 void CG_DrawTopBottom(float x, float y, float w, float h, float size) {
