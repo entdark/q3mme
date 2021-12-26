@@ -405,6 +405,7 @@ static void SetFinalProjection( void ) {
 	float	width, height, depth;
 	float	zNear, zFar, zProj, stereoSep;
 	float	dx, dy;
+	float	fovX, fovY;
 	vec2_t	pixelJitter, eyeJitter;
 	
 	//
@@ -416,10 +417,18 @@ static void SetFinalProjection( void ) {
 	zProj	= r_zproj->value;
 	stereoSep = r_stereoSeparation->value / 100.0f;
 
-	ymax = zNear * tan( backEnd.viewParms.fovY * M_PI / 360.0f );
+	if ( R_MME_CubemapActive( stereoSep > 0.0f ) ) {
+		fovY = 90.0f * M_PI / 360.0f;
+		fovX = atan2( backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight / tan( 90.0f / 360.0f * M_PI ) );
+	} else {
+		fovY = backEnd.viewParms.fovY * M_PI / 360.0f;
+		fovX = backEnd.viewParms.fovX * M_PI / 360.0f;
+	}
+
+	ymax = zNear * tan( fovY );
 	ymin = -ymax;
 
-	xmax = zNear * tan( backEnd.viewParms.fovX * M_PI / 360.0f );
+	xmax = zNear * tan( fovX );
 	xmin = -xmax;
 
 	width = xmax - xmin;
@@ -429,11 +438,9 @@ static void SetFinalProjection( void ) {
 	pixelJitter[0] = pixelJitter[1] = 0;
 	eyeJitter[0] = eyeJitter[1] = 0;
 	/* Jitter the view */
-	if ( stereoSep <= 0.0f) {
-		R_MME_JitterView( pixelJitter, eyeJitter );
-	} else if ( stereoSep > 0.0f) {
-		R_MME_JitterViewStereo( pixelJitter, eyeJitter );
-	}
+	R_MME_JitterView( pixelJitter, eyeJitter, stereoSep > 0.0f );
+	if ( R_MME_CubemapActive( stereoSep > 0.0f ) )
+		stereoSep = 0.0f;
 
 	dx = ( pixelJitter[0]*width ) / backEnd.viewParms.viewportWidth;
 	dy = ( pixelJitter[1]*height ) / backEnd.viewParms.viewportHeight;
@@ -987,10 +994,59 @@ static void RB_DrawSurfs( const void *data ) {
 	backEnd.viewParms = cmd->viewParms;
 	//Jitter the camera origin
 	if ( !backEnd.viewParms.isPortal && !(backEnd.refdef->rdflags & RDF_NOWORLDMODEL) ) {
-		int i;
+		int i, index;
 		float x, y;
-		if ( (r_stereoSeparation->value <= 0 && R_MME_JitterOrigin( &x, &y ))
-			|| (r_stereoSeparation->value > 0 && R_MME_JitterOriginStereo( &x, &y ))) {
+		if ( R_MME_CubemapIndex( &index, r_stereoSeparation->value > 0 ) ) {
+			vec3_t oldAxis[3];
+			float stereoSep = r_stereoSeparation->value;
+			orientationr_t* or = &backEnd.viewParms.or;
+			orientationr_t* world = &backEnd.viewParms.world;
+
+			/* Fixed camera for free observing */
+			if ( mme_saveCubemap->integer < 0 ) {
+				VectorSet( or->axis[0], 1.0f, 0.0f, 0.0f );
+				VectorSet( or->axis[1], 0.0f, 1.0f, 0.0f );
+				VectorSet( or->axis[2], 0.0f, 0.0f, 1.0f );
+			}
+
+			if ( stereoSep ) {
+				vec3_t projOrigin;
+				VectorMA( or->origin, r_zproj->value, or->axis[0], projOrigin );
+				VectorMA( or->origin, stereoSep, or->axis[1], or->origin );
+				VectorSubtract( projOrigin, or->origin, or->axis[0] );
+				VectorNormalize( or->axis[0] );
+				CrossProduct( or->axis[2], or->axis[0], or->axis[1] );
+			}
+
+			AxisCopy( or->axis, oldAxis );
+			/* Backward indexing so the last one is the front face */
+			switch ( index ) {
+				case 5: //front
+					break;
+				case 4: //right
+					VectorSubtract( vec3_origin, oldAxis[1], or->axis[0] );
+					VectorCopy( oldAxis[0], or->axis[1] );
+					break;
+				case 3: //back
+					VectorSubtract( vec3_origin, oldAxis[0], or->axis[0] );
+					VectorSubtract( vec3_origin, oldAxis[1], or->axis[1] );
+					break;
+				case 2: //left
+					VectorCopy( oldAxis[1], or->axis[0] );
+					VectorSubtract( vec3_origin, oldAxis[0], or->axis[1] );
+					break;
+				case 1: //top
+					VectorCopy( oldAxis[2], or->axis[0] );
+					VectorSubtract( vec3_origin, oldAxis[0], or->axis[2] );
+					break;
+				case 0: //bottom
+					VectorSubtract( vec3_origin, oldAxis[2], or->axis[0] );
+					VectorCopy( oldAxis[0], or->axis[2] );
+					break;
+			}
+
+			R_RotateForWorld( or, world );
+		} else if ( R_MME_JitterOrigin( &x, &y, r_stereoSeparation->value > 0 ) ) {
 			orientationr_t* or = &backEnd.viewParms.or;
 			orientationr_t* world = &backEnd.viewParms.world;
 
@@ -1121,16 +1177,20 @@ static int RB_SwapBuffers( const void *data ) {
 
 	backEnd.projection2D = qfalse;
 	
-	tr.capturingDofOrStereo = qfalse;
-	tr.latestDofOrStereoFrame = qfalse;
+	tr.capturingMultiPass = qfalse;
+	tr.latestMultiPassFrame = qfalse;
 
-	/* Take and merge DOF frames */
+	/* Take and merge multi pass frames */
 	if ( r_stereoSeparation->value <= 0.0f && !tr.finishStereo) {
-		if ( R_MME_MultiPassNext() ) {
+		if ( R_MME_CubemapNext( qfalse ) ) {
+			return 1;
+		} else if ( R_MME_MultiPassNext( qfalse ) ) {
 			return 1;
 		}
 	} else if ( r_stereoSeparation->value > 0.0f) {
-		if ( R_MME_MultiPassNextStereo() ) {
+		if ( R_MME_CubemapNext( qtrue ) ) {
+			return 1;
+		} else if ( R_MME_MultiPassNext( qtrue ) ) {
 			return 1;
 		}
 	}
@@ -1157,21 +1217,21 @@ static int RB_SwapBuffers( const void *data ) {
 	}
 	/* Allow MME to take a screenshot */
 	if ( r_stereoSeparation->value < 0.0f && tr.finishStereo) {
-		tr.capturingDofOrStereo = qtrue;
-		tr.latestDofOrStereoFrame = qtrue;
+		tr.capturingMultiPass = qtrue;
+		tr.latestMultiPassFrame = qtrue;
 		Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
 		return 1;
 	} else if ( r_stereoSeparation->value <= 0.0f) {
-		if ( R_MME_TakeShot( ) && r_stereoSeparation->value != 0.0f) {
-			tr.capturingDofOrStereo = qtrue;
-			tr.latestDofOrStereoFrame = qfalse;
+		if ( R_MME_TakeShot( qfalse ) && r_stereoSeparation->value != 0.0f) {
+			tr.capturingMultiPass = qtrue;
+			tr.latestMultiPassFrame = qfalse;
 			Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
 			tr.finishStereo = qtrue;
 			return 1;
 		}
 	} else if ( r_stereoSeparation->value > 0.0f) {
 		if ( tr.finishStereo) {
-			R_MME_TakeShotStereo( );
+			R_MME_TakeShot( qtrue );
 			R_MME_DoNotTake( );
 			Cvar_SetValue("r_stereoSeparation", -r_stereoSeparation->value);
 			tr.finishStereo = qfalse;
@@ -1211,6 +1271,7 @@ again:
 	data = oldData;
 	header = (commandHeader_t *)data;
 	backEnd.doneBloom = qfalse;
+	R_MME_PrepareMultiCapture( data );
 	while ( 1 ) {
 		int cmd = header->commandId;
 		data = header + 1;
@@ -1240,9 +1301,6 @@ again:
 			break;
 		case RC_CAPTURE:
 			R_MME_CaptureShotCmd( data );
-			break;
-		case RC_CAPTURE_STEREO:
-			R_MME_CaptureShotCmdStereo( data );
 			break;
 		case RC_ALLOC:
 			break;

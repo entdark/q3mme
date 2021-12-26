@@ -926,7 +926,6 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "vid_restore", GLimp_Restore );
 	
 	ri.Cmd_AddCommand( "capturestop", R_MME_Shutdown );
-	ri.Cmd_AddCommand( "capturestopstereo", R_MME_ShutdownStereo );
 }
 
 GLuint pboIds[4];
@@ -991,7 +990,6 @@ void R_Init( void ) {
 	R_Register();
 
 	R_MME_Init();
-	R_MME_InitStereo();
 
 	R_BloomInit();
 
@@ -1079,7 +1077,6 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	R_DecalShutdown();
 
 	R_MME_Shutdown();
-	R_MME_ShutdownStereo();
 
 	R_DoneFreeType();
 
@@ -1174,7 +1171,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.inPVS = R_inPVS;
 
 	re.Capture = R_MME_Capture;
-	re.CaptureStereo = R_MME_CaptureStereo;
 	re.BlurInfo = R_MME_BlurInfo;
 
 	re.TimeFraction = R_MME_TimeFraction;

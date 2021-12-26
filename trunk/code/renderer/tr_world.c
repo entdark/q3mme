@@ -115,7 +115,7 @@ qboolean R_CullSurface( const surfaceType_t *surface, const shader_t *shader ) {
 	const srfFace_t *sface;
 	float			d;
 
-	if ( r_nocull->integer ) {
+	if ( r_nocull->integer || mme_saveCubemap->integer ) {
 		return qfalse;
 	}
 
@@ -396,7 +396,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		// if the bounding volume is outside the frustum, nothing
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
-		if ( !r_nocull->integer ) {
+		if ( !r_nocull->integer && !mme_saveCubemap->integer ) {
 			int		r;
 
 			if ( planeBits & 1 ) {

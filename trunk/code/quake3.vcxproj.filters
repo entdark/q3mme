@@ -562,9 +562,6 @@
     <ClCompile Include="renderer\tr_mme_common.c">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="renderer\tr_mme_stereo.c">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="client\snd_effects.c">
       <Filter>Sound</Filter>
     </ClCompile>

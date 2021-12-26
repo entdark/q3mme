@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include <mmintrin.h>
 
+#define MME_MAX_WORKSIZE 2048
+
 #define AVI_MAX_FRAMES	20000
 #define AVI_MAX_SIZE	((2*1024-10)*1024*1024)
 #define AVI_HEADER_SIZE	2048
@@ -51,10 +53,12 @@ typedef struct mmeAviFile_s {
 
 typedef struct {
 	char name[MAX_OSPATH];
+	char nameOld[MAX_OSPATH];
 	int	 counter;
 	mmeShotFormat_t format;
 	mmeShotType_t type;
 	mmeAviFile_t avi;
+	byte *stereoTemp;
 } mmeShot_t;
 
 typedef struct {
@@ -76,10 +80,10 @@ typedef struct {
 	mmeBlurControl_t *control;
 } mmeBlurBlock_t;
 
-void R_MME_GetShot( void* output, mmeShotType_t type );
+void R_MME_GetShot( void* output, mmeShotType_t type, qboolean square );
 void R_MME_GetStencil( void *output );
 void R_MME_GetDepth( byte *output );
-void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf );
+void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf, qboolean stereo );
 
 void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, int width, int height, float fps, byte *inBuf, qboolean audio );
 void mmeAviSound( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, int width, int height, float fps, const byte *soundBuf, int size );
@@ -98,6 +102,7 @@ void MME_AccumShiftSSE( const void *r, void *w, int count );
 float R_MME_FocusScale(float focus);
 void R_MME_ClampDof(float *focus, float *radius);
 
+extern cvar_t	*mme_combineStereoShots;
 extern cvar_t	*mme_pipeCommand;
 
 extern cvar_t	*mme_aviFormat;

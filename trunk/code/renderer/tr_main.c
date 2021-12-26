@@ -54,7 +54,7 @@ int R_CullLocalBox ( const vec3_t bounds[2]) {
 	int			anyBack;
 	int			front, back;
 
-	if ( r_nocull->integer ) {
+	if ( r_nocull->integer || mme_saveCubemap->integer ) {
 		return CULL_CLIP;
 	}
 
@@ -123,7 +123,7 @@ int R_CullPointAndRadius( const vec3_t pt, float radius )
 	cplane_t	*frust;
 	qboolean mightBeClipped = qfalse;
 
-	if ( r_nocull->integer ) {
+	if ( r_nocull->integer || mme_saveCubemap->integer ) {
 		return CULL_CLIP;
 	}
 
@@ -460,6 +460,8 @@ static void R_SetupProjection( void ) {
 	zProj	= r_zproj->value;
 	zFar	= tr.viewParms.zFar;
 	stereoSep = r_stereoSeparation->value / 100.0f;
+	if ( R_MME_CubemapActive( stereoSep > 0.0f ) )
+		stereoSep = 0.0f;
 
 	ymax = zNear * tan( trScene.refdef->fov_y * M_PI / 360.0f );
 	ymin = -ymax;
@@ -531,6 +533,8 @@ void R_SetupFrustum (void) {
 	vec3_t	origin;
 
 	stereoSep = r_stereoSeparation->value / 100.0f;
+	if ( R_MME_CubemapActive( stereoSep > 0.0f ) )
+		stereoSep = 0.0f;
 	
 	if(stereoSep == 0) {
 		VectorCopy(tr.viewParms.or.origin, origin);

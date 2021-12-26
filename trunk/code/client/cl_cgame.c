@@ -757,7 +757,6 @@ long CL_CgameSystemCalls( long *args ) {
 
 	case CG_MME_CAPTURE:
 		re.Capture( VMA(1), VMF(2), VMF(3), VMF(4) );
-		re.CaptureStereo( (char *)VMA(1), VMF(2), VMF(3), VMF(4) );
 		S_MMERecord( VMA(1), 1.0f / VMF(2) );
 		return 0;
 	case CG_MME_BLURINFO:

@@ -578,7 +578,6 @@
     <ClCompile Include="renderer\tr_mme_common.c" />
     <ClCompile Include="renderer\tr_mme_fbo.c" />
     <ClCompile Include="renderer\tr_mme_sse2.c" />
-    <ClCompile Include="renderer\tr_mme_stereo.c" />
     <ClCompile Include="renderer\tr_model.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

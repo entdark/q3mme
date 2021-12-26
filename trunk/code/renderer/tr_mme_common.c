@@ -1,7 +1,7 @@
 #include "tr_mme.h"
 
 extern GLuint pboIds[4];
-void R_MME_GetShot( void* output, mmeShotType_t type ) {
+void R_MME_GetShot( void* output, mmeShotType_t type, qboolean square ) {
 	GLenum format;
 	switch (type) {
 	case mmeShotTypeBGR:
@@ -11,7 +11,19 @@ void R_MME_GetShot( void* output, mmeShotType_t type ) {
 		format = GL_RGB;
 		break;
 	}
-	if (!mme_pbo->integer || r_stereoSeparation->value != 0) {
+	if (square) {
+		int x, y, size;
+		if (glConfig.vidWidth > glConfig.vidHeight) {
+			size = glConfig.vidHeight;
+			x = (glConfig.vidWidth - size) >> 1;
+			y = 0;
+		} else {
+			size = glConfig.vidWidth;
+			x = 0;
+			y = (glConfig.vidHeight - size) >> 1;
+		}
+		qglReadPixels( x, y, size, size, format, GL_UNSIGNED_BYTE, output );
+	} else if (!mme_pbo->integer || r_stereoSeparation->value != 0) {
 		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, format, GL_UNSIGNED_BYTE, output ); 
 	} else {
 		static int index = 0;
@@ -78,12 +90,76 @@ void R_MME_GetDepth( byte *output ) {
 	ri.Hunk_FreeTempMemory( temp );
 }
 
-void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf ) {
+void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf, qboolean stereo ) {
 	mmeShotFormat_t format;
 	char *extension;
 	char *outBuf;
 	int outSize;
-	char fileName[MAX_OSPATH];
+	byte *shotBuf = inBuf;
+	char fileName[MAX_OSPATH], tempName[MAX_OSPATH];
+	qboolean combineStereo = mme_combineStereoShots->integer;
+	qboolean takingStereo = r_stereoSeparation->value != 0.0f;
+
+	if ( takingStereo ) {
+		if ( combineStereo ) {
+			if ( !stereo ) {
+				int channels;
+				switch ( shot->type ) {
+				case mmeShotTypeRGBA:
+					channels = 4;
+					break;
+				case mmeShotTypeGray:
+					channels = 1;
+					break;
+				default:
+					channels = 3;
+					break;
+				}
+				if (shot->stereoTemp) {
+					ri.Error( ERR_FATAL, "Memory is leaking in taking stereo shots\n" );
+				}
+				shot->stereoTemp = (byte *)ri.Malloc( width * height * channels );
+				Com_Memcpy( shot->stereoTemp, inBuf, width * height * channels );
+				return;
+			} else if ( stereo ) {
+				int i, j, channels, size, wstep;
+				if ( !shot->stereoTemp )
+					return;
+				switch ( shot->type ) {
+				case mmeShotTypeRGBA:
+					channels = 4;
+					break;
+				case mmeShotTypeGray:
+					channels = 1;
+					break;
+				default:
+					channels = 3;
+					break;
+				}
+				wstep = width * channels;
+				size = width * height * channels;
+				shotBuf = (byte *)ri.Hunk_AllocateTempMemory( size * 2 );
+				if ( mme_combineStereoShots->integer == 2 ) {
+					for ( i = 0; i < size; i += wstep) {
+						Com_Memcpy( shotBuf + i*2, shot->stereoTemp + i, wstep );
+						Com_Memcpy( shotBuf + i*2 + wstep, inBuf + i, wstep );
+					}
+					width *= 2;
+				} else {
+					Com_Memcpy( shotBuf, shot->stereoTemp, size );
+					Com_Memcpy( shotBuf + size, inBuf, size );
+					height *= 2;
+				}
+				ri.Free( shot->stereoTemp );
+				shot->stereoTemp = NULL;
+			}
+			Com_sprintf( tempName, sizeof(tempName), "%s", shot->name );
+		} else {
+			Com_sprintf( tempName, sizeof(tempName), "%s%s", shot->name, ( stereo ? ".s" : "" ) );
+		}
+	} else {
+		Com_sprintf( tempName, sizeof(tempName), "%s", shot->name );
+	}
 
 	format = shot->format;
 	switch (format) {
@@ -101,22 +177,24 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 		break;
 	case mmeShotFormatPNG:
 		extension = "png";
-		break;
+        break;
     case mmeShotFormatPIPE:
 		if (!shot->avi.f) {
 			shot->avi.pipe = qtrue;
 		}
 	case mmeShotFormatAVI:
-		mmeAviShot( &shot->avi, shot->name, shot->type, width, height, fps, inBuf, audio );
+		mmeAviShot( &shot->avi, tempName, shot->type, width, height, fps, shotBuf, audio );
 		if (audio)
-			mmeAviSound( &shot->avi, shot->name, shot->type, width, height, fps, aBuf, aSize );
-		return;
+			mmeAviSound( &shot->avi, tempName, shot->type, width, height, fps, aBuf, aSize );
+		goto complete;
 	}
 
-	if (shot->counter < 0) {
+	if (aSize < 0) {
+		Com_sprintf( fileName, sizeof(fileName), "%s.%s", tempName, extension );
+	} else if (shot->counter < 0) {
 		int counter = 0;
 		while ( counter < 1000000000) {
-			Com_sprintf( fileName, sizeof(fileName), "%s.%010d.%s", shot->name, counter, extension);
+			Com_sprintf( fileName, sizeof(fileName), "%s.%010d.%s", tempName, counter, extension);
 			if (!FS_FileExists( fileName ))
 				break;
 			if ( mme_saveOverwrite->integer ) 
@@ -130,20 +208,22 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 		}
 	} 
 
-	Com_sprintf( fileName, sizeof(fileName), "%s.%010d.%s", shot->name, shot->counter, extension );
-	shot->counter++;
+	if (aSize >= 0) {
+		Com_sprintf( fileName, sizeof(fileName), "%s.%010d.%s", tempName, shot->counter, extension );
+		shot->counter++;
+	}
 
 	outSize = width * height * 4 + 2048;
 	outBuf = (char *)ri.Hunk_AllocateTempMemory( outSize );
 	switch ( format ) {
 	case mmeShotFormatJPG:
-		outSize = SaveJPG( mme_jpegQuality->integer, width, height, shot->type, inBuf, (byte *)outBuf, outSize );
+		outSize = SaveJPG( mme_jpegQuality->integer, width, height, shot->type, shotBuf, (byte *)outBuf, outSize );
 		break;
 	case mmeShotFormatTGA:
-		outSize = SaveTGA( mme_tgaCompression->integer, width, height, shot->type, inBuf, (byte *)outBuf, outSize );
+		outSize = SaveTGA( mme_tgaCompression->integer, width, height, shot->type, shotBuf, (byte *)outBuf, outSize );
 		break;
 	case mmeShotFormatPNG:
-		outSize = SavePNG( mme_pngCompression->integer, width, height, shot->type, inBuf, (byte *)outBuf, outSize );
+		outSize = SavePNG( mme_pngCompression->integer, width, height, shot->type, shotBuf, (byte *)outBuf, outSize );
 		break;
 	default:
 		outSize = 0;
@@ -151,6 +231,10 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 	if (outSize)
 		ri.FS_WriteFile( fileName, outBuf, outSize );
 	ri.Hunk_FreeTempMemory( outBuf );
+complete:
+	if ( takingStereo && combineStereo && stereo ) {
+		ri.Hunk_FreeTempMemory( shotBuf );
+	}
 }
 
 void blurCreate( mmeBlurControl_t* control, const char* type, int frames ) {
@@ -268,12 +352,15 @@ static void MME_AccumClearMMX( void* w, const void* r, short mul, int count ) {
 	 zeroVal = _mm_setzero_si64();
 	 for (i = count; i>0 ; i--) {
 		 readVal = *reader++;
+
 		 work0 = _mm_unpacklo_pi8( readVal, zeroVal );
-		 work1 = _mm_unpackhi_pi8( readVal, zeroVal );
-		 work0 = _mm_mullo_pi16( work0, multiply );
-		 work1 = _mm_mullo_pi16( work1, multiply );
+		 work0 = _mm_mullo_pi16(work0, multiply);
 		 writer[0] = work0;
+
+		 work1 = _mm_unpackhi_pi8( readVal, zeroVal );
+		 work1 = _mm_mullo_pi16( work1, multiply );
 		 writer[1] = work1;
+
 		 writer += 2;
 	 }
 	 _mm_empty();
