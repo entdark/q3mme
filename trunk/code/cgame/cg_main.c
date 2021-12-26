@@ -378,12 +378,12 @@ static cvarTable_t cvarTable[] = { // bk001129
 	
 	{ &cg_drawSpeedometer,	"cg_drawSpeedometer",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerScale,"cg_drawSpeedometerScale","1.0",		NULL,	CVAR_ARCHIVE	},
-	{ &cg_drawSpeedometerPos, "cg_drawSpeedometerPos", "320.0 7.0",	CG_SetSpedometerPos, CVAR_ARCHIVE	},
+	{ &cg_drawSpeedometerPos, "cg_drawSpeedometerPos", "640.0 300.0", CG_SetSpedometerPos, CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerFormat,"cg_drawSpeedometerFormat", "Speed: %tups", NULL, CVAR_ARCHIVE	},
 	{ &cg_drawSpeedometerAlignment,"cg_drawSpeedometerAlignment","right",	NULL, CVAR_ARCHIVE },
 	
 	{ &cg_drawMovementKeys,	"cg_drawMovementKeys",	"0",			NULL,	CVAR_ARCHIVE	},
-	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320 140",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
+	{ &cg_drawMovementKeysPos, "cg_drawMovementKeysPos", "320.0 140.0",	CG_SetMovementKeysPos, CVAR_ARCHIVE	},
 	{ &cg_drawMovementKeysScale, "cg_drawMovementKeysScale", "1.0",	NULL,	CVAR_ARCHIVE	},
 
 	{ &mov_Obituaries,		"mov_Obituaries",		"1",			NULL,	CVAR_ARCHIVE	},
