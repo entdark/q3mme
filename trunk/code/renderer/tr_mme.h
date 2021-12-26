@@ -33,7 +33,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define BLURMAX 256
 #define PASSMAX 256
 
-#define PIPE_COMMAND_DEFAULT "ffmpeg -f avi -i - -threads 0 -preset ultrafast -y -pix_fmt yuv444p -crf 23 %o.mp4 2> ffmpeglog.txt"
+#define PIPE_COMMAND_BASE(s, e)	"ffmpeg -f avi -i - -threads 0 "s" -c:a aac -c:v libx264 -preset ultrafast -y -pix_fmt yuv420p -crf 19 %o."e" 2> ffmpeglog.txt"
+#define PIPE_COMMAND_DEFAULT	PIPE_COMMAND_BASE("", "mkv")
+#define PIPE_COMMAND_STEREO		PIPE_COMMAND_BASE("-metadata:s:v stereo_mode=top_bottom", "mkv")
+#define PIPE_COMMAND_VR180		PIPE_COMMAND_BASE("-vf v360=c1x6:he:in_forder=frblud:in_stereo=tb:out_stereo=sbs -metadata:s:v stereo_mode=left_right", "mkv")
+#define PIPE_COMMAND_VR360		PIPE_COMMAND_BASE("-vf v360=c1x6:e:in_forder=frblud", "mp4")
 
 typedef struct mmeAviFile_s {
 	char name[MAX_OSPATH];

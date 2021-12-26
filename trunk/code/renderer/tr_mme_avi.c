@@ -273,7 +273,19 @@ static qhandle_t aviPipeOpen(const char *name, int width, int height, float fps)
     format = mme_pipeCommand->string;
     if (!format || !format[0]) {
         format = PIPE_COMMAND_DEFAULT;
-    }
+    } else if (!Q_stricmp(format, "auto")) {
+		if (abs(mme_saveCubemap->integer) != 2 && mme_saveCubemap->integer) {
+			if (r_stereoSeparation->value != 0.0f && mme_combineStereoShots->integer != 2) {
+				format = PIPE_COMMAND_VR180;
+			} else {
+				format = PIPE_COMMAND_VR360;
+			}
+		} else if (!mme_saveCubemap->integer && r_stereoSeparation->value != 0.0f && mme_combineStereoShots->integer != 2) {
+			format = PIPE_COMMAND_STEREO;
+		} else {
+			format = PIPE_COMMAND_DEFAULT;
+		}
+	}
     
     while (*format && outLeft  > 0) {
         if (haveTag) {

@@ -811,7 +811,7 @@ void R_MME_Init(void) {
 
 	// MME cvars
     mme_combineStereoShots = ri.Cvar_Get ("mme_combineStereoShots", "1", CVAR_ARCHIVE);
-	mme_pipeCommand = ri.Cvar_Get ("mme_pipeCommand", PIPE_COMMAND_DEFAULT, CVAR_ARCHIVE);
+	mme_pipeCommand = ri.Cvar_Get ("mme_pipeCommand", "auto", CVAR_ARCHIVE);
 	mme_aviFormat = ri.Cvar_Get ("mme_aviFormat", "0", CVAR_ARCHIVE);
 	mme_jpegQuality = ri.Cvar_Get ("mme_jpegQuality", "90", CVAR_ARCHIVE);
 	mme_jpegDownsampleChroma = ri.Cvar_Get ("mme_jpegDownsampleChroma", "0", CVAR_ARCHIVE);
