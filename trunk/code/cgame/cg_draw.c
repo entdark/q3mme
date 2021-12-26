@@ -1993,7 +1993,7 @@ static void CG_DrawAmmoWarning( void ) {
 	} else {
 		s = "LOW AMMO WARNING";
 	}
-	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH * cgs.widthRatioCoef;
 	CG_DrawBigString(320 - w / 2, 64, s, 1.0F);
 }
 
