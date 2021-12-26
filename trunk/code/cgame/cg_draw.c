@@ -2210,8 +2210,6 @@ void CG_Draw2D( void ) {
 			CG_DrawCrosshair();
 			CG_DrawCrosshairNames();
 		}
-		CG_DrawSpeedometer();
-		CG_ChatBox_DrawStrings();
 	}
 	CG_DrawLagometer();
 	CG_DrawUpperRight();
