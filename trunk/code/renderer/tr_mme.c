@@ -439,7 +439,7 @@ qboolean R_MME_TakeShot( qboolean stereo ) {
 	int sizeSound = 0;
 	qboolean audio = qfalse, audioTaken = qfalse;
 	qboolean doGamma;
-	qboolean takingStereo = (qboolean)(r_stereoSeparation->value != 0.0f);
+	qboolean takingStereo = r_stereoSeparation->value != 0.0f;
 	qboolean workStereo;
 	workData_t *w = work(stereo);
 	mmeBlurControl_t* blurControl = &w->blurData.control;
