@@ -974,6 +974,28 @@ static void RB_StretchPic ( const void *data ) {
 }
 
 
+extern void R_MirrorPoint(vec3_t in, orientation_t *surface, orientation_t *camera, vec3_t out);
+extern void R_MirrorVector(vec3_t in, orientation_t *surface, orientation_t *camera, vec3_t out);
+static void RB_MirrorView( orientationr_t* oldOr, orientationr_t* or ) {
+	orientation_t	surface, camera;
+	
+	VectorCopy( backEnd.viewParms.portalPlane.normal, surface.axis[0] );
+	PerpendicularVector( surface.axis[1], surface.axis[0]);
+	CrossProduct( surface.axis[0], surface.axis[1], surface.axis[2] );
+
+	VectorScale( backEnd.viewParms.portalPlane.normal, backEnd.viewParms.portalPlane.dist, surface.origin );
+	VectorCopy( surface.origin, camera.origin );
+	VectorSubtract( vec3_origin, surface.axis[0], camera.axis[0] );
+	VectorCopy( surface.axis[1], camera.axis[1] );
+	VectorCopy( surface.axis[2], camera.axis[2] );
+
+	R_MirrorPoint( oldOr->origin, &surface, &camera, or->origin );
+
+	R_MirrorVector( oldOr->axis[0], &surface, &camera, or->axis[0] );
+	R_MirrorVector( oldOr->axis[1], &surface, &camera, or->axis[1] );
+	R_MirrorVector( oldOr->axis[2], &surface, &camera, or->axis[2] );
+}
+
 /*
 =============
 RB_DrawSurfs
@@ -993,7 +1015,7 @@ static void RB_DrawSurfs( const void *data ) {
 	backEnd.refdef = cmd->refdef;
 	backEnd.viewParms = cmd->viewParms;
 	//Jitter the camera origin
-	if ( !backEnd.viewParms.isPortal && !(backEnd.refdef->rdflags & RDF_NOWORLDMODEL) ) {
+	if ( !(backEnd.refdef->rdflags & RDF_NOWORLDMODEL) ) {
 		int i, index;
 		float x, y;
 		if ( R_MME_CubemapIndex( &index, r_stereoSeparation->value > 0 ) ) {
@@ -1001,6 +1023,10 @@ static void RB_DrawSurfs( const void *data ) {
 			float stereoSep = r_stereoSeparation->value;
 			orientationr_t* or = &backEnd.viewParms.or;
 			orientationr_t* world = &backEnd.viewParms.world;
+
+			if ( backEnd.viewParms.isMirror ) {
+				or = &backEnd.viewParms.oldOr;
+			}
 
 			/* Fixed camera for free observing */
 			if ( mme_saveCubemap->integer < 0 ) {
@@ -1016,6 +1042,12 @@ static void RB_DrawSurfs( const void *data ) {
 				VectorSubtract( projOrigin, or->origin, or->axis[0] );
 				VectorNormalize( or->axis[0] );
 				CrossProduct( or->axis[2], or->axis[0], or->axis[1] );
+			}
+
+			if ( backEnd.viewParms.isMirror ) {
+				orientationr_t* oldOr = or;
+				or = &backEnd.viewParms.or;
+				RB_MirrorView( oldOr, or );
 			}
 
 			AxisCopy( or->axis, oldAxis );
@@ -1050,6 +1082,9 @@ static void RB_DrawSurfs( const void *data ) {
 			orientationr_t* or = &backEnd.viewParms.or;
 			orientationr_t* world = &backEnd.viewParms.world;
 
+			if ( backEnd.viewParms.isMirror ) {
+				or = &backEnd.viewParms.oldOr;
+			}
 //			VectorScale( or->axis[0], 0.5, or->axis[0] );
 //			VectorScale( or->axis[1], 0.3, or->axis[1] );
 //			VectorScale( or->axis[2], 0.8, or->axis[2] );
@@ -1057,6 +1092,11 @@ static void RB_DrawSurfs( const void *data ) {
 			VectorMA( or->origin, y, or->axis[2], or->origin );
 //			or->origin[2] += 4000;
 //			or->origin[2] += 0.1 * x;
+			if ( backEnd.viewParms.isMirror ) {
+				orientationr_t* oldOr = or;
+				or = &backEnd.viewParms.or;
+				RB_MirrorView( oldOr, or );
+			}
 			R_RotateForWorld( or, world );
 			for ( i = 0; i < 16; i++ ) {
 				int r = (rand() & 0xffff ) - 0x4000;

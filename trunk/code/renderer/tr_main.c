@@ -871,6 +871,8 @@ qboolean R_MirrorViewBySurface ( const drawSurf_t *drawSurf ) {
 	R_MirrorVector (oldParms.or.axis[1], &surface, &camera, newParms.or.axis[1]);
 	R_MirrorVector (oldParms.or.axis[2], &surface, &camera, newParms.or.axis[2]);
 
+	newParms.oldOr = oldParms.or;
+
 	// OPTIMIZE: restrict the viewport on the mirrored view
 
 	// render the mirror view

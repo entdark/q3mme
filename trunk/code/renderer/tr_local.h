@@ -552,7 +552,7 @@ typedef struct {
 } fog_t;
 
 typedef struct {
-	orientationr_t	or;
+	orientationr_t	or, oldOr;
 	orientationr_t	world;
 	vec3_t		pvsOrigin;			// may be different than or.origin for portals
 	qboolean	isPortal;			// true if this view is through a portal
