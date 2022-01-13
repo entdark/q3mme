@@ -267,7 +267,7 @@ static qhandle_t aviPipeOpen(const char *name, int width, int height, float fps)
     fileHandle_t f = 0;
     
     if (!Q_stricmp(mod, "")) {
-        mod = "base";
+        mod = "baseq3";
     }
     
     format = mme_pipeCommand->string;
