@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern int winHideWindow;
 
 void	IN_MouseEvent (int mstate);
+void	IN_RawMouseEvent( int lastX, int lastY ); // Send raw input events to the input subsystem
 
 void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
 
