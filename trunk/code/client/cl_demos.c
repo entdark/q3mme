@@ -870,6 +870,12 @@ static demoPlay_t *demoPlayOpen( const char* fileName ) {
 		FS_FCloseFile( fileHandle );
 		return 0;
 	}
+	demo.nextNum = demoFindNext(mme_demoFileName->string);
+	if ( filePos == fileSize) {
+		Com_Printf("demo file %s is empty\n", fileName );
+		FS_FCloseFile( fileHandle );
+		return 0;
+	}
 	play = Z_Malloc( sizeof( demoPlay_t ));
 	Q_strncpyz( play->fileName, fileName, sizeof( play->fileName ));
 	play->fileSize = fileSize;
@@ -911,7 +917,6 @@ static demoPlay_t *demoPlayOpen( const char* fileName ) {
 		filePos += 4 + blockSize;
 		play->totalFrames++;
 	}
-	demo.nextNum = demoFindNext(mme_demoFileName->string);
 	play->fileHandle = fileHandle;
 	demoPlaySetIndex( play, 0 );
 	play->clientNum = -1;
@@ -1095,6 +1100,8 @@ qboolean demoPlay( const char *fileName, qboolean del ) {
 		cls.cgameStarted = qtrue;
 		CL_InitCGame();
 		cls.state = CA_ACTIVE;
+		return qtrue;
+	} else if (demo.nextNum) {
 		return qtrue;
 	} else {
 		return qfalse;
