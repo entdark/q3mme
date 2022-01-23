@@ -815,32 +815,39 @@ float demoProgress(void) {
 }
 static int demoFindNext(const char *fileName) {
 	int i;
-	const int len = strlen(fileName);
-	char name[MAX_OSPATH], seekName[MAX_OSPATH];
+	int len = strlen(fileName);
+	char name[MAX_QPATH], seekName[MAX_QPATH];
 	qboolean tryAgain = qtrue;
+	if (len > MAX_QPATH) {
+		Com_Printf(S_COLOR_YELLOW"WARNING: Demo name length too big: %d > %d\n", len, MAX_QPATH);
+		len = MAX_QPATH;
+	}
+	Com_sprintf(seekName, MAX_QPATH, fileName);
 	if (isdigit(fileName[len-1]) && ((fileName[len-2] == '.'))) {
-		Com_sprintf(seekName, len-1+1, fileName);
+		seekName[len-2] = 0;
 		demo.currentNum = fileName[len-1] - '0';
 	} else if (isdigit(fileName[len-1]) && (isdigit(fileName[len-2]) && (fileName[len-3] == '.'))) {
-		Com_sprintf(seekName, len-2+1, fileName);
+		seekName[len-3] = 0;
 		demo.currentNum = (fileName[len-2] - '0')*10 + (fileName[len-1] - '0');
 	} else {
-		Com_sprintf(seekName, MAX_OSPATH, fileName);
 		demo.currentNum = demo.nextNum;
-	}
-tryAgain:
-	for (i = demo.currentNum + 1; i < 99; i++) {
-		Com_sprintf(name, MAX_OSPATH, "mmedemos/%s.%d.mme", seekName, i);
-		if (FS_FileExists(name)) {
-			Com_Printf("Next demo file: %s\n", name);
-			return i;
-		}
-	}
-	Com_sprintf(seekName, len+1, "%s", fileName);
-	if (tryAgain) {
 		tryAgain = qfalse;
-		goto tryAgain;
 	}
+	do {
+		for (i = demo.currentNum + 1; i < 100; i++) {
+			Com_sprintf(name, MAX_QPATH, "mmedemos/%s.%d.mme", seekName, i);
+			if (FS_FileExists(name)) {
+				Com_Printf("Next demo file: %s\n", name);
+				return i;
+			}
+		}
+		if (tryAgain) {
+			Com_sprintf(seekName, MAX_QPATH, fileName);
+			tryAgain = qfalse;
+		} else {
+			break;
+		}
+	} while (1);
 	return 0;
 }
 
