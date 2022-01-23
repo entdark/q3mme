@@ -289,6 +289,12 @@ MainWndProc
 main window procedure
 ====================
 */
+
+#define WM_BUTTON4DOWN	(WM_MOUSELAST+2)
+#define WM_BUTTON4UP	(WM_MOUSELAST+3)
+#define MK_BUTTON4L		0x0020
+#define MK_BUTTON4R		0x0040
+
 extern cvar_t *in_mouse;
 extern cvar_t *in_logitechbug;
 LONG WINAPI MainWndProc (
@@ -484,6 +490,8 @@ LONG WINAPI MainWndProc (
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
 	case WM_MOUSEMOVE:
+	case WM_BUTTON4DOWN:
+	case WM_BUTTON4UP:
 		{
 			int	temp;
 
@@ -497,6 +505,12 @@ LONG WINAPI MainWndProc (
 
 			if (wParam & MK_MBUTTON)
 				temp |= 4;
+
+			if (wParam & MK_BUTTON4L)
+				temp |= 8;
+
+			if (wParam & MK_BUTTON4R)
+				temp |= 16;
 
 			IN_MouseEvent (temp);
 		}

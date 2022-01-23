@@ -457,6 +457,12 @@ void IN_DIMouse( int *mx, int *my ) {
 			else
 				Sys_QueEvent( od.dwTimeStamp, SE_KEY, K_MOUSE4, qfalse, 0, NULL );
 			break;      
+		case DIMOFS_BUTTON4:
+			if (od.dwData & 0x80)
+				Sys_QueEvent( od.dwTimeStamp, SE_KEY, K_MOUSE5, qtrue, 0, NULL );
+			else
+				Sys_QueEvent( od.dwTimeStamp, SE_KEY, K_MOUSE5, qfalse, 0, NULL );
+			break;
     // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=50
 		case DIMOFS_Z:
 			value = od.dwData;
@@ -601,7 +607,7 @@ void IN_MouseEvent (int mstate)
 		return;
 
 // perform button actions
-	for  (i = 0 ; i < 3 ; i++ )
+	for  (i = 0 ; i < 5 ; i++ )
 	{
 		if ( (mstate & (1<<i)) &&
 			!(s_wmv.oldButtonState & (1<<i)) )
