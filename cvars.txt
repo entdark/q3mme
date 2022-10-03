@@ -185,7 +185,7 @@ mme_saveCubemap         [-2, -1, 0, 1, 2] Save cubemap output:
 mme_cpuSSE2             [0, 1] Use SSE2 instruction to make motion blur (faster way, may crash on old CPUs)
 mme_pbo                 [0, 1] Use PBO instruction to increase capture speed in times (r_stereoSeparation 0.0)
 mme_pipeCommand         [text, %format] Set the command that opens its stdin for reading from the game raw input and set the supported output with the given format:
-                        %o = output name, %f = fps (from capture command), %w = game width, %h = game height, %% = %
+                        %o = output name, %a - absolute path to the game, %f = fps (from capture command), %w = game width, %h = game height, %q = double quote character ", %% = %
                         auto = automatically choose the best pipe command for current settings: default, stereo, VR180, VR360
 mme_combineStereoShots  [0, 1, 2] Combine 2 stereo shots into 1 (r_stereoSeparation not 0.0):
                         0 = save stereo shots separately, 1 = combine stereo shots fast and save (top-bottom), 2 = combine stereo shots human-pleasing and save (side-by-side)

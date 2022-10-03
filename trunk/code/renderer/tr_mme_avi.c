@@ -248,6 +248,7 @@ static qhandle_t aviPipeOpen(const char *name, int width, int height, float fps)
     int		outIndex = 0;
     int		outLeft = sizeof(outBuf) - 1;
     char	*mod = ri.Cvar_VariableString("fs_game");
+    char    *absPath = ri.Cvar_VariableString("fs_homepath");
     fileHandle_t f = 0;
     
     if (!Q_stricmp(mod, "")) {
@@ -291,6 +292,17 @@ static qhandle_t aviPipeOpen(const char *name, int width, int height, float fps)
                 case 'o':		//output
                     Com_sprintf( outBuf + outIndex, outLeft, "%s/%s", mod, name);
                     outIndex += strlen( outBuf + outIndex );
+                    break;
+                case 'a':		//absolute path
+                    if ( !absPath[0] ) {
+                        break;
+                    }
+                    Com_sprintf( outBuf + outIndex, outLeft, "%s/", absPath);
+                    outIndex += strlen( outBuf + outIndex );
+                    break;
+                case 'q':		//quote
+                    Com_sprintf(outBuf + outIndex, outLeft, "\"");
+                    outIndex += strlen(outBuf + outIndex);
                     break;
                 case '%':
                     outBuf[outIndex++] = '%';
