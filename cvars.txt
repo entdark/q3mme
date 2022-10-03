@@ -167,7 +167,7 @@ mme_dofRadius           [0.0..?.?] Set view offset for every dof frame (power of
 
 mme_renderWidth         [0, 1..?] Width of resolution that game will capture frames with in demoList feature
 mme_renderHeight        [0, 1..?] Height of resolution that game will capture frames with in demoList feature
-mme_workMegs            [1..512] Set megabytes that will be allocated for capturing output
+mme_workMegs            [1..2048] Set megabytes that will be allocated for capturing output
 mme_depthFocus          [0..?] Focus position from your current camera postion to given focus number (mme_saveDepth 1)
 mme_depthRange          [0..?] Range from focus position to your camera direction and reversely from your camera direction (mme_saveDepth 1)
 
