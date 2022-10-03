@@ -1144,8 +1144,8 @@ void CL_DemoList_f(void) {
 
 	if (Cmd_Argc() < 2) {
 		Com_Printf( "Usage demoList filename.\n");
-		Com_Printf( "That file should have lines with demoname projectname." );
-		Com_Printf( "These will be played after each other." );
+		Com_Printf( "That file should have lines with demoname projectname.\n" );
+		Com_Printf( "These will be played after each other.\n" );
 	}
 	if (!FS_FileExists( Cmd_Argv(1))) {
 		Com_Printf( "Listfile %s doesn't exist\n", Cmd_Argv(1));
