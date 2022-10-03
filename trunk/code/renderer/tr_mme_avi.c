@@ -120,11 +120,7 @@ int aviFillHeader( mmeAviFile_t *aviFile, qboolean close ) {
 	AVIOUTd(aviFile->width);            /* Width */
 	AVIOUTd(aviFile->height);           /* Height */
 	AVIOUTw(1);							/* Planes */
-	if (!storeMJPEG && aviFile->type == mmeShotTypeGray ) {
-		AVIOUTw(8);						/* BitCount */
-	} else {
-		AVIOUTw(24);					/* BitCount */
-	}
+	AVIOUTw(24);					/* BitCount */
 	if ( storeMJPEG ) { /* Compression */
 		AVIOUT4("MJPG");
 		AVIOUTd(aviFile->width * aviFile->height); /* SizeImage (in bytes?) */
@@ -134,20 +130,8 @@ int aviFillHeader( mmeAviFile_t *aviFile, qboolean close ) {
 	}
 	AVIOUTd(0);                  /* XPelsPerMeter */
 	AVIOUTd(0);                  /* YPelsPerMeter */
-	if ( !storeMJPEG && aviFile->type == mmeShotTypeGray ) {
-		AVIOUTd(255);			 /* colorUsed */
-	} else {
-		AVIOUTd(0);				 /* colorUsed */
-	}
+	AVIOUTd(0);				 /* colorUsed */
 	AVIOUTd(0);                  /* ClrImportant: Number of colors important */
-	if ( !storeMJPEG && aviFile->type == mmeShotTypeGray ) {
-		for(i = 0;i<255;i++) {
-			avi_header[header_pos++] = i;
-			avi_header[header_pos++] = i;
-			avi_header[header_pos++] = i;
-			avi_header[header_pos++] = 0;
-		}
-	}
 	/* Audio stream list */
 	if (aviFile->audio) {
 		AVIOUT4("LIST");
@@ -408,7 +392,7 @@ static qboolean aviValid( const mmeAviFile_t *aviFile, const char *name, mmeShot
 		return qfalse;
 	if (mme_aviFormat->integer != aviFile->format && !aviFile->pipe)
 		return qfalse;
-    //ffmpeg accepts w/ audio only, let's fool it
+	//ffmpeg accepts w/ audio only, let's fool it
 	if (aviFile->audio != audio && !aviFile->pipe)
 		return qfalse;
 	return qtrue;
@@ -433,9 +417,11 @@ void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, in
 		switch (type) {
 		case mmeShotTypeGray:
 			for (i = 0;i<pixels;i++) {
-				outBuf[8 + i] = inBuf[i];
-			};
-			outSize = pixels;
+				outBuf[8 + i*3 + 0 ] = inBuf[i];
+				outBuf[8 + i*3 + 1 ] = inBuf[i];
+				outBuf[8 + i*3 + 2 ] = inBuf[i];
+			}
+			outSize = width * height * 3;
 			break;
 		case mmeShotTypeRGB:
 			for (i = 0;i<pixels;i++) {

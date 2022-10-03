@@ -177,8 +177,8 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 		break;
 	case mmeShotFormatPNG:
 		extension = "png";
-        break;
-    case mmeShotFormatPIPE:
+		break;
+	case mmeShotFormatPIPE:
 		if (!shot->avi.f) {
 			shot->avi.pipe = qtrue;
 		}

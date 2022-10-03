@@ -697,7 +697,7 @@ static void R_MME_PrepareCapture( const captureCommand_t *cmd, qboolean stereo )
 			w->shotData.main.format = mmeShotFormatPNG;
 		}
 		w->shotData.main.type = mmeShotTypeRGB;
-	} else if (strcmp( cmd->name, w->shotData.main.name) || mme_screenShotFormat->modified || mme_screenShotAlpha->modified || mme_saveCubemap->modified ) {
+	} else if (strcmp( cmd->name, w->shotData.main.name) || mme_screenShotFormat->modified || mme_screenShotAlpha->modified || mme_saveCubemap->modified || mme_aviFormat->modified ) {
 		/* Also reset the the other data */
 		w->blurData.control.totalIndex = 0;
 		if ( workAlign )
@@ -711,6 +711,7 @@ static void R_MME_PrepareCapture( const captureCommand_t *cmd, qboolean stereo )
 		if ( stereo ) {
 			mme_screenShotFormat->modified = qfalse;
 			mme_screenShotAlpha->modified = qfalse;
+			mme_aviFormat->modified = qfalse;
 		}
 
 		if (!Q_stricmp(mme_screenShotFormat->string, "jpg")) {
@@ -728,7 +729,7 @@ static void R_MME_PrepareCapture( const captureCommand_t *cmd, qboolean stereo )
 		}
 		
 		//grayscale works fine only with compressed avi :(
-		if ((w->shotData.main.format != mmeShotFormatAVI && w->shotData.main.format != mmeShotFormatPIPE) || !mme_aviFormat->integer) {
+		if ((w->shotData.main.format != mmeShotFormatAVI && w->shotData.main.format != mmeShotFormatPIPE)) {
 			w->shotData.depth.format = mmeShotFormatPNG;
 			w->shotData.stencil.format = mmeShotFormatPNG;
 		} else if (w->shotData.main.format == mmeShotFormatAVI) {
@@ -810,7 +811,7 @@ void R_MME_Shutdown(void) {
 void R_MME_Init(void) {
 
 	// MME cvars
-    mme_combineStereoShots = ri.Cvar_Get ("mme_combineStereoShots", "1", CVAR_ARCHIVE);
+	mme_combineStereoShots = ri.Cvar_Get ("mme_combineStereoShots", "1", CVAR_ARCHIVE);
 	mme_pipeCommand = ri.Cvar_Get ("mme_pipeCommand", "auto", CVAR_ARCHIVE);
 	mme_aviFormat = ri.Cvar_Get ("mme_aviFormat", "0", CVAR_ARCHIVE);
 	mme_jpegQuality = ri.Cvar_Get ("mme_jpegQuality", "90", CVAR_ARCHIVE);
